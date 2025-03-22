@@ -3,7 +3,7 @@ package com.corilus.user_profile_management.enums;
 import lombok.Getter;
 
 @Getter
-public enum Speciality {
+public enum SPECIALITY {
 
     ORTHODONTICS("Orthodontics", "Specialized in dental alignment"),
     GENERAL_DENTISTRY("General Dentistry", "Covers all standard dental procedures"),
@@ -33,7 +33,7 @@ public enum Speciality {
     private final String displayName;
     private final String description;
 
-    Speciality(String displayName, String description) {
+    SPECIALITY(String displayName, String description) {
         this.displayName = displayName;
         this.description = description;
     }

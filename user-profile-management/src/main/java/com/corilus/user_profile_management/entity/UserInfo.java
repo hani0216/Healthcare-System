@@ -1,5 +1,5 @@
 package com.corilus.user_profile_management.entity;
-import com.corilus.user_profile_management.enums.Role;
+import com.corilus.user_profile_management.enums.ROLE;
 
 import jakarta.persistence.*;
         import lombok.*;
@@ -32,5 +32,5 @@ public class UserInfo {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private ROLE role;
 }

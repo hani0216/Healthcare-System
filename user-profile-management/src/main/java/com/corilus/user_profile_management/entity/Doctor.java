@@ -1,5 +1,5 @@
 package com.corilus.user_profile_management.entity;
-import com.corilus.user_profile_management.enums.Speciality ;
+import com.corilus.user_profile_management.enums.SPECIALITY;
 import jakarta.persistence.*;
         import lombok.*;
 
@@ -24,5 +24,5 @@ public class Doctor {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Speciality speciality;
+    private SPECIALITY speciality;
 }
