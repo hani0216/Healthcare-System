@@ -53,4 +53,7 @@ public class DoctorController {
     public ResponseEntity<List<Doctor>> getDoctorByName(@PathVariable String name) {
         return ResponseEntity.ok(doctorService.getDoctorByName(name));
     }
+
+
 }
+

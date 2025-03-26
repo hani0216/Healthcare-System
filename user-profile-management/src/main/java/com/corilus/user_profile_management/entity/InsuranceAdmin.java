@@ -17,8 +17,11 @@ public class InsuranceAdmin {
 
     @OneToOne
     @JoinColumn(name = "user_info_id", nullable = false)
-    private UserInfo insuranceInfo;
+    private UserInfo userInfo;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
+    private String insuranceCompany;
+
+    @Column(nullable = false)
     private Long insuranceLicenseNumber;
 }

@@ -48,6 +48,13 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Doctor> getAllDoctors() {
+        return doctorRepository.findAll();
+    }
+
+
+    @Override
     @Transactional
     public Doctor updateDoctor(Long id, DoctorDto doctorDto) {
         Optional<Doctor> existingDoctor = doctorRepository.findById(id);
@@ -82,10 +89,6 @@ public class DoctorServiceImpl implements DoctorService {
         }
     }
 
-    @Override
-    public List<Doctor> getAllDoctors() {
-        return doctorRepository.findAll();
-    }
 
     @Override
     public Doctor getDoctorById(Long id) {
