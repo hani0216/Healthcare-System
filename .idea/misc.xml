@@ -5,6 +5,7 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/user-profile-management/pom.xml" />
+        <option value="$PROJECT_DIR$/medical-records-management/pom.xml" />
       </list>
     </option>
   </component>
