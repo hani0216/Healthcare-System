@@ -7,6 +7,9 @@ import com.corilus.medical_records_management.service.MedicalRecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
+
 @Service
 @RequiredArgsConstructor
 public class MedicalRecordServiceImpl implements MedicalRecordService {
@@ -16,6 +19,16 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     @Override
     public void deleteMedicalRecord(Long id) {
         medicalRecordRepository.deleteById(id);
+    }
+    @Override
+    public MedicalRecord createMedicalRecord(MedicalRecordDto medicalRecordDto) {
+        MedicalRecord record = new MedicalRecord();
+        record.setPatientId(medicalRecordDto.getPatientId());
+        record.setNotes(new ArrayList<>());
+        record.setDocuments(new ArrayList<>());
+        record.setAppointments(new ArrayList<>());
+        record.setLogs(new ArrayList<>());
+        return medicalRecordRepository.save(record);
     }
 
     @Override
@@ -28,10 +41,6 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     public MedicalRecord getMedicalRecordByPatientName(String name) {
         return medicalRecordRepository.findByPatientName(name)
                 .orElseThrow(() -> new RuntimeException("Medical record not found for patient name: " + name));
-    }
-    @Override
-    public MedicalRecord createMedicalRecord(MedicalRecordDto medicalRecordDto) {
-        return null;
     }
 
     @Override
