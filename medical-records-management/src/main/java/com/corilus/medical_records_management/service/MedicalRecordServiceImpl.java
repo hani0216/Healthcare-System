@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
-
 @Service
 @RequiredArgsConstructor
 public class MedicalRecordServiceImpl implements MedicalRecordService {
@@ -20,6 +19,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     public void deleteMedicalRecord(Long id) {
         medicalRecordRepository.deleteById(id);
     }
+
     @Override
     public MedicalRecord createMedicalRecord(MedicalRecordDto medicalRecordDto) {
         MedicalRecord record = new MedicalRecord();

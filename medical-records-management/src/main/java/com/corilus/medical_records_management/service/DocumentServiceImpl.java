@@ -3,9 +3,10 @@ package com.corilus.medical_records_management.service;
 import com.corilus.medical_records_management.dto.DocumentDto;
 import com.corilus.medical_records_management.entity.Document;
 import com.corilus.medical_records_management.entity.MedicalRecord;
+import com.corilus.medical_records_management.enums.HistoryType;
 import com.corilus.medical_records_management.repository.DocumentRepository;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
-import com.corilus.medical_records_management.service.DocumentService;
+import com.corilus.medical_records_management.service.HistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final MedicalRecordRepository medicalRecordRepository;
+    private final HistoryService historyService;
 
     @Override
     public Document createDocument(Long medicalRecordId, DocumentDto documentDto) {
@@ -34,11 +36,24 @@ public class DocumentServiceImpl implements DocumentService {
         medicalRecord.getDocuments().add(saved);
         medicalRecordRepository.save(medicalRecord);
 
+        historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_UPLOADED);
+
         return saved;
     }
 
     @Override
     public void removeDocument(Long id) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+
+        MedicalRecord medicalRecord = medicalRecordRepository.findByDocumentsContaining(document)
+                .orElseThrow(() -> new RuntimeException("Medical record not found"));
+
+        historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED);
+
+        medicalRecord.getDocuments().remove(document);
+        medicalRecordRepository.save(medicalRecord);
+
         documentRepository.deleteById(id);
     }
 
@@ -50,7 +65,14 @@ public class DocumentServiceImpl implements DocumentService {
         document.setName(documentDto.getName());
         document.setContent(documentDto.getContent());
 
-        return documentRepository.save(document);
+        Document updated = documentRepository.save(document);
+
+        MedicalRecord medicalRecord = medicalRecordRepository.findByDocumentsContaining(document)
+                .orElseThrow(() -> new RuntimeException("Medical record not found"));
+
+        historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_UPDATED);
+
+        return updated;
     }
 
     @Override
