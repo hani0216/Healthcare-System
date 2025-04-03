@@ -22,8 +22,8 @@ public class MedicalRecord {
     @JoinColumn(name = "medical_record_id")
     private List<History> logs;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Note> notes;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private Note note ;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents;

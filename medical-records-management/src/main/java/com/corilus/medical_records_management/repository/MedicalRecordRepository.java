@@ -13,7 +13,7 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
 
     Optional<MedicalRecord> findByPatientName(String name);
 
-    Optional<MedicalRecord> findByNotesContaining(Note note);
+    Optional<MedicalRecord> findByNoteContaining(Note note);
 
     Optional<MedicalRecord> findByDocumentsContaining(Document document);
 

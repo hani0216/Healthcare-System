@@ -72,6 +72,14 @@ public class PatientServiceImpl implements PatientService {
         }
     }
 
+    // Dans PatientServiceImpl.java
+    @Override
+    public Long getPatientIdByName(String name) {
+        Optional<Patient> patient = patientRepository.findByName(name);
+        return patient.map(Patient::getId).orElseThrow(() -> new RuntimeException("No patient found with name: " + name));
+    }
+
+
     @Override
     public void deletePatient(Long id) {
         if (patientRepository.existsById(id)) {

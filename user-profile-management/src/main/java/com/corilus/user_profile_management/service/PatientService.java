@@ -9,5 +9,5 @@ public interface PatientService {
     void deletePatient(Long id);
     Patient getPatientById(Long id);
     List<Patient> getAllPatients();
-
+    Long  getPatientIdByName(String name);
 }

@@ -1,123 +1,92 @@
 package com.corilus.medical_records_management.service;
 
+import com.corilus.medical_records_management.client.DoctorClient;
+import com.corilus.medical_records_management.dto.DoctorDto;
 import com.corilus.medical_records_management.dto.NoteDto;
-import com.corilus.medical_records_management.entity.Document;
-import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.entity.Note;
-import com.corilus.medical_records_management.enums.HistoryType;
-import com.corilus.medical_records_management.repository.DocumentRepository;
-import com.corilus.medical_records_management.repository.MedicalRecordRepository;
 import com.corilus.medical_records_management.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.Timestamp;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
 
     private final NoteRepository noteRepository;
-    private final MedicalRecordRepository medicalRecordRepository;
-    private final DocumentRepository documentRepository;
-    private final HistoryService historyService;
+    @Autowired
+    private DoctorClient doctorClient;
 
     @Override
-    public Note createNoteForMedicalRecord(Long recordId, NoteDto noteDto) {
-        MedicalRecord medicalRecord = medicalRecordRepository.findById(recordId)
-                .orElseThrow(() -> new RuntimeException("Medical record not found"));
+    public Note createNoteForMedicalRecord(Long recordId, Long doctorId, NoteDto noteDto) {
+        validateDoctor(doctorId);
 
         Note note = new Note();
         note.setTitle(noteDto.getTitle());
         note.setDescription(noteDto.getDescription());
         note.setDate(new Timestamp(System.currentTimeMillis()));
-        note.setAuthorId(noteDto.getAuthorId());
+        note.setAuthorId(doctorId);
 
-        Note savedNote = noteRepository.save(note);
-
-        medicalRecord.getNotes().add(savedNote);
-        medicalRecordRepository.save(medicalRecord);
-
-        historyService.createHistory(medicalRecord.getId(), HistoryType.NOTE_ADDED);
-
-        return savedNote;
+        return noteRepository.save(note);
     }
 
     @Override
-    public List<Note> getNotesByMedicalRecord(Long id) {
-        MedicalRecord record = medicalRecordRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medical record not found"));
-        return record.getNotes();
+    public Note getNoteByMedicalRecord(Long id) {
+        return noteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Note not found for medical record with id: " + id));
     }
 
     @Override
-    public Note createNoteForDocument(Long documentId, NoteDto noteDto) {
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+    public Note createNoteForDocument(Long documentId, Long doctorId, NoteDto noteDto) {
+        validateDoctor(doctorId);
 
         Note note = new Note();
         note.setTitle(noteDto.getTitle());
         note.setDescription(noteDto.getDescription());
         note.setDate(new Timestamp(System.currentTimeMillis()));
-        note.setAuthorId(noteDto.getAuthorId());
+        note.setAuthorId(doctorId);
 
-        Note savedNote = noteRepository.save(note);
-
-        document.setNote(savedNote);
-        documentRepository.save(document);
-
-        MedicalRecord medicalRecord = medicalRecordRepository.findByDocumentsContaining(document)
-                .orElseThrow(() -> new RuntimeException("Medical record not found"));
-
-        historyService.createHistory(medicalRecord.getId(), HistoryType.NOTE_ADDED);
-
-        return savedNote;
+        return noteRepository.save(note);
     }
 
     @Override
     public Note getNotesByDocument(Long documentId, NoteDto noteDto) {
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
-        return document.getNote();
+        return noteRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Note not found for document with id: " + documentId));
     }
 
     @Override
     public Note updateNote(Long id, NoteDto noteDto) {
         Note note = noteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new RuntimeException("Note not found with id: " + id));
+
         note.setTitle(noteDto.getTitle());
         note.setDescription(noteDto.getDescription());
+        note.setDate(new Timestamp(System.currentTimeMillis())); // Assume that you might want to update the timestamp when the note is updated
 
-        Note updatedNote = noteRepository.save(note);
-
-        MedicalRecord medicalRecord = medicalRecordRepository.findByNotesContaining(updatedNote)
-                .orElseThrow(() -> new RuntimeException("Medical record not found"));
-
-        historyService.createHistory(medicalRecord.getId(), HistoryType.NOTE_UPDATED);
-
-        return updatedNote;
+        return noteRepository.save(note);
     }
 
     @Override
     public void deleteNote(Long id) {
         Note note = noteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new RuntimeException("Note not found with id: " + id));
 
-        MedicalRecord medicalRecord = medicalRecordRepository.findByNotesContaining(note)
-                .orElseThrow(() -> new RuntimeException("Medical record not found"));
-
-        historyService.createHistory(medicalRecord.getId(), HistoryType.NOTE_DELETED);
-
-        medicalRecord.getNotes().remove(note);
-        medicalRecordRepository.save(medicalRecord);
-
-        noteRepository.deleteById(id);
+        noteRepository.delete(note);
     }
 
     @Override
     public Note getNoteById(Long id) {
         return noteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Note not found"));
+                .orElseThrow(() -> new RuntimeException("Note not found with id: " + id));
+    }
+
+    private void validateDoctor(Long doctorId) {
+        DoctorDto doctor = doctorClient.getDoctorById(doctorId);
+        if (doctor == null) {
+            throw new RuntimeException("Doctor not found with id: " + doctorId);
+        }
     }
 }

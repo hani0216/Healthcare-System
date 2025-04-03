@@ -5,14 +5,16 @@ import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.service.MedicalRecordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.corilus.medical_records_management.client.PatientClient;
 
 @RestController
 @RequestMapping("/api/medical-records")
 @RequiredArgsConstructor
 public class MedicalRecordController {
-
+    @Autowired
     private final MedicalRecordService medicalRecordService;
 
     @PostMapping
@@ -20,6 +22,13 @@ public class MedicalRecordController {
         MedicalRecord created = medicalRecordService.createMedicalRecord(medicalRecordDto);
         return ResponseEntity.ok(created);
     }
+
+
+   /* @GetMapping("/patients/findByName")
+    public ResponseEntity<Long> getPatientIdByName(@RequestParam String name) {
+        Long patientId = medicalRecordService.findByName(name);
+        return ResponseEntity.ok(patientId);
+    }*/
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMedicalRecord(@PathVariable Long id) {

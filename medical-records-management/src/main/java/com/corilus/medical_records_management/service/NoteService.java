@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface NoteService {
 
-    Note createNoteForMedicalRecord(Long recordId, NoteDto noteDto);
+    Note createNoteForMedicalRecord(Long recordId, Long doctorId, NoteDto noteDto);
 
-    List<Note> getNotesByMedicalRecord(Long id);
+    Note getNoteByMedicalRecord(Long id);
 
-    Note createNoteForDocument(Long documentId, NoteDto noteDto);
+    Note createNoteForDocument(Long documentId, Long doctorId, NoteDto noteDto);
 
     Note getNotesByDocument(Long documentId, NoteDto noteDto);
 
