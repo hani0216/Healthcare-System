@@ -1,5 +1,7 @@
 package com.corilus.medical_records_management.controller;
 
+import com.corilus.medical_records_management.client.DoctorClient;
+import com.corilus.medical_records_management.dto.DoctorDto;
 import com.corilus.medical_records_management.dto.MedicalRecordDto;
 import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.service.MedicalRecordService;
@@ -16,6 +18,8 @@ import com.corilus.medical_records_management.client.PatientClient;
 public class MedicalRecordController {
     @Autowired
     private final MedicalRecordService medicalRecordService;
+    @Autowired
+    private DoctorClient doctorClient;
 
     @PostMapping
     public ResponseEntity<MedicalRecord> createMedicalRecord(@RequestBody @Valid MedicalRecordDto medicalRecordDto) {
@@ -53,4 +57,13 @@ public class MedicalRecordController {
         MedicalRecord record = medicalRecordService.getMedicalRecordById(id);
         return ResponseEntity.ok(record);
     }
+
+    @GetMapping("/doctors/{id}")
+    public ResponseEntity<DoctorDto> getDoctorById(@PathVariable Long id) {
+        DoctorDto doctor = doctorClient.getDoctorById(id);
+        return ResponseEntity.ok(doctor);
+    }
+
+
+
 }

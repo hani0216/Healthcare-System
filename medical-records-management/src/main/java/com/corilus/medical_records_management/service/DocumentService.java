@@ -13,7 +13,7 @@ public interface DocumentService {
 
     Document updateDocument(Long id, DocumentDto documentDto);
 
-    Document getDocumentsByPatient(Long patientId);
+    List<Document> getDocumentsByPatient(Long patientId);
 
     List<Document> getDocumentsByMedicalRecord(Long id);
 

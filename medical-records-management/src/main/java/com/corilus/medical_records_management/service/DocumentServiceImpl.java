@@ -76,7 +76,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Document getDocumentsByPatient(Long patientId) {
+    public List<Document> getDocumentsByPatient(Long patientId) {
         return documentRepository.findFirstByMedicalRecord_PatientId(patientId)
                 .orElseThrow(() -> new RuntimeException("No document found for patient"));
     }

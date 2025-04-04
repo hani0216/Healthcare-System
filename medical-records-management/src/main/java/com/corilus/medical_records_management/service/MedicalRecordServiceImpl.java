@@ -7,6 +7,7 @@ import com.corilus.medical_records_management.dto.MedicalRecordDto;
 import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.entity.Note;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +28,23 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     }
 
     public Long findPatientIdByName(String name) {
-        Long patientId = patientClient.getPatientIdByName(name);
-        if (patientId != null) {
-            return patientId;
-        } else {
-            throw new RuntimeException("Failed to fetch patient ID for name: " + name);
+        try {
+            Long patientId = patientClient.getPatientIdByName(name);
+            if (patientId != null) {
+                return patientId;
+            } else {
+                throw new PatientNotFoundException("No patient found with name: " + name);
+            }
+        } catch (FeignException e) {
+            throw new RuntimeException("Failed to fetch patient ID for name: " + name, e);
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected error occurred while fetching patient ID for name: " + name, e);
+        }
+    }
+
+    public class PatientNotFoundException extends RuntimeException {
+        public PatientNotFoundException(String message) {
+            super(message);
         }
     }
 

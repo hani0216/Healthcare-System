@@ -3,10 +3,12 @@ package com.corilus.user_profile_management.controller;
 import com.corilus.user_profile_management.dto.PatientDto;
 import com.corilus.user_profile_management.entity.Patient;
 import com.corilus.user_profile_management.service.PatientService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/patients")
@@ -30,7 +32,7 @@ public class PatientController {
     }
 
     @GetMapping("/{name}")
-    public ResponseEntity<Long> getPatientIdByName(String name){
+    public ResponseEntity<Long> getPatientIdByName(@PathVariable String name){
         return ResponseEntity.ok(patientService.getPatientIdByName(name));
     }
 
@@ -45,8 +47,13 @@ public class PatientController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ResponseEntity<Patient> getPatientById(@PathVariable Long id) {
         return ResponseEntity.ok(patientService.getPatientById(id));
     }
+
+
+
 }
+
+

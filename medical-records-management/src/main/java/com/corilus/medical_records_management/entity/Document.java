@@ -2,6 +2,7 @@ package com.corilus.medical_records_management.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.corilus.medical_records_management.entity.MedicalRecord;
 
 import java.util.Date;
 
@@ -19,6 +20,12 @@ public class Document {
     private byte[] content;
 
     private String name;
+
+
+    @ManyToOne
+    @JoinColumn(name = "medical_record_id")
+    private MedicalRecord medicalRecord;
+
 
     private Long uploadedById;
 
