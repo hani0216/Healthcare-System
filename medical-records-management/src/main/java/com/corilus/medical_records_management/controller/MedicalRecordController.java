@@ -16,10 +16,13 @@ import com.corilus.medical_records_management.client.PatientClient;
 @RequestMapping("/api/medical-records")
 @RequiredArgsConstructor
 public class MedicalRecordController {
+
     @Autowired
     private final MedicalRecordService medicalRecordService;
     @Autowired
     private DoctorClient doctorClient;
+    @Autowired
+    private PatientClient patientClient;
 
     @PostMapping
     public ResponseEntity<MedicalRecord> createMedicalRecord(@RequestBody @Valid MedicalRecordDto medicalRecordDto) {
@@ -27,12 +30,17 @@ public class MedicalRecordController {
         return ResponseEntity.ok(created);
     }
 
+    @GetMapping("/patient-name/{name}")
+    public ResponseEntity<MedicalRecord> getMedicalRecordByPatientName(@PathVariable String name) {
+        MedicalRecord record = medicalRecordService.getMedicalRecordByPatientName(name);
+        return ResponseEntity.ok(record);
+    }
 
-   /* @GetMapping("/patients/findByName")
-    public ResponseEntity<Long> getPatientIdByName(@RequestParam String name) {
-        Long patientId = medicalRecordService.findByName(name);
+    @GetMapping("/find-patient-id/{name}")
+    public ResponseEntity<Long> getPatientIdByName(@PathVariable String name) {
+        Long patientId = medicalRecordService.findPatientIdByName(name);
         return ResponseEntity.ok(patientId);
-    }*/
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMedicalRecord(@PathVariable Long id) {
@@ -43,12 +51,6 @@ public class MedicalRecordController {
     @GetMapping("/patient/{id}")
     public ResponseEntity<MedicalRecord> getMedicalRecordByPatientId(@PathVariable Long id) {
         MedicalRecord record = medicalRecordService.getMedicalRecordByPatientId(id);
-        return ResponseEntity.ok(record);
-    }
-
-    @GetMapping("/patient-name/{name}")
-    public ResponseEntity<MedicalRecord> getMedicalRecordByPatientName(@PathVariable String name) {
-        MedicalRecord record = medicalRecordService.getMedicalRecordByPatientName(name);
         return ResponseEntity.ok(record);
     }
 
@@ -63,7 +65,4 @@ public class MedicalRecordController {
         DoctorDto doctor = doctorClient.getDoctorById(id);
         return ResponseEntity.ok(doctor);
     }
-
-
-
 }

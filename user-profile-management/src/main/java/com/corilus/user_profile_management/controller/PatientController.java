@@ -25,7 +25,6 @@ public class PatientController {
         return ResponseEntity.ok(patientService.createPatient(dto));
     }
 
-    // Removed erroneous code line that was incomplete and fixed annotation capitalization
     @GetMapping
     public ResponseEntity<List<Patient>> getAllPatients() {
         return ResponseEntity.ok(patientService.getAllPatients());

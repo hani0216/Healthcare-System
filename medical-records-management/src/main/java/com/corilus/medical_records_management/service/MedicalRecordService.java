@@ -14,4 +14,6 @@ public interface MedicalRecordService {
     MedicalRecord getMedicalRecordByPatientName(String name);
 
     MedicalRecord getMedicalRecordById(Long id);
+
+    Long findPatientIdByName(String name);
 }

@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "patient-service", url = "http://localhost:8081")
 public interface PatientClient {
 
-    @GetMapping("/patients/getPatientIdByName")
+    @GetMapping("/patients/{name}")
     Long getPatientIdByName(@RequestParam("name") String name);
 }
