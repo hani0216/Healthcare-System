@@ -12,4 +12,7 @@ public class DocumentDto {
 
     @NotBlank
     private String name;
+
+    @NotNull
+    private Long uploadedById;
 }

@@ -6,10 +6,10 @@ import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.enums.HistoryType;
 import com.corilus.medical_records_management.repository.DocumentRepository;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
-import com.corilus.medical_records_management.service.HistoryService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import com.corilus.medical_records_management.service.MedicalRecordService;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +20,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final MedicalRecordRepository medicalRecordRepository;
     private final HistoryService historyService;
+    private final MedicalRecordService medicalRecordService;
 
     @Override
     public Document createDocument(Long medicalRecordId, DocumentDto documentDto) {
@@ -30,6 +31,8 @@ public class DocumentServiceImpl implements DocumentService {
         document.setName(documentDto.getName());
         document.setContent(documentDto.getContent());
         document.setCreationDate(new Date());
+        document.setMedicalRecord(medicalRecordId);
+        document.setUploadedById(documentDto.getUploadedById());
 
         Document saved = documentRepository.save(document);
 
@@ -76,11 +79,9 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public List<Document> getDocumentsByPatient(Long patientId) {
-        return documentRepository.findFirstByMedicalRecord_PatientId(patientId)
-                .orElseThrow(() -> new RuntimeException("No document found for patient"));
+    public List<Document> getAllDocuments(){
+        return documentRepository.findAll();
     }
-
     @Override
     public List<Document> getDocumentsByMedicalRecord(Long id) {
         MedicalRecord record = medicalRecordRepository.findById(id)
@@ -93,4 +94,18 @@ public class DocumentServiceImpl implements DocumentService {
         return documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
     }
+
+    @Transactional
+    public void deleteDocument(Long documentId) {
+        medicalRecordService.removeDocumentFromMedicalRecord(documentId);
+        documentRepository.deleteById(documentId);
+    }
+
+    @Override
+    public void removeDocumentFromMedicalRecord(Long documentId) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+    }
+
+
 }

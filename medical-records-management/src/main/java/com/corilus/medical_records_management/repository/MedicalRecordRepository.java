@@ -2,6 +2,7 @@ package com.corilus.medical_records_management.repository;
 
 import com.corilus.medical_records_management.entity.Document;
 import com.corilus.medical_records_management.entity.MedicalRecord;
+import feign.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.corilus.medical_records_management.entity.Document;
 import org.springframework.data.jpa.repository.Query;
@@ -15,8 +16,10 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
 
     Optional<MedicalRecord> findByDocumentsContaining(Document document);
 
-    //@Query("SELECT d FROM Document d WHERE d.medicalRecord.patientId = :patientId")
-    List<Document> findDocumentsByPatientId(Long patientId);
+
+    @Query("SELECT mr FROM MedicalRecord mr JOIN mr.documents doc WHERE doc.id = :documentId")
+    MedicalRecord findMedicalRecordByDocumentId(@Param("documentId") Long documentId);
+
 
 
 }

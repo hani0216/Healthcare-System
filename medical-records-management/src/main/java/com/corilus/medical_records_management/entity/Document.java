@@ -22,9 +22,8 @@ public class Document {
     private String name;
 
 
-    @ManyToOne
     @JoinColumn(name = "medical_record_id")
-    private MedicalRecord medicalRecord;
+    private Long medicalRecord;
 
 
     private Long uploadedById;

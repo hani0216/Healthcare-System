@@ -4,14 +4,18 @@ import com.corilus.medical_records_management.client.DoctorClient;
 import com.corilus.medical_records_management.client.PatientClient;
 import com.corilus.medical_records_management.dto.DoctorDto;
 import com.corilus.medical_records_management.dto.MedicalRecordDto;
+import com.corilus.medical_records_management.entity.Document;
 import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.entity.Note;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
 import feign.FeignException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.corilus.medical_records_management.repository.DocumentRepository;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,6 +25,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     private final MedicalRecordRepository medicalRecordRepository;
     private final DoctorClient doctorClient;
     private final PatientClient patientClient;
+    private final DocumentRepository documentRepository;
 
     @Override
     public void deleteMedicalRecord(Long id) {
@@ -49,7 +54,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     }
 
     @Override
-    public MedicalRecord createMedicalRecord(MedicalRecordDto medicalRecordDto) {
+    public Long createMedicalRecord(MedicalRecordDto medicalRecordDto) {
         if (!validateDoctor(medicalRecordDto.getDoctorId())) {
             throw new RuntimeException("Doctor not found with id: " + medicalRecordDto.getDoctorId());
         }
@@ -59,7 +64,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         record.setDocuments(new ArrayList<>());
         record.setAppointments(new ArrayList<>());
         record.setLogs(new ArrayList<>());
-        return medicalRecordRepository.save(record);
+        return medicalRecordRepository.save(record).getId();
     }
 
     @Override
@@ -67,6 +72,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         return medicalRecordRepository.findByPatientId(patientId)
                 .orElseThrow(() -> new RuntimeException("Medical record not found for patientId: " + patientId));
     }
+
 
     @Override
     public MedicalRecord getMedicalRecordByPatientName(String name) {
@@ -86,6 +92,29 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
             return doctor != null;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+
+    @Override
+    public List<MedicalRecord> getAllMedicalRecords(){
+        return medicalRecordRepository.findAll();
+    }
+
+
+
+    @Transactional
+    public void removeDocumentFromMedicalRecord(Long documentId) {
+        MedicalRecord medicalRecord = medicalRecordRepository.findMedicalRecordByDocumentId(documentId);
+        if (medicalRecord != null) {
+            Optional<Document> documentToRemove = medicalRecord.getDocuments().stream()
+                    .filter(doc -> doc.getId().equals(documentId))
+                    .findFirst();
+
+            documentToRemove.ifPresent(document -> {
+                medicalRecord.getDocuments().remove(document);
+                medicalRecordRepository.save(medicalRecord);
+            });
         }
     }
 }

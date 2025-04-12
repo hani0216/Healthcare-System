@@ -2,10 +2,10 @@ package com.corilus.medical_records_management.service;
 
 import com.corilus.medical_records_management.dto.MedicalRecordDto;
 import com.corilus.medical_records_management.entity.MedicalRecord;
-
+import java.util.List;
 public interface MedicalRecordService {
 
-    MedicalRecord createMedicalRecord(MedicalRecordDto medicalRecordDto);
+    Long createMedicalRecord(MedicalRecordDto medicalRecordDto);
 
     void deleteMedicalRecord(Long id);
 
@@ -16,4 +16,10 @@ public interface MedicalRecordService {
     MedicalRecord getMedicalRecordById(Long id);
 
     Long findPatientIdByName(String name);
+
+    List<MedicalRecord> getAllMedicalRecords();
+
+    void removeDocumentFromMedicalRecord(Long documentId);
+
+
 }

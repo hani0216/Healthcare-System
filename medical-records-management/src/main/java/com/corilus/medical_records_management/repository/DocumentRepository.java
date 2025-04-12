@@ -8,6 +8,5 @@ import java.util.Optional;
 
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
-    Optional<List<Document>> findFirstByMedicalRecord_PatientId(Long patientId);
 
 }

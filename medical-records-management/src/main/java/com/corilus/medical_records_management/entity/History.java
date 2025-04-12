@@ -19,6 +19,6 @@ public class History {
 
     private Timestamp date;
 
-    @ManyToOne
-    private MedicalRecord medicalRecord;
+    @Column(name = "medical_record_id")
+    private Long medicalRecordId;
 }
