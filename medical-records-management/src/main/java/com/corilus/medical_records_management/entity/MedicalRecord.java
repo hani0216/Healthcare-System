@@ -1,5 +1,6 @@
 package com.corilus.medical_records_management.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,12 +19,12 @@ public class MedicalRecord {
     @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Appointment> appointments;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "medical_record_id")
+    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<History> logs;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    private Note note ;
+    private Note note;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents;
