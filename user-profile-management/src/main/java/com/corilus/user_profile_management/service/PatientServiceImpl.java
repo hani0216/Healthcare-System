@@ -1,5 +1,6 @@
 package com.corilus.user_profile_management.service;
 
+import com.corilus.user_profile_management.dto.MedicalRecordDto;
 import com.corilus.user_profile_management.dto.PatientDto;
 import com.corilus.user_profile_management.entity.Patient;
 import com.corilus.user_profile_management.entity.UserInfo;
@@ -8,6 +9,7 @@ import com.corilus.user_profile_management.repository.PatientRepository;
 import com.corilus.user_profile_management.repository.UserInfoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.corilus.user_profile_management.client.MedicalRecordClient;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,10 +19,12 @@ public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
     private final UserInfoRepository userInfoRepository;
+    private final MedicalRecordClient medicalRecordClient;
 
-    public PatientServiceImpl(PatientRepository patientRepository, UserInfoRepository userInfoRepository) {
+    public PatientServiceImpl(PatientRepository patientRepository, UserInfoRepository userInfoRepository, MedicalRecordClient medicalRecordClient) {
         this.patientRepository = patientRepository;
         this.userInfoRepository = userInfoRepository;
+        this.medicalRecordClient = medicalRecordClient;
     }
 
     @Override
@@ -43,7 +47,18 @@ public class PatientServiceImpl implements PatientService {
         patient.setInsuranceNumber(dto.getInsuranceNumber());
         patient.setInsurance(dto.getInsuranceName());
 
-        return patientRepository.save(patient);
+        Patient savedPatient = patientRepository.save(patient);
+
+        MedicalRecordDto recordDto = new MedicalRecordDto();
+        recordDto.setPatientId(savedPatient.getId());
+        recordDto.setCreationDate(new java.util.Date());
+        try {
+            medicalRecordClient.createMedicalRecord(recordDto);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la création du dossier médical : " + e.getMessage());
+        }
+
+        return savedPatient;
     }
 
     @Override
@@ -72,7 +87,6 @@ public class PatientServiceImpl implements PatientService {
         }
     }
 
-    // Dans PatientServiceImpl.java
     @Override
     public Long getPatientIdByName(String name) {
         Optional<Patient> patient = patientRepository.findByName(name);

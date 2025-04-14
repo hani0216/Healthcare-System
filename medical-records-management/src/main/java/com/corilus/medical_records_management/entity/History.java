@@ -1,6 +1,7 @@
 package com.corilus.medical_records_management.entity;
 
 import com.corilus.medical_records_management.enums.HistoryType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -19,6 +20,8 @@ public class History {
 
     private Timestamp date;
 
-    @Column(name = "medical_record_id")
-    private Long medicalRecordId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "medical_record_id", nullable = false)
+    @JsonBackReference
+    private MedicalRecord medicalRecord;
 }

@@ -7,12 +7,14 @@ import com.corilus.medical_records_management.dto.MedicalRecordDto;
 import com.corilus.medical_records_management.entity.Document;
 import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.entity.Note;
+import com.corilus.medical_records_management.enums.HistoryType;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
 import feign.FeignException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.corilus.medical_records_management.repository.DocumentRepository;
+import com.corilus.medical_records_management.entity.History;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     private final DoctorClient doctorClient;
     private final PatientClient patientClient;
     private final DocumentRepository documentRepository;
+    private final HistoryService historyService;
 
     @Override
     public void deleteMedicalRecord(Long id) {
@@ -55,17 +58,20 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
 
     @Override
     public Long createMedicalRecord(MedicalRecordDto medicalRecordDto) {
-        if (!validateDoctor(medicalRecordDto.getDoctorId())) {
-            throw new RuntimeException("Doctor not found with id: " + medicalRecordDto.getDoctorId());
-        }
         MedicalRecord record = new MedicalRecord();
         record.setPatientId(medicalRecordDto.getPatientId());
         record.setNote(new Note());
         record.setDocuments(new ArrayList<>());
         record.setAppointments(new ArrayList<>());
         record.setLogs(new ArrayList<>());
-        return medicalRecordRepository.save(record).getId();
+        MedicalRecord savedRecord = medicalRecordRepository.save(record);
+        History createdLog = historyService.createHistory(savedRecord.getId(), HistoryType.MEDICAL_RECORD_CREATED);
+        createdLog.setMedicalRecord(savedRecord);
+        savedRecord.getLogs().add(0, createdLog);
+        medicalRecordRepository.save(savedRecord);
+        return savedRecord.getId();
     }
+
 
     @Override
     public MedicalRecord getMedicalRecordByPatientId(Long patientId) {
