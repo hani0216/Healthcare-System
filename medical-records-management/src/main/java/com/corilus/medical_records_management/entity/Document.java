@@ -2,8 +2,7 @@ package com.corilus.medical_records_management.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import com.corilus.medical_records_management.entity.MedicalRecord;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
 
 @Entity
@@ -21,10 +20,9 @@ public class Document {
 
     private String name;
 
-
     @JoinColumn(name = "medical_record_id")
+    @JsonIgnore
     private Long medicalRecord;
-
 
     private Long uploadedById;
 

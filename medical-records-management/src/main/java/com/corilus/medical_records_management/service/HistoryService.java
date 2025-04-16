@@ -7,7 +7,6 @@ public interface HistoryService {
 
     History createHistory(Long medicalRecordId, HistoryType type);
 
-    void deleteHistory(Long id);
 
     History getHistoryById(Long id);
 }

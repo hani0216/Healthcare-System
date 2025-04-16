@@ -11,14 +11,14 @@ import com.corilus.medical_records_management.service.MedicalRecordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-
+import com.corilus.medical_records_management.service.HistoryService;
+import com.corilus.medical_records_management.repository.MedicalRecordRepository;
+import com.corilus.medical_records_management.enums.HistoryType;
 import java.io.IOException;
 import java.util.List;
-
 @RestController
 @RequestMapping("/api/medical-records")
 @RequiredArgsConstructor
@@ -30,6 +30,10 @@ public class MedicalRecordController {
     private DoctorClient doctorClient;
     @Autowired
     private DocumentService documentService;
+    @Autowired
+    private HistoryService historyService;
+    @Autowired
+    private MedicalRecordRepository medicalRecordRepository;
 
     @PostMapping
     public ResponseEntity<Long> createMedicalRecord(@RequestBody @Valid MedicalRecordDto medicalRecordDto) {
@@ -52,6 +56,8 @@ public class MedicalRecordController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMedicalRecord(@PathVariable Long id) {
         medicalRecordService.deleteMedicalRecord(id);
+        MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(id);
+        historyService.createHistory(medicalRecord.getId(), HistoryType.MEDICAL_RECORD_DELETED);
         return ResponseEntity.noContent().build();
     }
 
@@ -82,43 +88,15 @@ public class MedicalRecordController {
     @PostMapping("/{medicalRecordId}/addDocument")
     public ResponseEntity<Document> addDocumentToMedicalRecord(@PathVariable Long medicalRecordId, @RequestBody @Valid DocumentDto documentDto) {
         Document createdDocument = documentService.createDocument(medicalRecordId, documentDto);
+        MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(medicalRecordId);
         return ResponseEntity.ok(createdDocument);
     }
-
-    /*@PostMapping("/{medicalRecordId}/addDocument2")
-    public ResponseEntity<Document> addDocumentToMedicalRecord(
-            @PathVariable Long medicalRecordId,
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("name") String name,
-            @RequestParam("uploadedById") Long uploadedById) throws IOException {
-
-        DocumentDto documentDto = new DocumentDto();
-        documentDto.setContent(file.getBytes());
-        documentDto.setName(name);
-        documentDto.setUploadedById(uploadedById);
-
-        Document createdDocument = documentService.createDocument(medicalRecordId, documentDto);
-        return ResponseEntity.ok(createdDocument);
-    }
-
-
-    @DeleteMapping("/{medicalRecordId}/removeDocument/{documentId}")
-    public ResponseEntity<Void> removeDocumentFromMedicalRecord(@PathVariable Long medicalRecordId, @PathVariable Long documentId) {
-        documentService.removeDocument(documentId);
-        return ResponseEntity.noContent().build();
-    }
-    @PutMapping("/{medicalRecordId}/updateDocument/{documentId}")
-    public ResponseEntity<Document> updateDocumentInMedicalRecord(@PathVariable Long medicalRecordId, @PathVariable Long documentId, @RequestBody @Valid DocumentDto documentDto) {
-        Document updatedDocument = documentService.updateDocument(documentId, documentDto);
-        return ResponseEntity.ok(updatedDocument);
-    }*/
-
 
     @GetMapping("/document/{id}")
-        public ResponseEntity<Document> getDocumentById(@PathVariable Long id) {
-            Document document = documentService.getDocumentById(id);
-            return ResponseEntity.ok(document);
-        }
+    public ResponseEntity<Document> getDocumentById(@PathVariable Long id) {
+        Document document = documentService.getDocumentById(id);
+        return ResponseEntity.ok(document);
+    }
 
     @GetMapping("/documents")
     public ResponseEntity<List<Document>> getAllDocuments() {
@@ -128,14 +106,29 @@ public class MedicalRecordController {
 
     @DeleteMapping("/document/{documentId}")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long documentId) {
-        documentService.deleteDocument(documentId);
-        return ResponseEntity.noContent().build();
+        try {
+            documentService.deleteDocument(documentId);
+            Document document = documentService.getDocumentById(documentId);
+            MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(document.getMedicalRecord());
+            historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.OK).build();
+        }
     }
 
+    @GetMapping("/{medicalRecordId}/documents")
+    public ResponseEntity<List<Document>> getDocumentsByMedicalRecord(@PathVariable Long medicalRecordId) {
+        List<Document> documents = documentService.getDocumentsByMedicalRecord(medicalRecordId);
+        return ResponseEntity.ok(documents);
+    }
 
+    @PutMapping("/document/{documentId}")
+    public ResponseEntity<Void> updateDocument(@PathVariable Long documentId, @RequestBody @Valid DocumentDto documentDto) {
+        documentService.updateDocument(documentId, documentDto);
+        Document document = documentService.getDocumentById(documentId);
+        MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(document.getMedicalRecord());
 
-
-
-
-
+        return ResponseEntity.noContent().build();
+    }
 }

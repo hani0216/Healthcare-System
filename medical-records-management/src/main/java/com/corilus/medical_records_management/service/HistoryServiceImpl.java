@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-
 @Service
 @RequiredArgsConstructor
 public class HistoryServiceImpl implements HistoryService {
@@ -26,18 +25,11 @@ public class HistoryServiceImpl implements HistoryService {
         History history = new History();
         history.setType(type);
         history.setDate(new Timestamp(System.currentTimeMillis()));
+        history.setMedicalRecord(record);
 
         History saved = historyRepository.save(history);
 
-        record.getLogs().add(saved);
-        medicalRecordRepository.save(record);
-
         return saved;
-    }
-
-    @Override
-    public void deleteHistory(Long id) {
-        historyRepository.deleteById(id);
     }
 
     @Override

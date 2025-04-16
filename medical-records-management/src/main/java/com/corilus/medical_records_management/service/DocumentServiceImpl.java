@@ -52,7 +52,9 @@ public class DocumentServiceImpl implements DocumentService {
         MedicalRecord medicalRecord = medicalRecordRepository.findByDocumentsContaining(document)
                 .orElseThrow(() -> new RuntimeException("Medical record not found"));
 
-        historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED);
+      /*  historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED);*/
+        medicalRecord.getLogs().add(0, historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED));
+
 
         medicalRecord.getDocuments().remove(document);
         medicalRecordRepository.save(medicalRecord);
