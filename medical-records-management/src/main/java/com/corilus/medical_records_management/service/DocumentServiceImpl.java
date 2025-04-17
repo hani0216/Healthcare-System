@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.corilus.medical_records_management.service.MedicalRecordService;
 import java.util.Date;
 import java.util.List;
+import com.corilus.medical_records_management.entity.MedicalRecord;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final MedicalRecordRepository medicalRecordRepository;
     private final HistoryService historyService;
     private final MedicalRecordService medicalRecordService;
+
 
     @Override
     public Document createDocument(Long medicalRecordId, DocumentDto documentDto) {
@@ -101,6 +103,7 @@ public class DocumentServiceImpl implements DocumentService {
     public void deleteDocument(Long documentId) {
         medicalRecordService.removeDocumentFromMedicalRecord(documentId);
         documentRepository.deleteById(documentId);
+
     }
 
     @Override

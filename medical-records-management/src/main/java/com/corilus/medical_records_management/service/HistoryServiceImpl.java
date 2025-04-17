@@ -23,7 +23,7 @@ public class HistoryServiceImpl implements HistoryService {
                 .orElseThrow(() -> new RuntimeException("Medical record not found"));
 
         History history = new History();
-        history.setType(type);
+        history.setHistoryType(type);
         history.setDate(new Timestamp(System.currentTimeMillis()));
         history.setMedicalRecord(record);
 

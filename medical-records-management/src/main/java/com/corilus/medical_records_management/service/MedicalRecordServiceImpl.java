@@ -120,6 +120,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
             documentToRemove.ifPresent(document -> {
                 medicalRecord.getDocuments().remove(document);
                 medicalRecordRepository.save(medicalRecord);
+                historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED);
             });
         }
     }

@@ -1,26 +1,33 @@
 package com.corilus.medical_records_management.controller;
 
 import com.corilus.medical_records_management.client.DoctorClient;
-import com.corilus.medical_records_management.dto.DoctorDto;
-import com.corilus.medical_records_management.dto.DocumentDto;
-import com.corilus.medical_records_management.dto.MedicalRecordDto;
+import com.corilus.medical_records_management.dto.*;
+import com.corilus.medical_records_management.entity.Appointment;
 import com.corilus.medical_records_management.entity.Document;
 import com.corilus.medical_records_management.entity.MedicalRecord;
+import com.corilus.medical_records_management.entity.Note;
 import com.corilus.medical_records_management.service.DocumentService;
 import com.corilus.medical_records_management.service.MedicalRecordService;
+import com.corilus.medical_records_management.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.corilus.medical_records_management.service.HistoryService;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
 import com.corilus.medical_records_management.enums.HistoryType;
-import java.io.IOException;
+import com.corilus.medical_records_management.service.NoteService;
+
+import java.sql.Timestamp;
 import java.util.List;
+
+
+
 @RestController
-@RequestMapping("/api/medical-records")
+@RequestMapping("/medical-records")
 @RequiredArgsConstructor
 public class MedicalRecordController {
 
@@ -34,6 +41,11 @@ public class MedicalRecordController {
     private HistoryService historyService;
     @Autowired
     private MedicalRecordRepository medicalRecordRepository;
+    @Autowired
+    private final NoteService noteService;
+    @Autowired
+    private final AppointmentService appointmentService;
+
 
     @PostMapping
     public ResponseEntity<Long> createMedicalRecord(@RequestBody @Valid MedicalRecordDto medicalRecordDto) {
@@ -85,12 +97,7 @@ public class MedicalRecordController {
         return ResponseEntity.ok(medicalRecords);
     }
 
-    @PostMapping("/{medicalRecordId}/addDocument")
-    public ResponseEntity<Document> addDocumentToMedicalRecord(@PathVariable Long medicalRecordId, @RequestBody @Valid DocumentDto documentDto) {
-        Document createdDocument = documentService.createDocument(medicalRecordId, documentDto);
-        MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(medicalRecordId);
-        return ResponseEntity.ok(createdDocument);
-    }
+
 
     @GetMapping("/document/{id}")
     public ResponseEntity<Document> getDocumentById(@PathVariable Long id) {
@@ -108,9 +115,6 @@ public class MedicalRecordController {
     public ResponseEntity<Void> deleteDocument(@PathVariable Long documentId) {
         try {
             documentService.deleteDocument(documentId);
-            Document document = documentService.getDocumentById(documentId);
-            MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(document.getMedicalRecord());
-            historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.OK).build();
@@ -131,4 +135,120 @@ public class MedicalRecordController {
 
         return ResponseEntity.noContent().build();
     }
+
+
+    @PutMapping("/{recordId}/updateNoteForMr/{doctorId}")
+    public ResponseEntity<Note> updateNoteForMedicalRecord(
+            @PathVariable Long recordId,
+            @PathVariable Long doctorId,
+            @RequestBody NoteDto noteDto) {
+
+        Note existingNote = noteService.getNoteByMedicalRecord(recordId);
+
+        existingNote.setTitle(noteDto.getTitle());
+        existingNote.setDescription(noteDto.getDescription());
+        existingNote.setAuthorId(doctorId);
+        existingNote.setDate(new Timestamp(System.currentTimeMillis()));
+
+        Note updatedNote = noteService.updateNote(existingNote.getId(), noteDto);
+
+        return new ResponseEntity<>(updatedNote, HttpStatus.OK);
+    }
+
+    @PostMapping("/{medicalRecordId}/addDocument")
+    public ResponseEntity<Document> addDocumentToMedicalRecord(
+            @PathVariable Long medicalRecordId, @RequestBody @Valid DocumentDto documentDto) {
+        Document createdDocument = documentService.createDocument(medicalRecordId, documentDto);
+        MedicalRecord medicalRecord = medicalRecordService.getMedicalRecordById(medicalRecordId);
+        return ResponseEntity.ok(createdDocument);
+    }
+
+    @PostMapping("/document/{documentId}/addNoteForDocument/{doctorId}")
+    public ResponseEntity<Note> createNoteForDocument(
+            @PathVariable Long documentId,
+            @PathVariable Long doctorId,
+            @RequestBody NoteDto noteDto) {
+
+        Note createdNote = noteService.createNoteForDocument(documentId, doctorId, noteDto);
+        return new ResponseEntity<>(createdNote, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/getNoteByDocument/{documentId}")
+    public ResponseEntity<Note> getNotesByDocument(
+            @PathVariable Long documentId,
+            @RequestBody NoteDto noteDto) {
+
+        Note notes = noteService.getNotesByDocument(documentId, noteDto);
+        return new ResponseEntity<>(notes, HttpStatus.OK);
+    }
+
+    @GetMapping("/note/{id}")
+    public ResponseEntity<Note> getNoteById(@PathVariable Long id) {
+        Note note = noteService.getNoteById(id);
+        return new ResponseEntity<>(note, HttpStatus.OK);
+    }
+    @GetMapping("/getNoteByMedicalRecord/{id}")
+    public ResponseEntity<Note> getNoteByMedicalRecord(@PathVariable Long id){
+        Note note = noteService.getNoteByMedicalRecord(id);
+        return new ResponseEntity<>(note , HttpStatus.OK);
+    }
+
+    @PutMapping("/noteDocument/{id}")
+    public ResponseEntity<Note> updateNote(
+            @PathVariable Long id,
+            @RequestBody NoteDto noteDto) {
+
+        Note updatedNote = noteService.updateNote(id, noteDto);
+        return new ResponseEntity<>(updatedNote, HttpStatus.OK);
+    }
+    @DeleteMapping("/deleteNoteFromDocument/{documentId}")
+    public ResponseEntity<Void> deleteNote(@PathVariable Long documentId) {
+        noteService.deleteNoteFromDocument(documentId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+    @DeleteMapping("/{appointmentId}")
+    public ResponseEntity<Void> deleteAppointment(@PathVariable Long appointmentId) {
+        appointmentService.deleteAppointment(appointmentId);
+        return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/patients/{patientId}")
+    public ResponseEntity<List<Appointment>> getAppointmentsByUser(@PathVariable Long patientId) {
+        return ResponseEntity.ok(appointmentService.getAppointmentsByUser(patientId));
+    }
+
+    @GetMapping("/appointment/{appointmentId}")
+    public ResponseEntity<Appointment> getAppointmentById(@PathVariable Long appointmentId) {
+        return ResponseEntity.ok(appointmentService.getAppointmentById(appointmentId));
+    }
+    @PutMapping("/{appointmentId}/medical-records/{medicalRecordId}")
+    public ResponseEntity<Appointment> updateAppointment(
+            @PathVariable Long appointmentId,
+            @PathVariable Long medicalRecordId,
+            @RequestBody AppointmentDto appointmentDto) {
+        return ResponseEntity.ok(
+                appointmentService.updateAppointment(appointmentId, medicalRecordId, appointmentDto)
+        );
+    }
+
+
+    @PostMapping("/medical-records/{medicalRecordId}")
+    public ResponseEntity<Appointment> createAppointment(
+            @PathVariable Long medicalRecordId,
+            @RequestBody AppointmentDto appointmentDto) {
+        return new ResponseEntity<>(
+                appointmentService.createAppointment(medicalRecordId, appointmentDto),
+                HttpStatus.CREATED
+        );
+    }
+
+
+
+
+
+
+
+
+
+
+
 }

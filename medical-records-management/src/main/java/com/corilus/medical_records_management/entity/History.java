@@ -16,7 +16,7 @@ public class History {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    private HistoryType type;
+    private HistoryType historyType;
 
     private Timestamp date;
 
