@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.corilus.medical_records_management.service.HistoryService;
@@ -206,12 +205,14 @@ public class MedicalRecordController {
         noteService.deleteNoteFromDocument(documentId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-    @DeleteMapping("/{appointmentId}")
+
+
+    @DeleteMapping("/appointment/{appointmentId}")
     public ResponseEntity<Void> deleteAppointment(@PathVariable Long appointmentId) {
         appointmentService.deleteAppointment(appointmentId);
         return ResponseEntity.noContent().build();
     }
-    @GetMapping("/patients/{patientId}")
+    @GetMapping("/appointmentBypatient/{patientId}")
     public ResponseEntity<List<Appointment>> getAppointmentsByUser(@PathVariable Long patientId) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByUser(patientId));
     }
@@ -220,18 +221,17 @@ public class MedicalRecordController {
     public ResponseEntity<Appointment> getAppointmentById(@PathVariable Long appointmentId) {
         return ResponseEntity.ok(appointmentService.getAppointmentById(appointmentId));
     }
-    @PutMapping("/{appointmentId}/medical-records/{medicalRecordId}")
+    @PutMapping("/appointment/{appointmentId}")
     public ResponseEntity<Appointment> updateAppointment(
             @PathVariable Long appointmentId,
-            @PathVariable Long medicalRecordId,
             @RequestBody AppointmentDto appointmentDto) {
         return ResponseEntity.ok(
-                appointmentService.updateAppointment(appointmentId, medicalRecordId, appointmentDto)
+                appointmentService.updateAppointment( appointmentId, appointmentDto)
         );
     }
 
 
-    @PostMapping("/medical-records/{medicalRecordId}")
+    @PostMapping("/addAppointment/{medicalRecordId}")
     public ResponseEntity<Appointment> createAppointment(
             @PathVariable Long medicalRecordId,
             @RequestBody AppointmentDto appointmentDto) {

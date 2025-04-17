@@ -6,11 +6,14 @@ import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.enums.HistoryType;
 import com.corilus.medical_records_management.repository.AppointmentRepository;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
-import com.corilus.medical_records_management.service.HistoryService;
+import com.corilus.medical_records_management.enums.Status;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.corilus.medical_records_management.enums.Type;
+
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +31,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = new Appointment();
         appointment.setDate(dto.getDate());
         appointment.setTitle(dto.getTitle());
-        appointment.setStatus(dto.getStatus());
-        appointment.setType(dto.getType());
+        appointment.setStatus(Optional.ofNullable(dto.getStatus()).orElse(Status.SCHEDULED));
+        appointment.setType(dto.getType() );
         appointment.setMedicalRecord(record);
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
@@ -40,18 +43,19 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public Appointment updateAppointment(Long appointmentId, Long medicalRecordId, AppointmentDto dto) {
+    public Appointment updateAppointment(Long appointmentId, AppointmentDto dto) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
-        MedicalRecord record = medicalRecordRepository.findById(medicalRecordId)
-                .orElseThrow(() -> new RuntimeException("Medical record not found"));
+        MedicalRecord record = appointment.getMedicalRecord();
+        if (record == null) {
+            throw new RuntimeException("Appointment has no associated medical record");
+        }
 
         appointment.setDate(dto.getDate());
         appointment.setTitle(dto.getTitle());
-        appointment.setStatus(dto.getStatus());
-        appointment.setType(dto.getType());
-        appointment.setMedicalRecord(record);
+        appointment.setStatus(dto.getStatus() != null ? dto.getStatus() : Status.SCHEDULED);
+        appointment.setType(dto.getType() != null ? dto.getType() : Type.MEDICAL_APPOINTMENT);
 
         Appointment updatedAppointment = appointmentRepository.save(appointment);
 

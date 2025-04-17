@@ -13,8 +13,7 @@ public interface AppointmentService {
 
     Appointment createAppointment(Long medicalRecordId, AppointmentDto dto);
 
-    Appointment updateAppointment(Long appointmentId, Long medicalRecordId, AppointmentDto dto);
-
+    Appointment updateAppointment(Long appointmentId, AppointmentDto dto);
 
     Appointment getAppointmentById(Long id);
 }

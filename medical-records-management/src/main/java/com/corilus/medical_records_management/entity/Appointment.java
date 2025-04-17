@@ -2,6 +2,7 @@ package com.corilus.medical_records_management.entity;
 
 import com.corilus.medical_records_management.enums.Status;
 import com.corilus.medical_records_management.enums.Type;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,5 +27,6 @@ public class Appointment {
     private Type type;
 
     @ManyToOne
+    @JsonIgnore
     private MedicalRecord medicalRecord;
 }
