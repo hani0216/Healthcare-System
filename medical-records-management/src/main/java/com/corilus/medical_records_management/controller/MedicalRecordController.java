@@ -39,8 +39,6 @@ public class MedicalRecordController {
     @Autowired
     private HistoryService historyService;
     @Autowired
-    private MedicalRecordRepository medicalRecordRepository;
-    @Autowired
     private final NoteService noteService;
     @Autowired
     private final AppointmentService appointmentService;
