@@ -1,17 +1,22 @@
 package com.corilus.billing_management.service;
 
+import com.corilus.billing_management.dto.DoctorDto;
 import com.corilus.billing_management.dto.InvoiceDTO;
 import com.corilus.billing_management.entity.Invoice;
 import com.corilus.billing_management.enums.Status;
 import com.corilus.billing_management.exception.ResourceNotFoundException;
 import com.corilus.billing_management.repository.InvoiceRepository;
+import com.corilus.billing_management.client.DoctorClient;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +24,27 @@ import java.util.stream.Collectors;
 public class InvoiceServiceImpl implements InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
+    private final DoctorClient doctorClient;
 
     @Override
     public InvoiceDTO createInvoice(InvoiceDTO invoiceDTO) {
-        Invoice invoice = mapToEntity(invoiceDTO);
-        invoiceDTO.setInvoiceDate(new java.sql.Timestamp(System.currentTimeMillis()));
-        Invoice savedInvoice = invoiceRepository.save(invoice);
-        return mapToDTO(savedInvoice);
+        try {
+            validateDoctor(invoiceDTO.getGeneratedBy());
+
+            Invoice invoice = new Invoice();
+            invoice.setAmount(invoiceDTO.getAmount());
+            invoice.setDescription(invoiceDTO.getDescription());
+            invoice.setGeneratedBy(invoiceDTO.getGeneratedBy());
+            invoice.setMedicalRecordId(invoiceDTO.getMedicalRecordId());
+            invoice.setInvoiceDate(new Timestamp(System.currentTimeMillis()));
+            invoice.setStatus(Status.PENDING);
+
+            Invoice savedInvoice = invoiceRepository.save(invoice);
+
+            return mapToDTO(savedInvoice);
+        } catch (Exception e) {
+            throw new RuntimeException("Invoice creation failed: Author not found with this Id " );
+        }
     }
 
     @Override
@@ -52,6 +71,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         invoice.setInvoiceDate(invoiceDTO.getInvoiceDate());
         invoice.setAmount(invoiceDTO.getAmount());
+
         invoice.setDescription(invoiceDTO.getDescription());
         invoice.setStatus(invoiceDTO.getStatus());
         invoice.setGeneratedBy(invoiceDTO.getGeneratedBy());
@@ -118,5 +138,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoiceDTO.setGeneratedBy(invoice.getGeneratedBy());
         invoiceDTO.setMedicalRecordId(invoice.getMedicalRecordId());
         return invoiceDTO;
+    }
+    private void validateDoctor(Long doctorId) {
+        DoctorDto doctor = doctorClient.getDoctorById(doctorId);
+        if (doctor == null) {
+            throw new RuntimeException("Doctor not found with id: " + doctorId);
+        }
     }
 }
