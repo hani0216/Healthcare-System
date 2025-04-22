@@ -1,14 +1,18 @@
 package com.corilus.billing_management.service;
 
+import com.corilus.billing_management.client.DoctorClient;
+import com.corilus.billing_management.client.HistoryClient;
 import com.corilus.billing_management.dto.DoctorDto;
 import com.corilus.billing_management.dto.InvoiceDTO;
 import com.corilus.billing_management.entity.Invoice;
+import com.corilus.billing_management.enums.HistoryType;
 import com.corilus.billing_management.enums.Status;
 import com.corilus.billing_management.exception.ResourceNotFoundException;
 import com.corilus.billing_management.repository.InvoiceRepository;
-import com.corilus.billing_management.client.DoctorClient;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +29,19 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final DoctorClient doctorClient;
+    private final HistoryClient historyClient;
+    private static final Logger log = LoggerFactory.getLogger(InvoiceServiceImpl.class);
+
 
     @Override
     public InvoiceDTO createInvoice(InvoiceDTO invoiceDTO) {
         try {
-            validateDoctor(invoiceDTO.getGeneratedBy());
+            try {
+                validateDoctor(invoiceDTO.getGeneratedBy());
+            } catch (Exception e) {
+                log.error("Erreur lors de la validation du docteur: {}", e.getMessage());
+                throw new RuntimeException("Erreur de validation du docteur: " + e.getMessage());
+            }
 
             Invoice invoice = new Invoice();
             invoice.setAmount(invoiceDTO.getAmount());
@@ -41,11 +53,21 @@ public class InvoiceServiceImpl implements InvoiceService {
 
             Invoice savedInvoice = invoiceRepository.save(invoice);
 
+            try {
+
+                historyClient.createHistory(savedInvoice.getMedicalRecordId(), HistoryType.INVOICE_GENERATED);
+                log.info("Historique créé avec succès pour la facture ID: {}", savedInvoice.getId());
+            } catch (Exception e) {
+                log.warn("Impossible de créer l'historique, mais la facture a été créée: {}", e.getMessage());
+            }
+
             return mapToDTO(savedInvoice);
         } catch (Exception e) {
-            throw new RuntimeException("Invoice creation failed: Author not found with this Id " );
+            log.error("Erreur lors de la création de la facture", e);
+            throw new RuntimeException("Erreur lors de la création de la facture: " + e.getMessage());
         }
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -69,15 +91,30 @@ public class InvoiceServiceImpl implements InvoiceService {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + id));
 
+        Status oldStatus = invoice.getStatus();
+        Status newStatus = invoiceDTO.getStatus();
+
         invoice.setInvoiceDate(invoiceDTO.getInvoiceDate());
         invoice.setAmount(invoiceDTO.getAmount());
-
         invoice.setDescription(invoiceDTO.getDescription());
         invoice.setStatus(invoiceDTO.getStatus());
         invoice.setGeneratedBy(invoiceDTO.getGeneratedBy());
         invoice.setMedicalRecordId(invoiceDTO.getMedicalRecordId());
 
         Invoice updatedInvoice = invoiceRepository.save(invoice);
+
+        if (oldStatus != newStatus) {
+            if (newStatus == Status.PAID) {
+                historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_GENERATED);
+            } else if (newStatus == Status.CANCELED) {
+                historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_CANCELLED);
+            } else {
+                historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_UPDATED);
+            }
+        } else {
+            historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_UPDATED);
+        }
+
         return mapToDTO(updatedInvoice);
     }
 
@@ -85,6 +122,9 @@ public class InvoiceServiceImpl implements InvoiceService {
     public void deleteInvoice(Long id) {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + id));
+
+        historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_DELETED);
+
         invoiceRepository.delete(invoice);
     }
 
@@ -115,7 +155,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .collect(Collectors.toList());
     }
 
-
     private Invoice mapToEntity(InvoiceDTO invoiceDTO) {
         Invoice invoice = new Invoice();
         invoice.setId(invoiceDTO.getId());
@@ -139,6 +178,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoiceDTO.setMedicalRecordId(invoice.getMedicalRecordId());
         return invoiceDTO;
     }
+
     private void validateDoctor(Long doctorId) {
         DoctorDto doctor = doctorClient.getDoctorById(doctorId);
         if (doctor == null) {
