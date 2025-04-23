@@ -20,7 +20,6 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -51,15 +50,11 @@ public class InvoiceServiceImpl implements InvoiceService {
             invoice.setInvoiceDate(new Timestamp(System.currentTimeMillis()));
             invoice.setStatus(Status.PENDING);
 
+            Long medicalRecordId = invoice.getMedicalRecordId();
+
+            historyClient.createHistory(medicalRecordId, HistoryType.INVOICE_GENERATED);
+
             Invoice savedInvoice = invoiceRepository.save(invoice);
-
-            try {
-
-                historyClient.createHistory(savedInvoice.getMedicalRecordId(), HistoryType.INVOICE_GENERATED);
-                log.info("Historique créé avec succès pour la facture ID: {}", savedInvoice.getId());
-            } catch (Exception e) {
-                log.warn("Impossible de créer l'historique, mais la facture a été créée: {}", e.getMessage());
-            }
 
             return mapToDTO(savedInvoice);
         } catch (Exception e) {
@@ -86,44 +81,61 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .collect(Collectors.toList());
     }
 
+
     @Override
+    @Transactional
     public InvoiceDTO updateInvoice(Long id, InvoiceDTO invoiceDTO) {
-        Invoice invoice = invoiceRepository.findById(id)
+        Invoice existingInvoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + id));
 
-        Status oldStatus = invoice.getStatus();
-        Status newStatus = invoiceDTO.getStatus();
-
-        invoice.setInvoiceDate(invoiceDTO.getInvoiceDate());
-        invoice.setAmount(invoiceDTO.getAmount());
-        invoice.setDescription(invoiceDTO.getDescription());
-        invoice.setStatus(invoiceDTO.getStatus());
-        invoice.setGeneratedBy(invoiceDTO.getGeneratedBy());
-        invoice.setMedicalRecordId(invoiceDTO.getMedicalRecordId());
-
-        Invoice updatedInvoice = invoiceRepository.save(invoice);
-
-        if (oldStatus != newStatus) {
-            if (newStatus == Status.PAID) {
-                historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_GENERATED);
-            } else if (newStatus == Status.CANCELED) {
-                historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_CANCELLED);
-            } else {
-                historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_UPDATED);
-            }
-        } else {
-            historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_UPDATED);
+        // Mise à jour des champs
+        if (invoiceDTO.getAmount() != null) {
+            existingInvoice.setAmount(invoiceDTO.getAmount());
+        }
+        if (invoiceDTO.getDescription() != null) {
+            existingInvoice.setDescription(invoiceDTO.getDescription());
+        }
+        if (invoiceDTO.getStatus() != null) {
+            existingInvoice.setStatus(invoiceDTO.getStatus());
+        }
+        if (invoiceDTO.getInvoiceDate() != null) {
+            existingInvoice.setInvoiceDate(invoiceDTO.getInvoiceDate());
+        }
+        if (invoiceDTO.getMedicalRecordId() != null) {
+            existingInvoice.setMedicalRecordId(invoiceDTO.getMedicalRecordId());
         }
 
-        return mapToDTO(updatedInvoice);
+        if (invoiceDTO.getGeneratedBy() != null) {
+            existingInvoice.setGeneratedBy(invoiceDTO.getGeneratedBy());
+        }
+
+        Invoice updatedInvoice = invoiceRepository.save(existingInvoice);
+
+        Long medicalRecordId = updatedInvoice.getMedicalRecordId();
+
+        historyClient.createHistory(medicalRecordId, HistoryType.INVOICE_UPDATED);
+        log.info("Historique créé avec succès pour la facture ID: {}", updatedInvoice.getId());
+
+
+        InvoiceDTO updatedInvoiceDTO = new InvoiceDTO();
+        updatedInvoiceDTO.setId(updatedInvoice.getId());
+        updatedInvoiceDTO.setAmount(updatedInvoice.getAmount());
+        updatedInvoiceDTO.setDescription(updatedInvoice.getDescription());
+        updatedInvoiceDTO.setStatus(updatedInvoice.getStatus());
+        updatedInvoiceDTO.setInvoiceDate(updatedInvoice.getInvoiceDate());
+        updatedInvoiceDTO.setMedicalRecordId(updatedInvoice.getMedicalRecordId());
+        updatedInvoiceDTO.setGeneratedBy(updatedInvoice.getGeneratedBy());
+
+        return updatedInvoiceDTO;
     }
+
 
     @Override
     public void deleteInvoice(Long id) {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + id));
-
-        historyClient.createHistory(invoice.getMedicalRecordId(), HistoryType.INVOICE_DELETED);
+        Long medicalRecordId = invoice.getMedicalRecordId();
+        historyClient.createHistory(medicalRecordId, HistoryType.INVOICE_DELETED);
 
         invoiceRepository.delete(invoice);
     }

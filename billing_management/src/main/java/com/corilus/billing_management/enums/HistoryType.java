@@ -22,5 +22,6 @@ public enum HistoryType {
     INVOICE_UPDATED,
     INVOICE_DELETED,
     INVOICE_PAID,
-    INVOICE_CANCELLED
+    INVOICE_CANCELLED,
+    I_UPD
 }

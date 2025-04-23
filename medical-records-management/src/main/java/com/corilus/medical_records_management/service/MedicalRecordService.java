@@ -7,6 +7,8 @@ public interface MedicalRecordService {
 
     Long createMedicalRecord(MedicalRecordDto medicalRecordDto);
 
+    void addHistoryToMedicalRecord(Long medicalRecordId, Long historyId);
+
     void deleteMedicalRecord(Long id);
 
     MedicalRecord getMedicalRecordByPatientId(Long patientId);

@@ -8,6 +8,7 @@ import com.corilus.medical_records_management.entity.Document;
 import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.entity.Note;
 import com.corilus.medical_records_management.enums.HistoryType;
+import com.corilus.medical_records_management.repository.HistoryRepository;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
 import feign.FeignException;
 import jakarta.transaction.Transactional;
@@ -19,6 +20,8 @@ import com.corilus.medical_records_management.entity.History;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     private final DoctorClient doctorClient;
     private final PatientClient patientClient;
     private final DocumentRepository documentRepository;
+    private final HistoryRepository historyRepository;
     private final HistoryService historyService;
 
     @Override
@@ -53,6 +57,38 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     public class PatientNotFoundException extends RuntimeException {
         public PatientNotFoundException(String message) {
             super(message);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void addHistoryToMedicalRecord(Long medicalRecordId, Long historyId) {
+        Logger log = LoggerFactory.getLogger(MedicalRecordService.class);
+
+        try {
+            log.info("Starting addHistoryToMedicalRecord with medicalRecordId: {} and historyId: {}", medicalRecordId, historyId);
+
+            MedicalRecord medicalRecord = medicalRecordRepository.findById(medicalRecordId)
+                    .orElseThrow(() -> new RuntimeException("Medical record not found"));
+            log.info("Found medical record: {}", medicalRecord);
+
+            History history = historyRepository.findById(historyId)
+                    .orElseThrow(() -> new RuntimeException("History not found"));
+            log.info("Found history: {}", history);
+
+            medicalRecord.getLogs().add(history);
+            log.info("History added to medical record logs");
+
+            historyRepository.save(history);
+            log.info("History saved: {}", history);
+
+            medicalRecord.getLogs().add(0, history);
+            medicalRecordRepository.save(medicalRecord);
+            log.info("Medical record saved with updated logs");
+
+        } catch (Exception e) {
+            log.error("Error in addHistoryToMedicalRecord: {}", e.getMessage(), e);
+            throw e;
         }
     }
 

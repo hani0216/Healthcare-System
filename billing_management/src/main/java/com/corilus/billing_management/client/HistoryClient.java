@@ -10,5 +10,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface HistoryClient {
     @PostMapping("/api/history/{medicalRecordId}")
     void createHistory(@PathVariable("medicalRecordId") Long medicalRecordId, 
-                      @RequestParam("type") HistoryType historyType);
+                      @RequestParam("type") HistoryType type);
 }

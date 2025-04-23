@@ -1,11 +1,12 @@
-package com.corilus.billing_management.service.impl;
+package com.corilus.billing_management.service;
 
 import com.corilus.billing_management.dto.ReimbursementDTO;
+import com.corilus.billing_management.client.HistoryClient;
 import com.corilus.billing_management.entity.Reimbursement;
+import com.corilus.billing_management.enums.HistoryType;
 import com.corilus.billing_management.enums.ReimbursementStatus;
 import com.corilus.billing_management.exception.ResourceNotFoundException;
 import com.corilus.billing_management.repository.ReimbursementRepository;
-import com.corilus.billing_management.service.ReimbursementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,11 +20,18 @@ import java.util.stream.Collectors;
 public class ReimbursementServiceImpl implements ReimbursementService {
 
     private final ReimbursementRepository reimbursementRepository;
-
+    private final HistoryClient historyClient;
     @Override
     public ReimbursementDTO createReimbursement(ReimbursementDTO reimbursementDTO) {
         Reimbursement reimbursement = mapToEntity(reimbursementDTO);
+
+
+        Long medicalRecordId = reimbursement.getMedicalRecordId();
+
+        historyClient.createHistory(medicalRecordId, HistoryType.INVOICE_GENERATED);
         Reimbursement savedReimbursement = reimbursementRepository.save(reimbursement);
+
+
         return mapToDTO(savedReimbursement);
     }
 
@@ -92,7 +100,6 @@ public class ReimbursementServiceImpl implements ReimbursementService {
                 .collect(Collectors.toList());
     }
 
-    // Méthodes utilitaires pour mapper entre entité et DTO
 
     private Reimbursement mapToEntity(ReimbursementDTO reimbursementDTO) {
         Reimbursement reimbursement = new Reimbursement();

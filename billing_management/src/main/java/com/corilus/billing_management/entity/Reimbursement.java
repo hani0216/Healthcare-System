@@ -22,4 +22,6 @@ public class Reimbursement {
     private Long invoiceId;
 
     private Long insuredId;
+
+    private Long medicalRecordId;
 }

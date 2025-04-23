@@ -28,4 +28,10 @@ public class MedicalRecord {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents;
+
+    @Override
+    public String toString() {
+        return "MedicalRecord{id=" + id + ", patientId=" + patientId + "}";
+    }
+
 }

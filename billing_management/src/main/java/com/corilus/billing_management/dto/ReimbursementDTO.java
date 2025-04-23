@@ -17,4 +17,5 @@ public class ReimbursementDTO {
     private Double amount;
     private Long invoiceId;
     private Long insuredId;
+    private Long medicalRecordId;
 }

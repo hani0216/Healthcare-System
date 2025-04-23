@@ -2,10 +2,7 @@ package com.corilus.medical_records_management.controller;
 
 import com.corilus.medical_records_management.client.DoctorClient;
 import com.corilus.medical_records_management.dto.*;
-import com.corilus.medical_records_management.entity.Appointment;
-import com.corilus.medical_records_management.entity.Document;
-import com.corilus.medical_records_management.entity.MedicalRecord;
-import com.corilus.medical_records_management.entity.Note;
+import com.corilus.medical_records_management.entity.*;
 import com.corilus.medical_records_management.service.DocumentService;
 import com.corilus.medical_records_management.service.MedicalRecordService;
 import com.corilus.medical_records_management.service.AppointmentService;
@@ -16,9 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.corilus.medical_records_management.service.HistoryService;
-import com.corilus.medical_records_management.repository.MedicalRecordRepository;
 import com.corilus.medical_records_management.enums.HistoryType;
 import com.corilus.medical_records_management.service.NoteService;
+
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -44,17 +41,39 @@ public class MedicalRecordController {
     private final AppointmentService appointmentService;
 
 
+
+
     @PostMapping
     public ResponseEntity<Long> createMedicalRecord(@RequestBody @Valid MedicalRecordDto medicalRecordDto) {
         Long idMedicalRecord = medicalRecordService.createMedicalRecord(medicalRecordDto);
         return ResponseEntity.ok(idMedicalRecord);
     }
 
+
+    @PutMapping("addLog/{medicalRecordId}/history/{historyId}")
+    public ResponseEntity<Long> updateMedicalRecord(
+            @PathVariable Long medicalRecordId,
+            @PathVariable Long historyId ) {
+        try {
+            medicalRecordService.addHistoryToMedicalRecord(medicalRecordId, historyId);
+            return ResponseEntity.ok(medicalRecordId);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+
+
     @GetMapping("/patient-name/{name}")
     public ResponseEntity<MedicalRecord> getMedicalRecordByPatientName(@PathVariable String name) {
         MedicalRecord record = medicalRecordService.getMedicalRecordByPatientName(name);
         return ResponseEntity.ok(record);
     }
+
+
+
 
     @GetMapping("/find-patient-id/{name}")
     public ResponseEntity<Long> getPatientIdByName(@PathVariable String name) {

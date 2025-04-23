@@ -51,7 +51,7 @@ public class InvoiceController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
 
-        invoiceDTO.setGeneratedBy(existingInvoice.getGeneratedBy());
+        invoiceDTO.setGeneratedBy(authorId);
 
         if (invoiceDTO.getMedicalRecordId() == null) {
             invoiceDTO.setMedicalRecordId(existingInvoice.getMedicalRecordId());
