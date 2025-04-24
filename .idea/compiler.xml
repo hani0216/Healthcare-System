@@ -9,6 +9,9 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.32/lombok-1.18.32.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.5.2.Final/mapstruct-processor-1.5.2.Final.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.5.2.Final/mapstruct-1.5.2.Final.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-configuration-processor/${spring.boot.version}/spring-boot-configuration-processor-${spring.boot.version}.jar" />
         </processorPath>
         <module name="user-profile-management" />
       </profile>
@@ -28,6 +31,15 @@
         </processorPath>
         <module name="billing_management" />
       </profile>
+      <profile name="Annotation profile for notification" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
+        </processorPath>
+        <module name="notfification" />
+      </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
@@ -35,6 +47,7 @@
       <module name="billing_management" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="medical-records-management" options="-parameters" />
+      <module name="notfification" options="-parameters" />
       <module name="user-profile-management" options="-parameters" />
     </option>
   </component>
