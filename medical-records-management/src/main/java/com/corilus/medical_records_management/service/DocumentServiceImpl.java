@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.corilus.medical_records_management.service.MedicalRecordService;
 import java.util.Date;
 import java.util.List;
-import com.corilus.medical_records_management.entity.MedicalRecord;
+import com.corilus.medical_records_management.kafka.MedicalRecordProducer;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +22,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final MedicalRecordRepository medicalRecordRepository;
     private final HistoryService historyService;
     private final MedicalRecordService medicalRecordService;
+    private final MedicalRecordProducer medicalRecordProducer;
 
 
     @Override
@@ -43,6 +44,16 @@ public class DocumentServiceImpl implements DocumentService {
 
         historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_UPLOADED);
 
+        medicalRecordProducer.sendDocumentCreatedMessage(
+
+                saved.getMedicalRecord(),
+                saved.getName(),
+                saved.getCreationDate().toString()
+
+        );
+
+
+
         return saved;
     }
 
@@ -51,11 +62,11 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
+
         MedicalRecord medicalRecord = medicalRecordRepository.findByDocumentsContaining(document)
                 .orElseThrow(() -> new RuntimeException("Medical record not found"));
-
-      /*  historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED);*/
         medicalRecord.getLogs().add(0, historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED));
+
 
 
         medicalRecord.getDocuments().remove(document);
@@ -78,6 +89,11 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new RuntimeException("Medical record not found"));
 
         historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_UPDATED);
+        medicalRecordProducer.sendDocumentUpdatedMessage(
+                updated.getMedicalRecord(),
+                updated.getName(),
+                updated.getCreationDate().toString()
+        );
 
         return updated;
     }

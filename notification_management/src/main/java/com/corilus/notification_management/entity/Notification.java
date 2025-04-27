@@ -1,7 +1,5 @@
 package com.corilus.notification_management.entity;
 
-
-
 import jakarta.persistence.*;
 import com.corilus.notification_management.enums.Frequency;
 import com.corilus.notification_management.enums.NotificationType;
@@ -27,6 +25,7 @@ public class Notification {
 
     private Boolean seen;
 
+    @Column(nullable = false)
     private Timestamp timeToSend;
 
     private Long receiverId;
@@ -34,5 +33,17 @@ public class Notification {
     @Enumerated(EnumType.STRING)
     private Frequency frequency;
 
+    public Notification() {
+        this.seen = false;
+    }
 
+    public Notification(String title, String message, NotificationType notificationType, Long receiverId, Frequency frequency, Timestamp timeToSend) {
+        this.title = title;
+        this.message = message;
+        this.notificationType = notificationType;
+        this.seen = false;
+        this.receiverId = receiverId;
+        this.frequency = frequency;
+        this.timeToSend = timeToSend;
+    }
 }

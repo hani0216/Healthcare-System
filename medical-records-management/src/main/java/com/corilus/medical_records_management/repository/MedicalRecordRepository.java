@@ -17,6 +17,12 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
     Optional<MedicalRecord> findByDocumentsContaining(Document document);
 
 
+
+    Optional<MedicalRecord> findById(Long medicalRecordId);
+
+
+
+
     @Query("SELECT mr FROM MedicalRecord mr JOIN mr.documents doc WHERE doc.id = :documentId")
     MedicalRecord findMedicalRecordByDocumentId(@Param("documentId") Long documentId);
 

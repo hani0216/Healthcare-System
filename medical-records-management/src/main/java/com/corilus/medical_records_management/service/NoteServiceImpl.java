@@ -3,18 +3,17 @@ package com.corilus.medical_records_management.service;
 import com.corilus.medical_records_management.client.DoctorClient;
 import com.corilus.medical_records_management.dto.DoctorDto;
 import com.corilus.medical_records_management.dto.NoteDto;
+import com.corilus.medical_records_management.entity.Document;
 import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.entity.Note;
 import com.corilus.medical_records_management.enums.HistoryType;
+import com.corilus.medical_records_management.kafka.NoteProducer;
+import com.corilus.medical_records_management.repository.DocumentRepository;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
 import com.corilus.medical_records_management.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.corilus.medical_records_management.service.HistoryService;
-import com.corilus.medical_records_management.service.MedicalRecordService;
-import com.corilus.medical_records_management.entity.Document;
-import com.corilus.medical_records_management.repository.DocumentRepository;
+import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 
@@ -23,16 +22,14 @@ import java.sql.Timestamp;
 public class NoteServiceImpl implements NoteService {
 
     private final NoteRepository noteRepository;
+    private final HistoryService historyService;
+    private final MedicalRecordService medicalRecordService;
+    private final MedicalRecordRepository medicalRecordRepository;
+    private final DocumentRepository documentRepository;
     @Autowired
     private DoctorClient doctorClient;
     @Autowired
-    private final HistoryService historyService;
-    @Autowired
-    private final MedicalRecordService medicalRecordService;
-    @Autowired
-    private final MedicalRecordRepository medicalRecordRepository;
-    @Autowired
-    private final DocumentRepository documentRepository ;
+    private NoteProducer noteProducer;
 
     @Override
     public Note createNoteForMedicalRecord(Long recordId, Long doctorId, NoteDto noteDto) {
@@ -44,7 +41,11 @@ public class NoteServiceImpl implements NoteService {
         note.setDate(new Timestamp(System.currentTimeMillis()));
         note.setAuthorId(doctorId);
 
-        return noteRepository.save(note);
+        Note savedNote = noteRepository.save(note);
+
+        noteProducer.sendNoteCreatedMessage(savedNote.getId(), savedNote.getTitle(), savedNote.getDate().toString());
+
+        return savedNote;
     }
 
     @Override
@@ -91,7 +92,11 @@ public class NoteServiceImpl implements NoteService {
             }
         }
 
-        return noteRepository.save(note);
+        Note savedNote = noteRepository.save(note);
+
+        noteProducer.sendNoteCreatedMessage(savedNote.getId(), savedNote.getTitle(), savedNote.getDate().toString());
+
+        return savedNote;
     }
 
     @Override
@@ -108,7 +113,6 @@ public class NoteServiceImpl implements NoteService {
         return note;
     }
 
-
     @Override
     public Note updateNote(Long id, NoteDto noteDto) {
         Note note = noteRepository.findById(id)
@@ -119,12 +123,12 @@ public class NoteServiceImpl implements NoteService {
         note.setDate(new Timestamp(System.currentTimeMillis()));
         Note updatedNote = noteRepository.save(note);
 
-        MedicalRecord medicalRecord = medicalRecordRepository.findByNoteId(id)
-                .orElse(null);
-
+        MedicalRecord medicalRecord = medicalRecordRepository.findByNoteId(id).orElse(null);
         if (medicalRecord != null) {
             historyService.createHistory(medicalRecord.getId(), HistoryType.NOTE_UPDATED);
         }
+
+        noteProducer.sendNoteUpdatedMessage(updatedNote.getId(), updatedNote.getTitle(), updatedNote.getDate().toString());
 
         return updatedNote;
     }
@@ -143,6 +147,8 @@ public class NoteServiceImpl implements NoteService {
             if (medicalRecord != null) {
                 historyService.createHistory(medicalRecord.getId(), HistoryType.NOTE_DELETED);
             }
+
+            noteProducer.sendNoteDeletedMessage(noteToDelete.getId(), noteToDelete.getTitle(), new Timestamp(System.currentTimeMillis()).toString());
 
             noteRepository.delete(noteToDelete);
         } else {

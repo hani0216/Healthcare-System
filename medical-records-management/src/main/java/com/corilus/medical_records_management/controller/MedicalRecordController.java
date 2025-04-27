@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import com.corilus.medical_records_management.service.HistoryService;
 import com.corilus.medical_records_management.enums.HistoryType;
 import com.corilus.medical_records_management.service.NoteService;
+import com.corilus.medical_records_management.kafka.MedicalRecordProducer;
 
 
 import java.sql.Timestamp;
@@ -39,6 +40,8 @@ public class MedicalRecordController {
     private final NoteService noteService;
     @Autowired
     private final AppointmentService appointmentService;
+    @Autowired
+    private final MedicalRecordProducer medicalRecordProducer;
 
 
 
@@ -131,10 +134,18 @@ public class MedicalRecordController {
     public ResponseEntity<Void> deleteDocument(@PathVariable Long documentId) {
         try {
             documentService.deleteDocument(documentId);
+            Document document = documentService.getDocumentById(documentId);
+            medicalRecordProducer.sendDocumentDeletedMessage(
+                    document.getMedicalRecord(),
+                    document.getName(),
+                    document.getCreationDate().toString()
+            );
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.OK).build();
         }
+
+
     }
 
     @GetMapping("/{medicalRecordId}/documents")
