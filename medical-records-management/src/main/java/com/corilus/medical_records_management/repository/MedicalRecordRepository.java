@@ -21,6 +21,9 @@ public interface MedicalRecordRepository extends JpaRepository<MedicalRecord, Lo
     Optional<MedicalRecord> findById(Long medicalRecordId);
 
 
+    Optional<MedicalRecord> findByAppointments_Id(Long appointmentId);
+
+
 
 
     @Query("SELECT mr FROM MedicalRecord mr JOIN mr.documents doc WHERE doc.id = :documentId")

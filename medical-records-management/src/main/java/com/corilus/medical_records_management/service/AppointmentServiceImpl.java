@@ -4,14 +4,14 @@ import com.corilus.medical_records_management.dto.AppointmentDto;
 import com.corilus.medical_records_management.entity.Appointment;
 import com.corilus.medical_records_management.entity.MedicalRecord;
 import com.corilus.medical_records_management.enums.HistoryType;
+import com.corilus.medical_records_management.enums.Status;
+import com.corilus.medical_records_management.enums.Type;
+import com.corilus.medical_records_management.kafka.AppointmentProducer;
 import com.corilus.medical_records_management.repository.AppointmentRepository;
 import com.corilus.medical_records_management.repository.MedicalRecordRepository;
-import com.corilus.medical_records_management.enums.Status;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.corilus.medical_records_management.enums.Type;
-
-
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +22,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MedicalRecordRepository medicalRecordRepository;
     private final HistoryService historyService;
+    @Autowired
+    private AppointmentProducer appointmentProducer;
 
     @Override
     public Appointment createAppointment(Long medicalRecordId, AppointmentDto dto) {
@@ -32,12 +34,14 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setDate(dto.getDate());
         appointment.setTitle(dto.getTitle());
         appointment.setStatus(Optional.ofNullable(dto.getStatus()).orElse(Status.SCHEDULED));
-        appointment.setType(dto.getType() );
+        appointment.setType(dto.getType());
         appointment.setMedicalRecord(record);
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
         historyService.createHistory(record.getId(), HistoryType.APPOINTMENT_ADDED);
+
+        appointmentProducer.sendAppointmentCreatedMessage(savedAppointment.getId(), savedAppointment.getTitle(), savedAppointment.getDate().toString());
 
         return savedAppointment;
     }
@@ -61,6 +65,8 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         historyService.createHistory(record.getId(), HistoryType.APPOINTMENT_UPDATED);
 
+        appointmentProducer.sendAppointmentUpdatedMessage(updatedAppointment.getId(), updatedAppointment.getTitle(), updatedAppointment.getDate().toString());
+
         return updatedAppointment;
     }
 
@@ -72,6 +78,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         MedicalRecord record = appointment.getMedicalRecord();
 
         historyService.createHistory(record.getId(), HistoryType.APPOINTMENT_DELETED);
+
+        appointmentProducer.sendAppointmentDeletedMessage(appointment.getId(), appointment.getTitle(), java.time.Instant.now().toString());
 
         appointmentRepository.deleteById(id);
     }
