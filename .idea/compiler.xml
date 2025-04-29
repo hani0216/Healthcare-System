@@ -25,6 +25,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="eureka-server" />
         <module name="medical-records-management" />
+        <module name="spring-boot-security" />
       </profile>
       <profile name="Annotation profile for billing_management" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -53,6 +54,7 @@
       <module name="eureka-server" options="-parameters" />
       <module name="medical-records-management" options="-parameters" />
       <module name="notfification" options="-parameters" />
+      <module name="spring-boot-security" options="-parameters" />
       <module name="user-profile-management" options="-parameters" />
     </option>
   </component>
