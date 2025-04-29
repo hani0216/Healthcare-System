@@ -1,10 +1,10 @@
-package com.corilus.spring_boot_security;
+package com.corilus.Auth_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SpringBootSecurityApplicationTests {
+class AuthServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

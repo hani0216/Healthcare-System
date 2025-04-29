@@ -1,13 +1,13 @@
-package com.corilus.spring_boot_security;
+package com.corilus.Auth_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SpringBootSecurityApplication {
+public class AuthServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SpringBootSecurityApplication.class, args);
+		SpringApplication.run(AuthServiceApplication.class, args);
 	}
 
 }

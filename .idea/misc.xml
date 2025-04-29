@@ -10,6 +10,8 @@
         <option value="$PROJECT_DIR$/eureka-server/pom.xml" />
         <option value="$PROJECT_DIR$/notification_management/pom.xml" />
         <option value="$PROJECT_DIR$/spring-boot-security/pom.xml" />
+        <option value="$PROJECT_DIR$/authentication_service/pom.xml" />
+        <option value="$PROJECT_DIR$/Auth-service/pom.xml" />
       </list>
     </option>
   </component>
