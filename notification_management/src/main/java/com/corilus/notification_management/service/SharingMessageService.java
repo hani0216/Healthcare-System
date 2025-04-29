@@ -15,4 +15,10 @@ public interface SharingMessageService {
     SharingMessage updateMessage(Long id, SharingMessage sharingMessageDetails);
 
     void deleteMessage(Long id);
+
+    SharingMessage getMessageById(Long id);
+
+    List<SharingMessage> getMessagesBySenderId(Long senderId);
+
+    List<SharingMessage> getMessagesByReceiverId(Long receiverId);
 }

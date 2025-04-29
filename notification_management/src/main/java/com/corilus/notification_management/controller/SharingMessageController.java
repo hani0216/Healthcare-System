@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import lombok.Setter;
 
 @RestController
 @RequestMapping("/api/sharing-messages")
@@ -21,10 +22,27 @@ public class SharingMessageController {
         return sharingMessageService.getAllMessages();
     }
 
-    @PostMapping
-    public SharingMessage createSharingMessage(@RequestBody SharingMessageDto sharingMessageDto) {
+    @PostMapping("/{senderId}")
+    public SharingMessage createSharingMessage(@PathVariable Long senderId, @RequestBody SharingMessageDto sharingMessageDto) {
+        sharingMessageDto.setSenderId(senderId);
         return sharingMessageService.createMessage(sharingMessageDto);
     }
+
+    @GetMapping("/{id}")
+    public SharingMessage getSharingMessageById(@PathVariable Long id) {
+        return sharingMessageService.getMessageById(id);
+    }
+
+    @GetMapping("/sender/{senderId}")
+    public List<SharingMessage> getMessagesBySenderId(@PathVariable Long senderId) {
+        return sharingMessageService.getMessagesBySenderId(senderId);
+    }
+
+    @GetMapping("/receiver/{receiverId}")
+    public List<SharingMessage> getMessagesByReceiverId(@PathVariable Long receiverId) {
+        return sharingMessageService.getMessagesByReceiverId(receiverId);
+    }
+
 
 
     @PutMapping("/{id}")

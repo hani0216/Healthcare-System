@@ -1,25 +1,18 @@
 package com.corilus.notification_management.dto;
+import com.corilus.notification_management.enums.ResourceType;
 
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class SharingMessageDto {
 
     private Long receiverId;
     private String description;
+    private ResourceType resourceType;
+    private Long SenderId;
+    private Long resourceId;
 
-    // Getters and Setters
-    public Long getReceiverId() {
-        return receiverId;
-    }
 
-    public void setReceiverId(Long receiverId) {
-        this.receiverId = receiverId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 }

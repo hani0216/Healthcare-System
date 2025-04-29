@@ -23,20 +23,36 @@ public class SharingMessageServiceImpl implements SharingMessageService {
     public SharingMessage createMessage(SharingMessageDto sharingMessageDto) {
         SharingMessage sharingMessage = new SharingMessage();
         sharingMessage.setReceiverId(sharingMessageDto.getReceiverId());
+        sharingMessage.setResourceId(sharingMessageDto.getResourceId());
+        sharingMessage.setResourceType(sharingMessageDto.getResourceType());
+        sharingMessage.setSenderId(sharingMessageDto.getSenderId());
+        sharingMessage.setSendingDate(new java.sql.Timestamp(System.currentTimeMillis()));
         sharingMessage.setDescription(sharingMessageDto.getDescription());
         return sharingMessageRepository.save(sharingMessage);
     }
+
+    @Override
+    public SharingMessage getMessageById(Long id) {
+        return sharingMessageRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+    }
+
+    @Override
+    public List<SharingMessage> getMessagesBySenderId(Long senderId) {
+        return sharingMessageRepository.findBySenderId(senderId);
+    }
+
+    @Override
+    public List<SharingMessage> getMessagesByReceiverId(Long receiverId) {
+        return sharingMessageRepository.findByReceiverId(receiverId);
+    }
+
 
 
     @Override
     public SharingMessage updateMessage(Long id, SharingMessage sharingMessageDetails) {
         SharingMessage sharingMessage = sharingMessageRepository.findById(id).orElseThrow();
-        sharingMessage.setResourceId(sharingMessageDetails.getResourceId());
-        sharingMessage.setSenderId(sharingMessageDetails.getSenderId());
-        sharingMessage.setReceiverId(sharingMessageDetails.getReceiverId());
-        sharingMessage.setSendingDate(sharingMessageDetails.getSendingDate());
         sharingMessage.setSeen(sharingMessageDetails.getSeen());
-        sharingMessage.setDescription(sharingMessageDetails.getDescription());
         return sharingMessageRepository.save(sharingMessage);
     }
 

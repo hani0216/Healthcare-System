@@ -68,6 +68,12 @@ public class DocumentServiceImpl implements DocumentService {
         medicalRecord.getLogs().add(0, historyService.createHistory(medicalRecord.getId(), HistoryType.DOCUMENT_DELETED));
 
 
+        medicalRecordProducer.sendDocumentDeletedMessage(
+                medicalRecord.getId(),
+                document.getName(),
+                new Date().toString()
+        );
+
 
         medicalRecord.getDocuments().remove(document);
         medicalRecordRepository.save(medicalRecord);

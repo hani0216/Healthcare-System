@@ -1,5 +1,6 @@
 package com.corilus.notification_management.entity;
 
+import com.corilus.notification_management.enums.ResourceType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +21,11 @@ public class SharingMessage {
     private Long resourceId;
     private Long senderId;
     private Long receiverId;
+
+    @Column(name = "resource_type")
+    @Enumerated(EnumType.STRING)
+    private ResourceType resourceType;
+
 
     private Timestamp sendingDate;
 
