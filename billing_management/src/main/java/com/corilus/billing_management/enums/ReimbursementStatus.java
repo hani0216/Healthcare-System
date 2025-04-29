@@ -3,5 +3,8 @@ package com.corilus.billing_management.enums;
 public enum ReimbursementStatus {
     Processing,
     Approved,
-    Rejected
+    Rejected,
+    PROCESSING,
+    APPROVED,
+    REJECTED
 }

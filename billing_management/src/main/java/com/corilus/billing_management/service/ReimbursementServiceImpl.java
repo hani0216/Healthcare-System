@@ -27,8 +27,7 @@ public class ReimbursementServiceImpl implements ReimbursementService {
 
 
         Long medicalRecordId = reimbursement.getMedicalRecordId();
-
-        historyClient.createHistory(medicalRecordId, HistoryType.INVOICE_GENERATED);
+        historyClient.createHistory(medicalRecordId, HistoryType.REIMBURSEMENT_GENERATED);
         Reimbursement savedReimbursement = reimbursementRepository.save(reimbursement);
 
 
@@ -59,10 +58,10 @@ public class ReimbursementServiceImpl implements ReimbursementService {
 
         reimbursement.setStatus(reimbursementDTO.getStatus());
         reimbursement.setAmount(reimbursementDTO.getAmount());
-        reimbursement.setInvoiceId(reimbursementDTO.getInvoiceId());
-        reimbursement.setInsuredId(reimbursementDTO.getInsuredId());
-
         Reimbursement updatedReimbursement = reimbursementRepository.save(reimbursement);
+        Long medicalRecordId = reimbursement.getMedicalRecordId();
+        historyClient.createHistory(medicalRecordId, HistoryType.REIMBURSEMENT_UPDATED);
+
         return mapToDTO(updatedReimbursement);
     }
 
@@ -70,6 +69,8 @@ public class ReimbursementServiceImpl implements ReimbursementService {
     public void deleteReimbursement(Long id) {
         Reimbursement reimbursement = reimbursementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reimbursement not found with id: " + id));
+        Long medicalRecordId = reimbursement.getMedicalRecordId();
+        historyClient.createHistory(medicalRecordId, HistoryType.REIMBURSEMENT_DELETED);
         reimbursementRepository.delete(reimbursement);
     }
 
@@ -108,6 +109,7 @@ public class ReimbursementServiceImpl implements ReimbursementService {
         reimbursement.setAmount(reimbursementDTO.getAmount());
         reimbursement.setInvoiceId(reimbursementDTO.getInvoiceId());
         reimbursement.setInsuredId(reimbursementDTO.getInsuredId());
+        reimbursement.setMedicalRecordId(reimbursementDTO.getMedicalRecordId());
         return reimbursement;
     }
 
