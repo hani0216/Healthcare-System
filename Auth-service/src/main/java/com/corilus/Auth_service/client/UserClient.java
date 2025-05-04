@@ -1,27 +1,26 @@
 package com.corilus.Auth_service.client;
 
-
-
-import com.corilus.Auth_service.dto.SignupRequest;
-import com.corilus.Auth_service.dto.UserInfoResponse;
+import com.corilus.Auth_service.dto.*;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "user-management-service")
+
+@FeignClient(name = "user-profile-management" , url = "http://localhost:8081" )
 public interface UserClient {
 
     @GetMapping("/api/users/info")
     UserInfoResponse getUserByEmail(@RequestParam("email") String email);
 
     @PostMapping("/patients")
-    void createPatient(SignupRequest request);
+    ResponseEntity<String> createPatient(PatientDto patientDto);
 
     @PostMapping("/doctors")
-    void createDoctor(SignupRequest request);
+    ResponseEntity<String> createDoctor(DoctorDto doctorDto);
 
     @PostMapping("/insurance-admins")
-    void createInsuranceAdmin(SignupRequest request);
+    ResponseEntity<String> createInsuranceAdmin(InsuranceAdminDto insuranceAdminDto);
 
 }

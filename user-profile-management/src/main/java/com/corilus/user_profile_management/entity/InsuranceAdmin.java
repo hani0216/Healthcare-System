@@ -19,9 +19,9 @@ public class InsuranceAdmin {
     @JoinColumn(name = "user_info_id", nullable = false)
     private UserInfo userInfo;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String insuranceCompany;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Long insuranceLicenseNumber;
 }

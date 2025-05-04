@@ -2,7 +2,10 @@ package com.corilus.Auth_service.controller;
 
 import com.corilus.Auth_service.dto.LoginRequest;
 import com.corilus.Auth_service.dto.LoginResponse;
+import com.corilus.Auth_service.dto.SignupRequest;
+import com.corilus.Auth_service.dto.UserInfoResponse;
 import com.corilus.Auth_service.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,5 +37,10 @@ public class AuthController {
             log.error("Authentication error: {}", e.getMessage());
             return ResponseEntity.status(401).build();
         }
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<UserInfoResponse> signUp(@Valid @RequestBody SignupRequest request) {
+        return ResponseEntity.ok(authService.signUp(request));
     }
 }

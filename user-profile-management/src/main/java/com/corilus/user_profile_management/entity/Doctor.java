@@ -19,10 +19,10 @@ public class Doctor {
     @JoinColumn(name = "user_info_id", nullable = false)
     private UserInfo doctorInfo;
 
-    @Column(nullable = false, unique = true)
+    @Column( unique = true , nullable = true)
     private Long medicalLicenseNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private SPECIALITY speciality;
 }

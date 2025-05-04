@@ -21,14 +21,14 @@ public class Patient {
     @JoinColumn(name = "user_info_id", nullable = false)
     private UserInfo patientInfo;
 
-    @Column(nullable = false)
-    @Temporal(TemporalType.DATE)
+    @Column()
+    @Temporal(TemporalType.DATE )
     private Date birthDate;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true  , nullable = true)
     private Integer cin;
 
-    @Column(nullable = false, unique = true)
+    @Column( unique = true , nullable = true)
     private Integer insuranceNumber;
 
     private String insurance;

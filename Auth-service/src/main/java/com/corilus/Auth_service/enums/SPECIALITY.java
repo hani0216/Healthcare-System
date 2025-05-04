@@ -1,4 +1,4 @@
-package com.corilus.user_profile_management.enums;
+package com.corilus.Auth_service.enums;
 
 import lombok.Getter;
 
@@ -30,7 +30,6 @@ public enum SPECIALITY {
     RHEUMATOLOGY("Rheumatology", "Joint and autoimmune diseases"),
     ENDOCRINOLOGY("Endocrinology", "Hormonal and metabolic disorders"),
     GENERAL("General", "General practice, covering a wide range of health issues");
-
 
     private final String displayName;
     private final String description;

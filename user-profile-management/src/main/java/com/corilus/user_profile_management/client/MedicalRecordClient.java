@@ -6,9 +6,12 @@ import com.corilus.user_profile_management.dto.MedicalRecordDto;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "medical-record-service", url = "http://localhost:8082")
+@FeignClient(
+        name = "medical-record-service",
+        url = "${medical.record.service.url:}",
+        configuration = MedicalRecordClientConfig.class
+)
 public interface MedicalRecordClient {
-
     @PostMapping("/api/medical-records")
     ResponseEntity<Long> createMedicalRecord(@RequestBody MedicalRecordDto medicalRecordDto);
 }
