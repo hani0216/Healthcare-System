@@ -12,6 +12,8 @@
         <option value="$PROJECT_DIR$/spring-boot-security/pom.xml" />
         <option value="$PROJECT_DIR$/authentication_service/pom.xml" />
         <option value="$PROJECT_DIR$/Auth-service/pom.xml" />
+        <option value="$PROJECT_DIR$/config-server/pom.xml" />
+        <option value="$PROJECT_DIR$/api-gateway/pom.xml" />
       </list>
     </option>
   </component>
