@@ -1,104 +1,86 @@
 package com.corilus.api_gateway.Config;
 
-import jakarta.servlet.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
-import org.springframework.security.web.SecurityFilterChain;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class SecurityConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(exchange -> exchange
+                        // Public endpoints
+                        .pathMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .pathMatchers("/api/auth/login").permitAll()
+
+                        //USER_MANAGEMENT
+                        .pathMatchers("/doctors").hasAnyRole("DOCTOR", "ROLE_DOCTOR")
+
+                        // BILLING_MANAGEMENT
+                        .pathMatchers("/api/invoices/**").hasAnyRole("DOCTOR", "ADMIN")
+
+                        // Default fallback
+                        .anyExchange().authenticated()
+                )
+
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(grantedAuthoritiesConverter()))
+                )
+                .build();
+    }
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthorityPrefix("ROLE_");
+    public ReactiveJwtDecoder jwtDecoder() {
+        return NimbusReactiveJwtDecoder.withJwkSetUri(
+                "http://localhost:8080/realms/mrecords/protocol/openid-connect/certs"
+        ).build();
+    }
 
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+    private Converter<Jwt, Mono<AbstractAuthenticationToken>> grantedAuthoritiesConverter() {
+        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        authoritiesConverter.setAuthorityPrefix("ROLE_"); // Le préfixe "ROLE_" est par défaut dans Spring Security
+        authoritiesConverter.setAuthoritiesClaimName("realm_access.roles"); // Assurez-vous que cette clé correspond à la structure de votre JWT
+
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+
+        return jwt -> {
+            // Extraction de la partie realm_access
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
 
+            // Log des claims pour vérifier que tout est correctement extrait
+            System.out.println("JWT claims: " + jwt.getClaims());
+
+            // Log détaillé pour examiner le claim "realm_access.roles"
             if (realmAccess != null && realmAccess.containsKey("roles")) {
-                @SuppressWarnings("unchecked")
                 List<String> roles = (List<String>) realmAccess.get("roles");
+                System.out.println("Roles extracted from JWT: " + roles);
 
-                if (roles == null || roles.isEmpty()) {
-                    logger.debug("Aucun rôle trouvé - Attribution du rôle USER par défaut");
-                    roles = List.of("USER");
+                if (roles != null && !roles.isEmpty()) {
+                    roles.forEach(role -> System.out.println("Role from JWT: " + role));
+                } else {
+                    System.out.println("Roles are null or empty in realm_access");
                 }
-
-                logger.debug("Rôles extraits du JWT: {}", roles);
-
-                return roles.stream()
-                        .map(role -> role.startsWith("ROLE_")
-                                ? new SimpleGrantedAuthority(role)
-                                : new SimpleGrantedAuthority("ROLE_" + role))
-                        .collect(Collectors.toList());
+            } else {
+                System.out.println("No roles found in realm_access");
             }
 
-            logger.warn("Aucun rôle trouvé dans 'realm_access'");
-            return Collections.emptyList();
-        });
-
-        return converter;
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("Configuration de la sécurité pour les endpoints API");
-
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/doctors/**").hasRole("DOCTOR")
-                        .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth -> oauth
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        .and()
-                        .addFilterAfter(new RolesLoggingFilter(), BearerTokenAuthenticationFilter.class));
-
-        return http.build();
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        String jwkUri = "http://localhost:8080/realms/mrecords/protocol/openid-connect/certs";
-        logger.info("Configuration du JwtDecoder avec l'URL JWK Set : {}", jwkUri);
-        return NimbusJwtDecoder.withJwkSetUri(jwkUri).build();
-    }
-
-    private static class RolesLoggingFilter implements Filter {
-        @Override
-        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-                throws IOException, ServletException {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.getAuthorities() != null) {
-                logger.debug("Rôles authentifiés: {}",
-                        auth.getAuthorities().stream()
-                                .map(GrantedAuthority::getAuthority)
-                                .collect(Collectors.toList()));
-            }
-            chain.doFilter(request, response);
-        }
+            return Mono.justOrEmpty(jwtConverter.convert(jwt));
+        };
     }
 }
