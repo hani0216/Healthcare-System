@@ -5,6 +5,13 @@
     <file url="file://$PROJECT_DIR$/api-gateway/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/api-gateway/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/authentication_service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/Auth-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/api-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/billing_management/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/eureka-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/medical-records-management/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/notification_management/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backend/user-profile-management/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/billing_management/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/eureka-server/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/medical-records-management/src/main/java" charset="UTF-8" />

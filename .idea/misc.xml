@@ -14,6 +14,13 @@
         <option value="$PROJECT_DIR$/Auth-service/pom.xml" />
         <option value="$PROJECT_DIR$/config-server/pom.xml" />
         <option value="$PROJECT_DIR$/api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/frontend/api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/frontend/Auth-service/pom.xml" />
+        <option value="$PROJECT_DIR$/frontend/billing_management/pom.xml" />
+        <option value="$PROJECT_DIR$/frontend/eureka-server/pom.xml" />
+        <option value="$PROJECT_DIR$/frontend/medical-records-management/pom.xml" />
+        <option value="$PROJECT_DIR$/frontend/notification_management/pom.xml" />
+        <option value="$PROJECT_DIR$/frontend/user-profile-management/pom.xml" />
       </list>
     </option>
   </component>
