@@ -1,26 +1,22 @@
 import axios from 'axios';
 
-// URL de l'API d'inscription
-const API_URL = 'http://localhost:8088/api/auth/signup';
+// URL de l'API de login
+const API_URL = 'http://localhost:8088/api/auth/login';
 
-export const signUp = async (userData: {
-  firstName: string;
-  lastName: string;
+export const login = async (userData: {
   email: string;
   password: string;
-  role: string;
 }) => {
   try {
     // Envoi des données via une requête POST
     const response = await axios.post(API_URL, {
       email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
       password: userData.password,
-      role: userData.role,
     });
-    return response.data; 
-  } catch (error:any) {
+    
+    // Retourne la réponse du backend contenant les tokens
+    return response.data;
+  } catch (error: any) {
     // Si une erreur se produit, on la capture et la renvoie
     throw error.response ? error.response.data : error.message;
   }

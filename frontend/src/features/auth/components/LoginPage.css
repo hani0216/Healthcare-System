@@ -20,9 +20,11 @@
   box-shadow: 0 4px 6px rgba(233, 230, 230, 0.1);
   width: 65vh;
   max-width: 100%;
-  height: 70vh;
+  height: 80vh;
   margin: 0 auto;
   margin-right: 125vh;
+        
+
 }
 
 /* Titre */
@@ -38,11 +40,13 @@
 .login-form {
   display: flex;
   flex-direction: column;
+
 }
 
 /* Groupes de champs */
 .form-group {
   margin-bottom: 1rem;
+
 }
 
 /* Labels */
@@ -71,7 +75,7 @@
 
 /* Bouton de login */
 .login-button {
-  width: 100%;
+
   background-color: #656ED3;
   color: white;
   padding: 0.75rem;
@@ -103,3 +107,31 @@
 .forgot-link:hover {
   text-decoration: underline;
 }
+/* Message de succès */
+.success-message {
+  color: green;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Message d'erreur */
+.error-message {
+  color: red;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+
+
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Deux colonnes égales */
+  gap: 20px; /* Espace entre les champs */
+  margin-bottom: 10px; 
+  width: 75vh;/* Espace entre les lignes */
+}
+
+

@@ -8,9 +8,6 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
-        <module name="medical-records-management" />
-        <module name="Auth-service" />
-        <module name="eureka-server" />
       </profile>
       <profile name="Annotation profile for notification" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -22,39 +19,15 @@
         </processorPath>
         <module name="notfification" />
       </profile>
-      <profile name="Annotation profile for billing_management" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
-        </processorPath>
-        <module name="billing_management" />
-      </profile>
-      <profile name="Annotation profile for notification_management" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
-        </processorPath>
-        <module name="notification_management" />
-      </profile>
-      <profile name="Annotation profile for user-profile-management" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.5.5.Final/mapstruct-processor-1.5.5.Final.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.5.5.Final/mapstruct-1.5.5.Final.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/springframework/boot/spring-boot-configuration-processor/3.3.10/spring-boot-configuration-processor-3.3.10.jar" />
-        </processorPath>
-        <module name="user-profile-management" />
-      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="Auth-service" target="17" />
       <module name="authentication_service" target="17" />
+      <module name="billing_management" target="17" />
+      <module name="eureka-server" target="21" />
+      <module name="medical-records-management" target="21" />
+      <module name="notification_management" target="17" />
+      <module name="user-profile-management" target="21" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

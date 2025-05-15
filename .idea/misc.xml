@@ -21,6 +21,7 @@
         <option value="$PROJECT_DIR$/frontend/medical-records-management/pom.xml" />
         <option value="$PROJECT_DIR$/frontend/notification_management/pom.xml" />
         <option value="$PROJECT_DIR$/frontend/user-profile-management/pom.xml" />
+        <option value="$PROJECT_DIR$/backend/api-gateway/pom.xml" />
       </list>
     </option>
   </component>

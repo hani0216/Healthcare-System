@@ -1,11 +1,10 @@
-import RightSideBar from "../components/RightSideBar"
-import DoctorImg from "../../../assets/doctor.png"
- import LoginForm from "../components/LoginForm";
+import RightSideBar from '../components/RightSideBar';
+import DoctorImg from '../../../assets/doctor.png';
+import DoctorSecondForm from '../components/doctorSecondForm'
 
-
-export default function LoginPage() {
-    return (
-        <div   style={{
+export default function DoctorSecondSignupPage() {
+  return (
+            <div   style={{
 
             
         }}>
@@ -31,7 +30,7 @@ export default function LoginPage() {
                         
     
                         />
-                <LoginForm />
+                <DoctorSecondForm />
         </div>
-    );
+  );
 }

@@ -1,4 +1,6 @@
-// RightSideBar.jsx (votre fichier existant)
+import group1 from '../../../assets/Group1.png'
+ 
+
 export default function RightSideBar() {
   return (
     <div>
@@ -19,7 +21,9 @@ export default function RightSideBar() {
           zIndex: 1 ,
           marginLeft:'0%'  ,
         paddingLeft: '0%'      }}
-      ></div>
+      >
+        <img src={group1} alt="group1"  style={{marginLeft:'45%' , marginTop:'15%'}}/>
+      </div>
     </div>
   );
 }
