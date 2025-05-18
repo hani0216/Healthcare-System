@@ -1,8 +1,9 @@
-import './LoginPage.css'; // Import du fichier CSS
-import { Link, useNavigate } from 'react-router-dom'; // Importation de Link et useNavigate pour redirection
-import { useState, useEffect } from 'react'; // Importation de useState et useEffect pour gérer les entrées et effets
-import axios from 'axios'; // Import d'axios pour faire des requêtes HTTP
+import './LoginPage.css';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { signUp } from '../authService';
+import { login } from '../loginService';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function SignUpForm() {
@@ -13,110 +14,106 @@ export default function SignUpForm() {
     password: '',
     confirmPassword: '',
     role: '',
-    userId: '', // Ajout de l'ID utilisateur
+    userId: '',
   });
 
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [progress, setProgress] = useState(0); // Ajout de l'état pour la progression
-  
-  const navigate = useNavigate(); // Pour gérer la redirection après la connexion
+  const [progress, setProgress] = useState(0);
 
-  // Fonction pour récupérer l'ID de l'utilisateur via l'email
-  const fetchUserId = async (email: string) => {
-    try {
-      const response = await axios.get(`http://localhost:8088/api/users/userId/${email}`);
-      setFormData((prevData) => ({
-        ...prevData,
-        userId: response.data.id, // Stocke l'ID de l'utilisateur dans l'état
-      }));
-    } catch (error) {
-      setErrorMessage('');
-    }
-  };
+  const navigate = useNavigate();
 
-  // Calcul de la progression basée sur les champs remplis
   const calculateProgress = () => {
-    const totalFields = 6; // Il y a 6 champs dans le formulaire (excluant l'ID utilisateur)
+    const totalFields = 6;
     let filledFields = 0;
-
-    // Compter les champs remplis
-    Object.values(formData).forEach((value) => {
-      if (value !== '' && value !== undefined) {
-        filledFields += 1;
-      }
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key !== 'userId' && value !== '' && value !== undefined) filledFields++;
     });
-
-    // Calculer la progression en pourcentage
     setProgress((filledFields / totalFields) * 100);
   };
 
-  // Mise à jour de la progression lorsque le formulaire change
   useEffect(() => {
     calculateProgress();
-  }, [formData]); // Recalcule la progression chaque fois que formData change
+  }, [formData]);
 
-  // Gestion de la soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Vérification que les mots de passe correspondent
     if (formData.password !== formData.confirmPassword) {
       setErrorMessage('Passwords do not match');
       setSuccessMessage('');
       return;
     }
 
-    // Récupérer l'ID de l'utilisateur uniquement lorsque le formulaire est soumis
-    if (formData.email) {
-      await fetchUserId(formData.email);
-    }
-
     try {
-      // Appel API pour l'inscription avec les données correspondant au DTO SignupRequest
-      const response = await signUp(formData);  // Appel à l'API
+      // 1. Signup sans token
+      const signUpResponse = await signUp({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
+
+      if (!signUpResponse) {
+        throw new Error('Signup failed');
+      }
+
       setSuccessMessage('Account created successfully!');
       setErrorMessage('');
-      console.log('Form Submitted:', response); // Log de la réponse de l'API (optionnel)
 
-      // Simuler que la réponse de l'API contient le rôle et l'ID du patient
-      const { role, id } = response; // Ex: { role: 'doctor', id: '12345' }
+      // 2. Login pour récupérer token après signup
+      const loginResponse = await login({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      // Enregistre l'ID du patient dans localStorage
-      localStorage.setItem('patientId', id);
+      localStorage.setItem('accessToken', loginResponse.accessToken);
+      localStorage.setItem('refreshToken', loginResponse.refreshToken);
 
-      // Redirection basée sur le rôle
-      if (role === 'DOCTOR') {
+      // 3. Récupérer l'ID user en utilisant token
+      const userIdResponse = await axios.get(
+        `http://localhost:8088/api/users/userId/${formData.email}`,
+        {
+          headers: {
+            Authorization: `Bearer ${loginResponse.accessToken}`,
+          },
+        }
+      );
+
+      const userId = userIdResponse.data;
+      localStorage.setItem('userId', userId);
+
+      // 4. Redirection selon rôle
+      if (formData.role === 'doctor') {
         navigate('/doctorSignUp');
-      } else if (role === 'INSURANCE_ADMIN') {
+      } else if (formData.role === 'INSURANCE_ADMIN') {
         navigate('/insuranceSignUp');
-      } else if (role === 'PATIENT') {
+      } else if (formData.role === 'patient') {
         navigate('/PatientSecondForm');
       }
     } catch (error: any) {
-      setErrorMessage('Error during sign up');
+      setErrorMessage(error.response?.data?.message || 'Error during sign up process');
       setSuccessMessage('');
+      console.error('Error during signup process:', error);
     }
   };
 
-  // Mise à jour des données du formulaire
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
   };
 
   return (
     <div className="login-container" style={{ marginTop: '0vh' }}>
       <div className="login-card" style={{ marginTop: '15vh' }}>
-        {/* Formulaire d'inscription */}
         <h2 className="login-title">Create Your Account</h2>
 
         <form onSubmit={handleSubmit} className="login-form" style={{ marginTop: '0vh' }}>
           <div className="form-row">
-            {/* First Name */}
             <div className="form-group">
               <label className="form-label">First Name</label>
               <input
@@ -130,7 +127,6 @@ export default function SignUpForm() {
               />
             </div>
 
-            {/* Last Name */}
             <div className="form-group">
               <label className="form-label">Last Name</label>
               <input
@@ -146,7 +142,6 @@ export default function SignUpForm() {
           </div>
 
           <div className="form-row">
-            {/* Email */}
             <div className="form-group">
               <label className="form-label">Email</label>
               <input
@@ -160,14 +155,13 @@ export default function SignUpForm() {
               />
             </div>
 
-            {/* Role */}
             <div className="form-group">
               <label className="form-label">Define Your Role</label>
               <select
                 name="role"
                 className="form-input"
-                value={formData.role} // Utilise `value` ici
-                onChange={handleChange} // Met à jour `formData.role` avec `handleChange`
+                value={formData.role}
+                onChange={handleChange}
                 required
               >
                 <option value="" disabled>Choose your role</option>
@@ -179,7 +173,6 @@ export default function SignUpForm() {
           </div>
 
           <div className="form-row">
-            {/* Password */}
             <div className="form-group">
               <label className="form-label">Password</label>
               <input
@@ -193,7 +186,6 @@ export default function SignUpForm() {
               />
             </div>
 
-            {/* Confirm Password */}
             <div className="form-group">
               <label className="form-label">Confirm Password</label>
               <input
@@ -208,29 +200,25 @@ export default function SignUpForm() {
             </div>
           </div>
 
-          {/* Progress Bar */}
           <div className="progress">
             <div
               className="progress-bar progress-bar-striped progress-bar-animated"
               role="progressbar"
               aria-valuenow={progress}
-              aria-valuemin="0"
-              aria-valuemax="100"
-              style={{ width: `${progress}%`, backgroundColor: '#20c997', marginBottom: '2px'  }}
-            ></div>
+              aria-valuemin={0}
+              aria-valuemax={100}
+              style={{ width: `${progress}%`, backgroundColor: '#20c997', marginBottom: '2px' }}
+            />
           </div>
 
-          {/* Submit Button */}
-          <button type="submit" className="login-button" style={{ width: '64%', marginLeft: '70%' , marginTop:'5%'}}>
-            Next ... 
+          <button type="submit" className="login-button" style={{ width: '64%', marginLeft: '70%', marginTop: '5%' }}>
+            Next ...
           </button>
         </form>
 
-        {/* Display success or error message */}
         {successMessage && <p className="success-message">{successMessage}</p>}
         {errorMessage && <p className="error-message">{errorMessage}</p>}
 
-        {/* Link to Login Page */}
         <div className="forgot-password">
           <Link to="/login" className="forgot-link">Already have an account? Log In</Link>
         </div>

@@ -63,6 +63,7 @@ public class AuthServiceImpl implements AuthService {
             return LoginResponse.builder()
                     .accessToken((String) response.getBody().get("access_token"))
                     .refreshToken((String) response.getBody().get("refresh_token"))
+                    .email(request.getEmail())
                     .build();
 
         } catch (HttpClientErrorException e) {
@@ -75,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
     public UserInfoResponse signUp(SignupRequest request) {
         validateSignupRequest(request);
         String email = request.getEmail();
-        String name= request.getFirstName() + " " + request.getLastName();
+        String name = request.getFirstName() + " " + request.getLastName();
         String role = request.getRole().toUpperCase();
 
         // 1. Création dans Keycloak
@@ -83,13 +84,17 @@ public class AuthServiceImpl implements AuthService {
         log.info("User created in Keycloak with ID: {}", keycloakUserId);
 
         try {
+            // 2. Assigner le rôle dans Keycloak
+            assignRoleToUser(keycloakUserId, role);
+            log.info("Role {} assigned to user in Keycloak", role);
+
+            // 3. Créer l'utilisateur dans la base de données
             createUserInDatabase(request);
 
             UserInfoResponse response = new UserInfoResponse();
             response.setEmail(request.getEmail());
-            String FullName = request.getFirstName() + " " + request.getLastName();
-            response.setFullName(FullName);
-            response.setRole(request.getRole().toUpperCase());
+            response.setFullName(name);
+            response.setRole(role);
 
             return response;
 
@@ -98,11 +103,65 @@ public class AuthServiceImpl implements AuthService {
             deleteKeycloakUser(keycloakUserId);
             throw new RuntimeException("User creation failed: " + e.getMessage());
         }
+    }
 
+    @Override
+    public void logout(String refreshToken) {
+        String logoutUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/logout";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("refresh_token", refreshToken);
+
+        try {
+            restTemplate.exchange(
+                logoutUrl,
+                HttpMethod.POST,
+                new HttpEntity<>(body, headers),
+                Void.class
+            );
+            log.info("User logged out successfully");
+        } catch (Exception e) {
+            log.error("Logout failed: {}", e.getMessage());
+            throw new RuntimeException("Logout failed");
+        }
+    }
+
+    private void assignRoleToUser(String userId, String role) {
+        String adminToken = getAdminToken();
+        String roleUrl = keycloakUrl + "/admin/realms/" + realm + "/roles/" + role;
+        String userRolesUrl = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
+
+        // 1. Récupérer le rôle
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(adminToken);
+
+        ResponseEntity<Map> roleResponse = restTemplate.exchange(
+            roleUrl,
+            HttpMethod.GET,
+            new HttpEntity<>(headers),
+            Map.class
+        );
+
+        if (roleResponse.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("Failed to get role: " + role);
+        }
+
+        // 2. Assigner le rôle à l'utilisateur
+        List<Map<String, Object>> roles = Collections.singletonList(roleResponse.getBody());
+        restTemplate.exchange(
+            userRolesUrl,
+            HttpMethod.POST,
+            new HttpEntity<>(roles, headers),
+            Void.class
+        );
     }
 
     private void createUserInDatabase(SignupRequest request) {
-        // Crée un DTO simplifié pour le user-management service
         SignupRequest userRequest = new SignupRequest();
         userRequest.setFirstName(request.getFirstName());
         userRequest.setLastName(request.getLastName());
@@ -262,7 +321,6 @@ public class AuthServiceImpl implements AuthService {
 
         return (String) response.getBody().get(0).get("id");
     }
-
 
     @Data
     @AllArgsConstructor

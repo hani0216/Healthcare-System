@@ -8,4 +8,5 @@ import com.corilus.Auth_service.dto.UserInfoResponse;
 public interface AuthService {
     LoginResponse login(LoginRequest request);
     UserInfoResponse signUp(SignupRequest request);
+    void logout(String refreshToken);
 }
