@@ -34,6 +34,7 @@ public class DoctorController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/specialities")
     public ResponseEntity<List<String>> getAllSpecialities() {
         return ResponseEntity.ok(doctorService.getAllSpecialities());
     }
@@ -49,6 +50,7 @@ public class DoctorController {
     }
 
     @GetMapping("/speciality/{speciality}")
+    @CrossOrigin(origins = "http://localhost:3000")
     public ResponseEntity<List<Doctor>> getDoctorsBySpeciality(@PathVariable String speciality) {
         return ResponseEntity.ok(doctorService.getDoctorsBySpeciality(speciality));
     }
