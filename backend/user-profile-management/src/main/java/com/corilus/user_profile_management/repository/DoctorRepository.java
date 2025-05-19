@@ -4,11 +4,12 @@ import com.corilus.user_profile_management.entity.Doctor;
 import com.corilus.user_profile_management.enums.SPECIALITY;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     List<Doctor> findBySpeciality(SPECIALITY speciality);
     List<Doctor> findByDoctorInfo_Name(String name);
+    Optional<Doctor> findByDoctorInfoId(Long doctorInfoId);
 }

@@ -26,9 +26,24 @@ public class UserInfoController {
         UserInfo createdUser = userInfoService.save(userInfo);
         return ResponseEntity.ok(createdUser);
     }
-    @GetMapping ("/userId/{email}")
+
+    @GetMapping("/userId/{email}")
     public ResponseEntity<Long> getUserIdByEmail(@PathVariable String email) {
         Optional<UserInfo> user = userInfoService.findByEmail(email);
         return user.map(userInfo -> ResponseEntity.ok(userInfo.getId())).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/specific-id/{email}")
+    public ResponseEntity<Long> getSpecificUserIdByEmail(@PathVariable String email) {
+        try {
+            Long specificId = userInfoService.getSpecificUserIdByEmail(email);
+            return ResponseEntity.ok(specificId);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
+
+
+
+

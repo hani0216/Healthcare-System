@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface PatientRepository extends JpaRepository<Patient, Long> {
     @Query("SELECT p FROM Patient p WHERE p.patientInfo.name = :name")
     Optional<Patient> findByName(String name);
+
+    Optional<Patient> findByPatientInfoId(Long patientInfoId);
 }

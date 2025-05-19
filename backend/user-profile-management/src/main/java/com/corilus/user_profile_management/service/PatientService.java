@@ -12,4 +12,5 @@ public interface PatientService {
     Patient getPatientById(Long id);
     List<Patient> getAllPatients();
     Long  getPatientIdByName(String name);
+    Patient getPatientByUserInfoId(Long userInfoId);
 }

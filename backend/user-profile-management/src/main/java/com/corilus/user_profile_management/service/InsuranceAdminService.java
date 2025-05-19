@@ -10,4 +10,5 @@ public interface InsuranceAdminService {
     void deleteInsuranceAdmin(Long id);
     InsuranceAdmin getInsuranceById(Long id);
     List<InsuranceAdmin> getAllInsuranceAdmins();
+    InsuranceAdmin getInsuranceAdminByUserInfoId(Long userInfoId);
 }

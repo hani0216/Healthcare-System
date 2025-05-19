@@ -8,16 +8,19 @@ import com.corilus.user_profile_management.enums.SPECIALITY;
 import com.corilus.user_profile_management.exception.InvalidSpecialityException;
 import com.corilus.user_profile_management.repository.DoctorRepository;
 import com.corilus.user_profile_management.repository.UserInfoRepository;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Service
 public class DoctorServiceImpl implements DoctorService {
-
+    private static final Logger logger = LoggerFactory.getLogger(DoctorServiceImpl.class);
     private final DoctorRepository doctorRepository;
     private final UserInfoRepository userInfoRepository;
 
@@ -29,6 +32,7 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     @Transactional
     public Doctor createDoctor(DoctorDto doctorDto) {
+        logger.info("Creating doctor with phone: {}", doctorDto.getPhone());
         UserInfo userInfo = new UserInfo();
         userInfo.setName(doctorDto.getName());
         userInfo.setPhone(doctorDto.getPhone());
@@ -38,6 +42,7 @@ public class DoctorServiceImpl implements DoctorService {
         userInfo.setRole(ROLE.DOCTOR);
 
         userInfo = userInfoRepository.save(userInfo);
+        logger.info("Saved userInfo with phone: {}", userInfo.getPhone());
 
         Doctor doctor = new Doctor();
         doctor.setDoctorInfo(userInfo);
@@ -57,21 +62,41 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     @Transactional
     public Doctor updateDoctor(Long id, DoctorDto doctorDto) {
+        logger.info("Updating doctor with ID: {}, phone from DTO: {}", id, doctorDto.getPhone());
         Optional<Doctor> existingDoctor = doctorRepository.findById(id);
         if (existingDoctor.isPresent()) {
             Doctor doctor = existingDoctor.get();
             UserInfo userInfo = doctor.getDoctorInfo();
+            logger.info("Current phone before update: {}", userInfo.getPhone());
 
-            userInfo.setName(doctorDto.getName());
-            userInfo.setPhone(doctorDto.getPhone());
-            userInfo.setEmail(doctorDto.getEmail());
-            userInfo.setPassword(doctorDto.getPassword());
-            userInfo.setAddress(doctorDto.getAddress());
+            // Update UserInfo fields only if they are not null
+            if (doctorDto.getName() != null) {
+                userInfo.setName(doctorDto.getName());
+            }
+            if (doctorDto.getPhone() != null) {
+                userInfo.setPhone(doctorDto.getPhone());
+                logger.info("Updated phone to: {}", userInfo.getPhone());
+            }
+            if (doctorDto.getEmail() != null) {
+                userInfo.setEmail(doctorDto.getEmail());
+            }
+            if (doctorDto.getPassword() != null) {
+                userInfo.setPassword(doctorDto.getPassword());
+            }
+            if (doctorDto.getAddress() != null) {
+                userInfo.setAddress(doctorDto.getAddress());
+            }
 
-            userInfoRepository.save(userInfo);
+            userInfo = userInfoRepository.save(userInfo);
+            logger.info("Saved userInfo with phone: {}", userInfo.getPhone());
 
-            doctor.setMedicalLicenseNumber(doctorDto.getMedicalLicenseNumber());
-            doctor.setSpeciality(doctorDto.getSpeciality());
+            // Update Doctor fields only if they are not null
+            if (doctorDto.getMedicalLicenseNumber() != null) {
+                doctor.setMedicalLicenseNumber(doctorDto.getMedicalLicenseNumber());
+            }
+            if (doctorDto.getSpeciality() != null) {
+                doctor.setSpeciality(doctorDto.getSpeciality());
+            }
 
             return doctorRepository.save(doctor);
         } else {
@@ -109,5 +134,19 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public List<Doctor> getDoctorByName(String name) {
         return doctorRepository.findByDoctorInfo_Name(name);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getAllSpecialities() {
+        return Arrays.stream(SPECIALITY.values())
+                .map(SPECIALITY::name)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Doctor getDoctorByUserInfoId(Long userInfoId) {
+        return doctorRepository.findByDoctorInfoId(userInfoId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found for user info ID: " + userInfoId));
     }
 }

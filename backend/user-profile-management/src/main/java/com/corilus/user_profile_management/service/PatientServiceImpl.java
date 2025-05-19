@@ -69,23 +69,42 @@ public class PatientServiceImpl implements PatientService {
             Patient patient = existing.get();
             UserInfo userInfo = patient.getPatientInfo();
 
-            userInfo.setName(dto.getName());
-            userInfo.setPhone(dto.getPhone());
-            userInfo.setEmail(dto.getEmail());
-            userInfo.setPassword(dto.getPassword());
-            userInfo.setAddress(dto.getAddress());
+            if (dto.getName() != null) {
+                userInfo.setName(dto.getName());
+            }
+            if (dto.getPhone() != null) {
+                userInfo.setPhone(dto.getPhone());
+            }
+            if (dto.getEmail() != null) {
+                userInfo.setEmail(dto.getEmail());
+            }
+            if (dto.getPassword() != null) {
+                userInfo.setPassword(dto.getPassword());
+            }
+            if (dto.getAddress() != null) {
+                userInfo.setAddress(dto.getAddress());
+            }
             userInfoRepository.save(userInfo);
 
-            patient.setBirthDate(dto.getBirthDate());
-            patient.setCin(dto.getCin());
-            patient.setInsuranceNumber(dto.getInsuranceNumber());
-            patient.setInsurance(dto.getInsuranceName());
+            if (dto.getBirthDate() != null) {
+                patient.setBirthDate(dto.getBirthDate());
+            }
+            if (dto.getCin() != null) {
+                patient.setCin(dto.getCin());
+            }
+            if (dto.getInsuranceNumber() != null) {
+                patient.setInsuranceNumber(dto.getInsuranceNumber());
+            }
+            if (dto.getInsuranceName() != null) {
+                patient.setInsurance(dto.getInsuranceName());
+            }
 
             return patientRepository.save(patient);
         } else {
             throw new RuntimeException("Patient with ID " + id + " not found.");
         }
     }
+
 
     @Override
     public Long getPatientIdByName(String name) {
@@ -112,5 +131,11 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public List<Patient> getAllPatients() {
         return patientRepository.findAll();
+    }
+
+    @Override
+    public Patient getPatientByUserInfoId(Long userInfoId) {
+        return patientRepository.findByPatientInfoId(userInfoId)
+                .orElseThrow(() -> new RuntimeException("Patient not found for user info ID: " + userInfoId));
     }
 }

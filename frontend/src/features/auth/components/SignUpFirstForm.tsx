@@ -59,7 +59,7 @@ export default function SignUpForm() {
         throw new Error('Signup failed');
       }
 
-      setSuccessMessage('Account created successfully!');
+      setSuccessMessage('');
       setErrorMessage('');
 
       // 2. Login pour récupérer token après signup
@@ -73,7 +73,7 @@ export default function SignUpForm() {
 
       // 3. Récupérer l'ID user en utilisant token
       const userIdResponse = await axios.get(
-        `http://localhost:8088/api/users/userId/${formData.email}`,
+        `http://localhost:8088/api/users/specific-id/${formData.email}`,
         {
           headers: {
             Authorization: `Bearer ${loginResponse.accessToken}`,

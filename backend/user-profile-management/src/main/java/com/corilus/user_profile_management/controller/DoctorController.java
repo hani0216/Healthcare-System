@@ -34,6 +34,10 @@ public class DoctorController {
         return ResponseEntity.noContent().build();
     }
 
+    public ResponseEntity<List<String>> getAllSpecialities() {
+        return ResponseEntity.ok(doctorService.getAllSpecialities());
+    }
+
     @GetMapping
     public ResponseEntity<List<Doctor>> getAllDoctors() {
         return ResponseEntity.ok(doctorService.getAllDoctors());

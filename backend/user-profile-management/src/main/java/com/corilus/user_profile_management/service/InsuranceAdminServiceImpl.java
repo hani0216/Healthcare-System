@@ -54,16 +54,30 @@ public class InsuranceAdminServiceImpl implements InsuranceAdminService {
             InsuranceAdmin admin = existing.get();
             UserInfo userInfo = admin.getUserInfo();
 
-            userInfo.setName(dto.getName());
-            userInfo.setPhone(dto.getPhone());
-            userInfo.setEmail(dto.getEmail());
-            userInfo.setPassword(dto.getPassword());
-            userInfo.setAddress(dto.getAddress());
+            if (dto.getName() != null) {
+                userInfo.setName(dto.getName());
+            }
+            if (dto.getPhone() != null) {
+                userInfo.setPhone(dto.getPhone());
+            }
+            if (dto.getEmail() != null) {
+                userInfo.setEmail(dto.getEmail());
+            }
+            if (dto.getPassword() != null) {
+                userInfo.setPassword(dto.getPassword());
+            }
+            if (dto.getAddress() != null) {
+                userInfo.setAddress(dto.getAddress());
+            }
 
             userInfoRepository.save(userInfo);
 
-            admin.setInsuranceCompany(dto.getInsuranceCompany());
-            admin.setInsuranceLicenseNumber(dto.getInsuranceLicenseNumber());
+            if (dto.getInsuranceCompany() != null) {
+                admin.setInsuranceCompany(dto.getInsuranceCompany());
+            }
+            if (dto.getInsuranceLicenseNumber() != null) {
+                admin.setInsuranceLicenseNumber(dto.getInsuranceLicenseNumber());
+            }
 
             return insuranceAdminRepository.save(admin);
         } else {
@@ -89,5 +103,11 @@ public class InsuranceAdminServiceImpl implements InsuranceAdminService {
     public InsuranceAdmin getInsuranceById(Long id) {
         return insuranceAdminRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Insurance admin with ID " + id + " not found."));
+    }
+
+    @Override
+    public InsuranceAdmin getInsuranceAdminByUserInfoId(Long userInfoId) {
+        return insuranceAdminRepository.findByUserInfoId(userInfoId)
+                .orElseThrow(() -> new RuntimeException("Insurance Admin not found for user info ID: " + userInfoId));
     }
 }

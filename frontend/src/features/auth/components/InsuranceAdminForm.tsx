@@ -1,43 +1,22 @@
 import './LoginPage.css';
-import { Link, useNavigate } from 'react-router-dom';  
-import { useState, useEffect } from 'react';  
-import { updateDoctor } from '../doctorService';  
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { updateInsuranceAdmin } from '../insuranceAdminService';  
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export default function PatientSecondForm() {
+export default function InsuranceAdminForm() {
   const [formData, setFormData] = useState({
     phone: '',
-    medicalLicenseNumber: '',
-    speciality: '',
     address: '',
-    userId: '', 
+    insuranceCompany: '',
+    insuranceLicenseNumber: '',
   });
 
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [specialities, setSpecialities] = useState<string[]>([]);
 
   const navigate = useNavigate();
-
-  const fetchSpecialities = async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
-
-      const response = await fetch('http://localhost:8088/doctors/specialities', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      setSpecialities(data);
-    } catch (error) {
-      console.error('Error fetching specialities:', error);
-      setErrorMessage('Error fetching specialities');
-    }
-  };
-
-  useEffect(() => {
-    fetchSpecialities();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,17 +25,17 @@ export default function PatientSecondForm() {
       const token = localStorage.getItem('accessToken');
       const userId = localStorage.getItem('userId');
 
-      if (!token || !userId) {
-        setErrorMessage('Missing token or userId');
+      if (!userId) {
+        setErrorMessage('User ID missing');
         return;
       }
 
-      await updateDoctor(userId, formData, token);
+      await updateInsuranceAdmin(userId, formData, token || '');
 
       setSuccessMessage('');
       setErrorMessage('');
 
-      toast.success('Update successful!', {
+      toast.success('Sign up finished successfully!', {
         position: 'top-center',
         autoClose: 3000,
         hideProgressBar: false,
@@ -70,21 +49,22 @@ export default function PatientSecondForm() {
         navigate('/login');
       }, 3200);
 
-    } catch (error: any) {
-      setErrorMessage('Error during update');
+    } catch (error) {
+      setErrorMessage('Error updating insurance admin information');
       setSuccessMessage('');
-      toast.error('Update failed.', {
+      console.error(error);
+      toast.error('Failed to finish sign up.', {
         position: 'top-center',
         autoClose: 4000,
       });
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
   };
 
@@ -109,41 +89,6 @@ export default function PatientSecondForm() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Medical License Number</label>
-              <input
-                type="text"
-                name="medicalLicenseNumber"
-                className="form-input"
-                placeholder="Enter your medical license number"
-                value={formData.medicalLicenseNumber}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Speciality</label>
-              <select
-                name="speciality"
-                className="form-input"
-                value={formData.speciality}
-                onChange={handleChange}
-                required
-              >
-                <option value="" disabled>
-                  Choose your speciality
-                </option>
-                {specialities.map((spec, idx) => (
-                  <option key={idx} value={spec}>
-                    {spec}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
               <label className="form-label">Address</label>
               <input
                 type="text"
@@ -157,8 +102,36 @@ export default function PatientSecondForm() {
             </div>
           </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Insurance Company</label>
+              <input
+                type="text"
+                name="insuranceCompany"
+                className="form-input"
+                placeholder="Enter insurance company name"
+                value={formData.insuranceCompany}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Insurance License Number</label>
+              <input
+                type="text"
+                name="insuranceLicenseNumber"
+                className="form-input"
+                placeholder="Enter insurance license number"
+                value={formData.insuranceLicenseNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
           <button type="submit" className="login-button" style={{ width: '64%', marginLeft: '70%' }}>
-            Sign Up
+            Finish sign up
           </button>
         </form>
 

@@ -8,4 +8,5 @@ public interface UserInfoService {
     boolean existsByEmail(String email);
     boolean existsByPhone(String phone);
     UserInfo save(UserInfo userInfo);
+    Long getSpecificUserIdByEmail(String email);
 }

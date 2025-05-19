@@ -3,6 +3,7 @@ package com.corilus.apigateway.config;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -63,11 +64,14 @@ public class SecurityConfig {
                 .pathMatchers("/actuator/**").permitAll()
                 .pathMatchers("/api/users/userId/**").permitAll()
                 .pathMatchers("/doctors/specialities").permitAll()
-                    .pathMatchers("/doctors/id}").hasRole("DOCTOR")// Permettre l'accès aux spécialités sans authentification
-
+                .pathMatchers("/doctors/{id}").hasRole("DOCTOR")// Permettre l'accès aux spécialités sans authentification
                 // Routes protégées par rôle
                 .pathMatchers("/doctors/**").hasRole("DOCTOR")
                 .pathMatchers("/patients/**").hasAnyRole("ADMIN", "PATIENT")
+                    .pathMatchers(HttpMethod.GET, "/insurance-admins").hasAnyRole("INSURANCE_ADMIN", "PATIENT")
+                    .pathMatchers("/insurance-admins/**").hasRole("INSURANCE_ADMIN")
+
+
 
                 // Toutes les autres routes nécessitent une authentification
                 .anyExchange().authenticated()
