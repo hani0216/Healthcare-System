@@ -28,7 +28,7 @@ export default function LoginForm() {
       localStorage.setItem('refreshToken', response.data.refreshToken);
 
       // Rediriger l'utilisateur vers la page d'accueil ou une autre page
-      navigate('/home'); // Remplace '/home' par la page où tu veux rediriger l'utilisateur
+      navigate('/doctorHome'); // Remplace '/home' par la page où tu veux rediriger l'utilisateur
     } catch (err) {
       // Gérer l'erreur (exemple : si les identifiants sont incorrects)
       setError('Invalid email or password');

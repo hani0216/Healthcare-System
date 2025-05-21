@@ -4,6 +4,9 @@ import SignUpPage from '../features/auth/pages/SignUpPage';
 import DoctorSecondSignupPage from '../features/auth/pages/DoctorSecondSignupPage'
 import PatientSecondSignupPage from '../features/auth/pages/PatientSecondSignupPage'
 import InsuranceSignUp from '../features/auth/pages/InsuranceSecondSignupPage'
+import InsuranceHome from '../features/dashboard/pages/InsuranceHome'
+import DoctorHome from '../features/dashboard/pages/DoctorHome';
+import PatientHome from '../features/dashboard/pages/PatientHome';
 
 
 
@@ -18,6 +21,9 @@ export default function AppRouter() {
         <Route path='/doctorSignUp' element={<DoctorSecondSignupPage />} />
         <Route path='/patientSecondForm' element={<PatientSecondSignupPage />} />
         <Route path='/insuranceSignUp' element={<InsuranceSignUp />} />
+        <Route path='/insuranceHome' element={<InsuranceHome />}></Route>
+        <Route path='/doctorHome' element={<DoctorHome />}></Route>
+        <Route path='/patientHome' element={<PatientHome />}></Route>
 
       </Routes>
     </Router>
