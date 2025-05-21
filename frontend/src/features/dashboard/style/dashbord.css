@@ -1,4 +1,5 @@
 /* Pour forcer le texte du calendrier en noir */
+
 .react-calendar,
 .react-calendar *,
 .react-calendar button,
@@ -55,7 +56,7 @@
   text-decoration: none;
   width: 100%;
   margin-top: 2px;
-font-family: Arial, sans-serif;
+font-family: Arial, sans-serif
 
   
 }
@@ -108,13 +109,13 @@ font-family: Arial, sans-serif;
 .react-calendar__tile--rangeStart,
 .react-calendar__tile--rangeEnd,
 .react-calendar__tile--rangeBothEnds {
-  background: #ff374b !important;
+  background: #00c0f2 !important;
   color: #fff !important;
-  border-radius: var(--accent-br) !important;
+  border-radius: 20px !important;
 }
 
 .react-calendar__tile--range {
-  background: rgb(101, 110, 211) !important;
+  background: 'var(--primary-color)' !important;
   color: #fff !important;
   border-radius: var(--accent-br) !important;
 }

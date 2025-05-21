@@ -62,7 +62,7 @@ public class SecurityConfig {
                 // Routes publiques
                 .pathMatchers("/api/auth/**").permitAll()
                 .pathMatchers("/actuator/**").permitAll()
-                .pathMatchers("/api/users/userId/**").permitAll()
+                .pathMatchers("/api/users/**").permitAll()
                 .pathMatchers("/doctors/specialities").permitAll()
                 .pathMatchers("/doctors/{id}").hasRole("DOCTOR")// Permettre l'accès aux spécialités sans authentification
                 // Routes protégées par rôle

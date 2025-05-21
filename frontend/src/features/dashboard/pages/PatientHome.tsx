@@ -1,10 +1,22 @@
-
-
-
+import { useState, useRef, useEffect } from "react";
+import SideBar from "../components/sideBar";
+import Agenda from "../components/Agenda";
+import DashboardActionsBar from "../components/DashboardActionsBar";
+import Dashboard from "../components/Dashboard";
+ 
 export default function PatientHome() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <h1>Patient Home Page</h1>
+    <div style={{ height: "100vh", display: "flex" }}>
+      <SideBar />
+      <div style={{ flex: 1, background: "#f5f6fa", position: "relative" }}>
+        <DashboardActionsBar />
+        <Dashboard />
+        <div style={{ padding: "40px" }}>
+        </div>
+        
+
+        
+      </div>
     </div>
   );
 }

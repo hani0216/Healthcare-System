@@ -1,11 +1,10 @@
 /* ===== RESET & BASE STYLES ===== */
 :root {
   /* Couleurs */
-  --primary-color: #AEE0DF;
-  --secondary-color: #535bf2;
-  --text-color: #213547;
-  --background-color: #ffffff;
-  --border-color: #e0e0e0;
+--primary-color: #00c0f2;
+    --secondary-color: #57c1a5;
+    --primary-color-rgb: 0, 192, 242;
+    --secondary-color-rgb: 87, 193, 165;
   
   /* Espacements */
   --space-xs: 0.25rem;

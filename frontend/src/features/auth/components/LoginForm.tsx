@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import './LoginPage.css'; // Import du fichier CSS
+import './LoginPage.css';
 import corilus from '../../../assets/corilus.png';
-import { Link, useNavigate } from 'react-router-dom'; // Importation de Link et useNavigate
-import axios from 'axios'; // Import d'axios pour les appels HTTP
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function LoginForm() {
-  const [email, setEmail] = useState(''); // Gère l'email
-  const [password, setPassword] = useState(''); // Gère le mot de passe
-  const [error, setError] = useState(''); // Gère l'erreur
-  const navigate = useNavigate(); // Pour la navigation après la connexion réussie
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  // Fonction qui est appelée lors de la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -27,10 +26,60 @@ export default function LoginForm() {
       localStorage.setItem('accessToken', response.data.accessToken);
       localStorage.setItem('refreshToken', response.data.refreshToken);
 
+      // Ajout de l'email dans le localStorage
+      localStorage.setItem('email', email);
+
+      // Appel pour récupérer userId
+      try {
+        const userIdResponse = await axios.get(
+          `http://localhost:8088/api/users/userId/${email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${response.data.accessToken}`,
+            },
+          }
+        );
+        localStorage.setItem('userId', userIdResponse.data);
+      } catch (e) {
+        console.error("Erreur lors de la récupération du userId", e);
+      }
+
+      // Appel pour récupérer specificId
+      try {
+        const specificIdResponse = await axios.get(
+          `http://localhost:8088/api/users/specific-id/${email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${response.data.accessToken}`,
+            },
+          }
+        );
+        localStorage.setItem('specificId', specificIdResponse.data);
+      } catch (e) {
+        console.error("Erreur lors de la récupération du specificId", e);
+      }
+
+      // Appel pour récupérer le nom de l'utilisateur
+      try {
+        const userDataResponse = await axios.get(
+          `http://localhost:8088/api/users/email/${email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${response.data.accessToken}`,
+            },
+          }
+        );
+        if (userDataResponse.data && userDataResponse.data.name) {
+          localStorage.setItem('userName', userDataResponse.data.name);
+          console.log("userName ok :", userDataResponse.data.name);
+        }
+      } catch (e) {
+        console.error("Erreur lors de la récupération du userName", e);
+      }
+
       // Rediriger l'utilisateur vers la page d'accueil ou une autre page
-      navigate('/doctorHome'); // Remplace '/home' par la page où tu veux rediriger l'utilisateur
+      navigate('/patientHome');
     } catch (err) {
-      // Gérer l'erreur (exemple : si les identifiants sont incorrects)
       setError('Invalid email or password');
     }
   };
@@ -57,8 +106,8 @@ export default function LoginForm() {
               type="email"
               className="form-input"
               placeholder="Enter your email"
-              value={email} // Liaison avec l'état
-              onChange={(e) => setEmail(e.target.value)} // Mise à jour de l'état
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -70,8 +119,8 @@ export default function LoginForm() {
               type="password"
               className="form-input"
               placeholder="Enter your password"
-              value={password} // Liaison avec l'état
-              onChange={(e) => setPassword(e.target.value)} // Mise à jour de l'état
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>

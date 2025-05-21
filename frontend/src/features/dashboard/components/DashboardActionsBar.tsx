@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { FaBell, FaCalendarAlt } from "react-icons/fa";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css"; // à importer pour le style de base
-import "../style/dashbord.css"; // adapte le chemin si besoin
+import "../style/dashbord.css";
+import '../../../index.css' // adapte le chemin si besoin
 
 // Style local pour forcer le texte du calendrier en noir
 const calendarStyle = `
@@ -53,7 +54,7 @@ export default function DashboardActionsBar() {
         {/* Icône Notification */}
         <div style={{ position: "relative" }} ref={notifRef}>
           <FaBell
-            style={{ color: "#656ED3", fontSize: "1.8rem", cursor: "pointer" }}
+            style={{ color: 'var(--primary-color)', fontSize: "1.8rem", cursor: "pointer" }}
             onClick={() => {
               setShowNotifications((v) => !v);
               setShowCalendar(false);
@@ -85,7 +86,7 @@ export default function DashboardActionsBar() {
         {/* Icône Calendrier */}
         <div style={{ position: "relative" }} ref={calRef}>
           <FaCalendarAlt
-            style={{ color: "#656ED3", fontSize: "1.8rem", cursor: "pointer" }}
+            style={{ color: "var(--primary-color)", fontSize: "1.8rem", cursor: "pointer" }}
             onClick={() => {
               setShowCalendar((v) => !v);
               setShowNotifications(false);

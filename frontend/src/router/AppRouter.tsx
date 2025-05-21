@@ -5,7 +5,7 @@ import DoctorSecondSignupPage from '../features/auth/pages/DoctorSecondSignupPag
 import PatientSecondSignupPage from '../features/auth/pages/PatientSecondSignupPage'
 import InsuranceSignUp from '../features/auth/pages/InsuranceSecondSignupPage'
 import InsuranceHome from '../features/dashboard/pages/InsuranceHome'
-import DoctorHome from '../features/dashboard/pages/DoctorHome';
+import DoctorHome from '../features/dashboard/pages/DoctorHome'
 import PatientHome from '../features/dashboard/pages/PatientHome';
 
 
@@ -14,7 +14,6 @@ export default function AppRouter() {
   return (
     <Router>
       <Routes>
-        {/* Redirection de la racine vers /login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signUp" element={<SignUpPage />} />
