@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
         name = "medical-record-service",
-        url = "${medical.record.service.url:}",
+        url = "http://localhost:8082",
         configuration = MedicalRecordClientConfig.class
 )
 public interface MedicalRecordClient {
-    @PostMapping("/api/medical-records")
+    @PostMapping("/medical-records")
     ResponseEntity<Long> createMedicalRecord(@RequestBody MedicalRecordDto medicalRecordDto);
 }

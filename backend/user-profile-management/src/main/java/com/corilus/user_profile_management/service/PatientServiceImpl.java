@@ -7,6 +7,8 @@ import com.corilus.user_profile_management.entity.UserInfo;
 import com.corilus.user_profile_management.enums.ROLE;
 import com.corilus.user_profile_management.repository.PatientRepository;
 import com.corilus.user_profile_management.repository.UserInfoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.corilus.user_profile_management.client.MedicalRecordClient;
@@ -16,6 +18,8 @@ import java.util.Optional;
 
 @Service
 public class PatientServiceImpl implements PatientService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PatientServiceImpl.class);
 
     private final PatientRepository patientRepository;
     private final UserInfoRepository userInfoRepository;
@@ -30,6 +34,8 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public Patient createPatient(PatientDto dto) {
+        logger.info("Début de la création d'un patient avec les données : {}", dto);
+
         UserInfo userInfo = new UserInfo();
         userInfo.setName(dto.getName());
         userInfo.setPhone(dto.getPhone());
@@ -39,6 +45,7 @@ public class PatientServiceImpl implements PatientService {
         userInfo.setRole(ROLE.PATIENT);
 
         userInfo = userInfoRepository.save(userInfo);
+        logger.info("Utilisateur associé créé avec succès : {}", userInfo);
 
         Patient patient = new Patient();
         patient.setPatientInfo(userInfo);
@@ -48,14 +55,18 @@ public class PatientServiceImpl implements PatientService {
         patient.setInsurance(dto.getInsuranceName());
 
         Patient savedPatient = patientRepository.save(patient);
+        logger.info("Patient créé avec succès : {}", savedPatient);
 
         MedicalRecordDto recordDto = new MedicalRecordDto();
         recordDto.setPatientId(savedPatient.getId());
         recordDto.setCreationDate(new java.util.Date());
+        logger.info("Tentative de création d'un dossier médical pour le patient ID : {}", savedPatient.getId());
+
         try {
             medicalRecordClient.createMedicalRecord(recordDto);
+            logger.info("Dossier médical créé avec succès pour le patient ID : {}", savedPatient.getId());
         } catch (Exception e) {
-            System.err.println("Erreur lors de la création du dossier médical : " + e.getMessage());
+            logger.error("Erreur lors de la création du dossier médical pour le patient ID : {}. Détails : {}", savedPatient.getId(), e.getMessage(), e);
         }
 
         return savedPatient;
@@ -64,6 +75,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     @Transactional
     public Patient updatePatient(Long id, PatientDto dto) {
+        logger.info("Début de la mise à jour du patient avec ID : {}", id);
         Optional<Patient> existing = patientRepository.findById(id);
         if (existing.isPresent()) {
             Patient patient = existing.get();
@@ -99,43 +111,60 @@ public class PatientServiceImpl implements PatientService {
                 patient.setInsurance(dto.getInsuranceName());
             }
 
-            return patientRepository.save(patient);
+            Patient updatedPatient = patientRepository.save(patient);
+            logger.info("Patient mis à jour avec succès : {}", updatedPatient);
+            return updatedPatient;
         } else {
+            logger.error("Patient avec ID {} non trouvé.", id);
             throw new RuntimeException("Patient with ID " + id + " not found.");
         }
     }
 
-
     @Override
     public Long getPatientIdByName(String name) {
+        logger.info("Recherche de l'ID du patient avec le nom : {}", name);
         Optional<Patient> patient = patientRepository.findByName(name);
-        return patient.map(Patient::getId).orElseThrow(() -> new RuntimeException("No patient found with name: " + name));
+        return patient.map(Patient::getId).orElseThrow(() -> {
+            logger.error("Aucun patient trouvé avec le nom : {}", name);
+            return new RuntimeException("No patient found with name: " + name);
+        });
     }
-
 
     @Override
     public void deletePatient(Long id) {
+        logger.info("Suppression du patient avec ID : {}", id);
         if (patientRepository.existsById(id)) {
             patientRepository.deleteById(id);
+            logger.info("Patient avec ID {} supprimé avec succès.", id);
         } else {
+            logger.error("Patient avec ID {} n'existe pas.", id);
             throw new RuntimeException("Patient with ID " + id + " does not exist.");
         }
     }
 
     @Override
     public Patient getPatientById(Long id) {
+        logger.info("Recherche du patient avec ID : {}", id);
         return patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient with ID " + id + " not found."));
+                .orElseThrow(() -> {
+                    logger.error("Patient avec ID {} non trouvé.", id);
+                    return new RuntimeException("Patient with ID " + id + " not found.");
+                });
     }
 
     @Override
     public List<Patient> getAllPatients() {
+        logger.info("Récupération de tous les patients.");
         return patientRepository.findAll();
     }
 
     @Override
     public Patient getPatientByUserInfoId(Long userInfoId) {
+        logger.info("Recherche du patient avec l'ID de UserInfo : {}", userInfoId);
         return patientRepository.findByPatientInfoId(userInfoId)
-                .orElseThrow(() -> new RuntimeException("Patient not found for user info ID: " + userInfoId));
+                .orElseThrow(() -> {
+                    logger.error("Patient non trouvé pour l'ID de UserInfo : {}", userInfoId);
+                    return new RuntimeException("Patient not found for user info ID: " + userInfoId);
+                });
     }
 }
