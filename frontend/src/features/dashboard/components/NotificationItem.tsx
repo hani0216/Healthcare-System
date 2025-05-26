@@ -2,6 +2,10 @@ import React from "react";
 import '../style/dash.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/en';
+
 // Props pour le composant NotificationItem
 interface NotificationItemProps {
   title: string;
@@ -28,6 +32,8 @@ const typeStyles: Record<string, { color: string; icon: string }> = {
   default:      { color: "bg-cyan-500",    icon: "fa-bell" }
 };
 
+dayjs.extend(relativeTime);
+
 export default function NotificationItem({
   title,
   message,
@@ -38,6 +44,8 @@ export default function NotificationItem({
   onMarkAsRead
 }: NotificationItemProps) {
   const { color, icon } = typeStyles[type] || typeStyles.default;
+  // Formatage du temps relatif en anglais
+  const relativeTimeStr = dayjs(time).locale('en').fromNow();
 
   return (
     <div
@@ -48,54 +56,47 @@ export default function NotificationItem({
         borderLeft: `4px solid var(--tw-${color.replace("bg-", "")}-500, #06b6d4)`
       }}
     >
-
-      <div className="flex items-start">
-        <div className={`${color} text-white p-2 rounded-lg mr-3 flex items-center justify-center`}>
-          <i className={`fas ${icon} text-base`}></i>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-medium text-gray-900" style={{ fontSize: "0.97rem" }}>{title}</h3>
-              <p className="text-xs text-gray-600 mt-1" style={{ fontSize: "0.90rem" }}>{message}</p>
-            </div>
-            <div className="flex flex-col items-end ml-2">
-              <span className="text-xs text-gray-500 mb-2" style={{ fontSize: "0.80rem" }}>{time}</span>
-              <div className="flex space-x-2">
-                {/* Bouton marquer comme lu */}
-                <button
-  title="Marquer comme lu"
-  style={{
-    background: "transparent",
-    border: "none",
-    color: "#28A6A7",
-    cursor: "pointer",
-    fontSize: "1.1rem",
-  }}
-  onClick={onMarkAsRead}
->
-  <FontAwesomeIcon icon={faCheck} />
-</button>
-<button
-  title="Supprimer"
-  style={{
-    background: "transparent",
-    border: "none",
-    color: "red",
-    cursor: "pointer",
-    fontSize: "1.1rem",
-  }}
-  onClick={onDelete}
->
-  <FontAwesomeIcon icon={faTrashAlt} />
-</button>
-                  
-              </div>
-            </div>
+      <div className="flex items-center justify-between w-full" >
+        <div className="flex items-start">
+          <div className={`${color} text-white p-2 rounded-lg mr-3 flex items-center justify-center`}>
+            <i className={`fas ${icon} text-base`}></i>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-gray-900" style={{ fontSize: "0.97rem" }}>{title}</h3>
+            <p className="text-xs text-gray-600 mt-1" style={{ fontSize: "0.90rem" }}>{message}</p>
+            <span className="text-xs text-gray-500 mt-1 block" style={{ fontSize: "0.80rem" }}>{relativeTimeStr}</span>
           </div>
         </div>
+        <div className="flex items-center space-x-2 ml-4" >
+          {/* Bouton marquer comme lu */}
+          <button
+            title="Mark as read"
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#28A6A7",
+              cursor: "pointer",
+              fontSize: "1.1rem",
+            }}
+            onClick={onMarkAsRead}
+          >
+            <FontAwesomeIcon icon={faCheck} />
+          </button>
+          <button
+            title="Delete"
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "red",
+              cursor: "pointer",
+              fontSize: "1.1rem",
+            }}
+            onClick={onDelete}
+          >
+            <FontAwesomeIcon icon={faTrashAlt} />
+          </button>
+        </div>
       </div>
- 
       {!seen && (
         <span
           className="absolute top-3 right-3 bg-blue-500 rounded-full w-2 h-2"

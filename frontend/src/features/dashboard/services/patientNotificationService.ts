@@ -42,3 +42,36 @@ export function getDisplayableNotifications(notifications: any[]): any[] {
     .filter(n => new Date(n.timeToSend) <= now)
     .sort((a, b) => new Date(b.timeToSend).getTime() - new Date(a.timeToSend).getTime());
 }
+
+export async function markNotificationAsSeen(notifId: string) {
+  const token = localStorage.getItem("accessToken");
+  const url = `http://localhost:8084/api/notifications/${notifId}`;
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ seen: true })
+  });
+  if (!response.ok) {
+    throw new Error("Erreur lors de la mise à jour de la notification");
+  }
+  return response.json();
+}
+
+export async function deleteNotification(notifId: string) {
+  const token = localStorage.getItem("accessToken");
+  const url = `http://localhost:8084/api/notifications/${notifId}`;
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (!response.ok) {
+    throw new Error("Erreur lors de la suppression de la notification");
+  }
+  return true;
+}

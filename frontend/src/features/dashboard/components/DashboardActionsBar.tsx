@@ -4,6 +4,8 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../style/dashbord.css";
 import '../../../index.css';
+import { useNavigate } from 'react-router-dom';
+import { fetchNotificationsByReceiverId, getDisplayableNotifications } from '../services/patientNotificationService';
 
 // Style local pour forcer le texte du calendrier en noir
 const calendarStyle = `
@@ -18,9 +20,33 @@ const calendarStyle = `
 export default function DashboardActionsBar({ userName }: { userName: string }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const navigate = useNavigate();
 
   const notifRef = useRef<HTMLDivElement>(null);
   const calRef = useRef<HTMLDivElement>(null);
+
+  // Récupération régulière des notifications
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    let interval: NodeJS.Timeout;
+    async function fetchNotifs() {
+      if (userId) {
+        try {
+          const data = await fetchNotificationsByReceiverId(userId);
+          setNotifications(getDisplayableNotifications(data));
+        } catch {
+          setNotifications([]);
+        }
+      }
+    }
+    fetchNotifs();
+    interval = setInterval(fetchNotifs, 60000); // toutes les minutes
+    return () => clearInterval(interval);
+  }, []);
+
+  const unreadCount = notifications.filter((n: any) => !n.seen).length;
+  const last4 = notifications.slice(0, 4);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -63,6 +89,20 @@ export default function DashboardActionsBar({ userName }: { userName: string }) 
               setShowCalendar(false);
             }}
           />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: 2,
+              right: 2,
+              width: 12,
+              height: 12,
+              background: 'red',
+              borderRadius: '50%',
+              display: 'block',
+              border: '2px solid #fff',
+              zIndex: 20
+            }} />
+          )}
           {showNotifications && (
             <div
               style={{
@@ -72,17 +112,45 @@ export default function DashboardActionsBar({ userName }: { userName: string }) 
                 background: "#fff",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                 borderRadius: "8px",
-                minWidth: "220px",
-                padding: "16px",
+                minWidth: "260px",
+                padding: "16px 0 0 0",
                 zIndex: 10,
               }}
             >
-              <div style={{ color: "#656ED3", fontWeight: "bold" }}>
+              <div style={{ color: "#656ED3", fontWeight: "bold", padding: '0 16px 8px 16px' }}>
                 Notifications
               </div>
-              <div style={{ color: "#888", marginTop: "8px" }}>
-                No notifications yet.
-              </div>
+              {last4.length === 0 ? (
+                <div style={{ color: "#888", margin: "8px 0 16px 0", padding: '0 16px' }}>
+                  No notifications yet.
+                </div>
+              ) : (
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  {last4.map((notif: any, idx: number) => (
+                    <li
+                      key={idx}
+                      style={{
+                        padding: '10px 16px',
+                        cursor: 'pointer',
+                        background: notif.seen ? '#f9fafb' : '#e0f2fe',
+                        borderBottom: idx !== last4.length - 1 ? '1px solid #f1f1f1' : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
+                      }}
+                      onClick={() => navigate('/patientNotification')}
+                    >
+                      <span style={{
+                        fontWeight: 600,
+                        color: '#28A6A7',
+                        fontSize: 14,
+                        marginRight: 8
+                      }}>{notif.notificationType || notif.type}</span>
+                      <span style={{ fontSize: 14, color: '#222', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{notif.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </div>

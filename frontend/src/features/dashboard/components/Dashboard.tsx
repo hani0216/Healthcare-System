@@ -9,6 +9,16 @@ import HealthTip from "./HealthTip";
 import { getAppointments, getNextAppointment } from "../services/appointmentService";
 import appointmentImg from '../../../assets/appointment.png';
 import DashboardActionBar from "./DashboardActionsBar";
+import { fetchNotificationsByReceiverId, getDisplayableNotifications } from '../services/patientNotificationService';
+import notifImg from '../../../assets/notif.png'
+
+interface Appointment {
+  id: number;
+  date: string;
+  title: string;
+  status: string;
+  type: string;
+}
 
 export default function Dashboard({ sidebarCollapsed = true }) {
   const userName = localStorage.getItem("userName") || "Patient";
@@ -21,7 +31,8 @@ export default function Dashboard({ sidebarCollapsed = true }) {
   ];
 
   const specificId = localStorage.getItem("specificId"); 
-  const [nextAppointment, setNextAppointment] = useState(null);
+  const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
   useEffect(() => {
     if (specificId) {
@@ -33,6 +44,25 @@ export default function Dashboard({ sidebarCollapsed = true }) {
         .catch(() => setNextAppointment(null));
     }
   }, [specificId]);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    let interval: NodeJS.Timeout;
+    async function fetchNotifs() {
+      if (userId) {
+        try {
+          const data = await fetchNotificationsByReceiverId(userId);
+          const notifs = getDisplayableNotifications(data);
+          setUnreadNotifCount(notifs.filter((n: any) => !n.seen).length);
+        } catch {
+          setUnreadNotifCount(0);
+        }
+      }
+    }
+    fetchNotifs();
+    interval = setInterval(fetchNotifs, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   function formatDate(dateStr: string) {
     if (!dateStr) return "";
@@ -119,16 +149,18 @@ export default function Dashboard({ sidebarCollapsed = true }) {
           </div>
         </div>
 
-        {/* Current Medications */}
+        {/* Notifications non lues */}
         <div className="statsCard">
           <div>
-            <p className="statsCardTitle">Current Medications</p>
-            <h3 className="statsCardValue">3</h3>
-            <p className="statsCardSub">1 to take today</p>
+            <p className="statsCardTitle">Unread Notifications</p>
+            <h3 className="statsCardValue">{unreadNotifCount}</h3>
+            <p className="statsCardSub">Stay up to date</p>
           </div>
-          <div className="statsCardIconGreen">
-            <i className="fas fa-pills" style={{ color: "#059669", fontSize: "1.4rem" }}></i>
-          </div>
+          <img
+              src={notifImg}
+              alt="Next Appointment"
+              style={{ width: "2rem", height: "2rem", display: "block" }}
+            />
         </div>
 
         {/* Heart Rate */}
