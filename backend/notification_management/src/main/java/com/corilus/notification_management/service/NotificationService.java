@@ -14,5 +14,9 @@ public interface NotificationService {
     Notification updateNotification(Long id, Notification notificationDetails);
 
     void deleteNotification(Long id);
+
+    List<Notification> getNotificationsByReceiverId(Long receiverId);
+
+
 }
 

@@ -71,6 +71,9 @@ public class SecurityConfig {
                     .pathMatchers(HttpMethod.GET, "/insurance-admins").hasAnyRole("INSURANCE_ADMIN", "PATIENT")
                     .pathMatchers("/insurance-admins/**").hasRole("INSURANCE_ADMIN")
 
+                    .pathMatchers(("/medical-records/**")).hasAnyRole("DOCTOR", "PATIENT")
+                    .pathMatchers("/api/notifications/notifications/receiver/**").hasAnyRole("DOCTOR", "PATIENT" , "INSURANCE_ADMIN" , "ADMIN")
+
 
 
                 // Toutes les autres routes nécessitent une authentification

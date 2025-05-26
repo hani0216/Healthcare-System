@@ -40,6 +40,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public List<Notification> getNotificationsByReceiverId(Long receiverId) {
+        return notificationRepository.findByReceiverId(receiverId);
+    }
+
+
+    @Override
     public Notification updateNotification(Long id, Notification notificationDetails) {
         Notification notification = notificationRepository.findById(id).orElseThrow();
         notification.setTitle(notificationDetails.getTitle());

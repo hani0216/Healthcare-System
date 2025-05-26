@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { FaBell, FaCalendarAlt } from "react-icons/fa";
+import { FaBell, FaCalendarAlt, FaUserCircle } from "react-icons/fa";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css"; // à importer pour le style de base
+import "react-calendar/dist/Calendar.css";
 import "../style/dashbord.css";
-import '../../../index.css' // adapte le chemin si besoin
+import '../../../index.css';
 
 // Style local pour forcer le texte du calendrier en noir
 const calendarStyle = `
@@ -15,7 +15,7 @@ const calendarStyle = `
   }
 `;
 
-export default function DashboardActionsBar() {
+export default function DashboardActionsBar({ userName }: { userName: string }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
 
@@ -43,18 +43,21 @@ export default function DashboardActionsBar() {
       <style>{calendarStyle}</style>
       <div
         style={{
-          position: "absolute",
-          top: "24px",
-          right: "40px",
+          position: "relative", 
+          width: "100%",
+          background: "#fff",
           display: "flex",
+          justifyContent: "flex-end",
           gap: "32px",
-          zIndex: 10,
+          alignItems: "center",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+          padding: "0.5rem 2rem"
         }}
       >
         {/* Icône Notification */}
         <div style={{ position: "relative" }} ref={notifRef}>
           <FaBell
-            style={{ color: 'var(--primary-color)', fontSize: "1.8rem", cursor: "pointer" }}
+            style={{ color: '#28A6A7', fontSize: "2.2rem", cursor: "pointer" }}
             onClick={() => {
               setShowNotifications((v) => !v);
               setShowCalendar(false);
@@ -86,7 +89,7 @@ export default function DashboardActionsBar() {
         {/* Icône Calendrier */}
         <div style={{ position: "relative" }} ref={calRef}>
           <FaCalendarAlt
-            style={{ color: "var(--primary-color)", fontSize: "1.8rem", cursor: "pointer" }}
+            style={{ color: "#28A6A7", fontSize: "2.2rem", cursor: "pointer"  }}
             onClick={() => {
               setShowCalendar((v) => !v);
               setShowNotifications(false);
@@ -102,12 +105,12 @@ export default function DashboardActionsBar() {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                 borderRadius: "8px",
                 zIndex: 10,
-                padding: 0,          
-                minWidth: "unset",   
-                margin: 0           
+                padding: 0,
+                minWidth: "unset",
+                margin: 0
               }}
             >
-              <div style={{   margin: 0, padding: 0 }}>
+              <div style={{ margin: 0, padding: 0 }}>
                 <Calendar
                   locale="en-US"
                   onChange={() => {}}
@@ -120,7 +123,12 @@ export default function DashboardActionsBar() {
             </div>
           )}
         </div>
+        {/* Profil utilisateur */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "24px" }}>
+          <span style={{ fontWeight: 500, color: "#28a6a7" }}>{userName}</span>
+          <FaUserCircle size={32} color="#28a6a7" />
+        </div>
       </div>
     </>
-  );  
+  );
 }

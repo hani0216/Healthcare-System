@@ -5,11 +5,11 @@ import DashboardActionsBar from "../components/DashboardActionsBar";
 import Dashboard from "../components/Dashboard";
  
 export default function PatientHome() {
+
   return (
-    <div style={{ height: "100vh", display: "flex" }}>
+    <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
       <div style={{ flex: 1, background: "#f5f6fa", position: "relative" }}>
-        <DashboardActionsBar />
         <Dashboard />
         <div style={{ padding: "40px" }}>
         </div>

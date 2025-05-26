@@ -1,12 +1,14 @@
 import { Sidebar, Menu, MenuItem } from 'react-pro-sidebar';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaUser, FaCalendarAlt, FaSearch, FaMoneyCheckAlt, FaBookMedical, FaBars, FaSignOutAlt, FaTachometerAlt, FaHistory } from 'react-icons/fa';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FaUser, FaCalendarAlt, FaSearch, FaMoneyCheckAlt, FaBookMedical, FaBars, FaSignOutAlt, FaTachometerAlt, FaHistory, FaBell } from 'react-icons/fa';
 import { useState } from 'react';
 import '../../../index.css';
+import '../style/dash.css'
 
 export default function SideBar() {
     const [collapsed, setCollapsed] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = () => {
         localStorage.clear();
@@ -22,7 +24,7 @@ export default function SideBar() {
                     fontSize: '1.2rem',
                     textAlign: 'center',
                     background: '#fff',
-                    color: 'var(--primary-color)',
+                    color: '#222',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: collapsed ? 'center' : 'space-between'
@@ -34,7 +36,7 @@ export default function SideBar() {
                         style={{
                             background: 'none',
                             border: 'none',
-                            color: 'var(--primary-color)',
+                            color: '#28A6A7',
                             cursor: 'pointer',
                             fontSize: '1.2rem',
                             marginLeft: collapsed ? 0 : '10px'
@@ -47,7 +49,7 @@ export default function SideBar() {
                 </div>
                 <Menu
                     menuItemStyles={{
-                        root: { color: 'var(--primary-color)' },
+                        root: { color: '#222' },
                         button: {
                             padding: '12px 20px',
                             borderRadius: '8px',
@@ -55,36 +57,71 @@ export default function SideBar() {
                             fontWeight: 500,
                             fontSize: '1rem',
                             background: '#fff',
-                            color: 'var(--primary-color)',
+                            color: '#222',
                             transition: 'background 0.2s',
                         },
                         icon: {
-                            color: 'var(--primary-color)', // <-- icons now use primary color
+                            color: '#28A6A7',
                             fontSize: '1.2rem',
                             marginRight: '12px'
                         },
                         label: { marginLeft: '8px' }
                     }}
                 >
-                    <MenuItem icon={<FaTachometerAlt />} component={<Link to="/dashboard" />}>
+                    <MenuItem
+                        icon={<FaTachometerAlt />}
+                        component={<Link to="/patientHome" />}
+                        active={location.pathname === "/patientHome"}
+                    >
                         Dashboard
                     </MenuItem>
-                    <MenuItem icon={<FaHistory />} component={<Link to="/history" />}>
+                    <MenuItem
+                        icon={<FaBell />}
+                        component={<Link to="/patientNotification" />}
+                        active={location.pathname === "/patientNotification"}
+                    >
+                        Notifications
+                    </MenuItem>
+                    <MenuItem
+                        icon={<FaHistory />}
+                        component={<Link to="/history" />}
+                        active={location.pathname === "/history"}
+                    >
                         History
                     </MenuItem>
-                    <MenuItem icon={<FaUser />} component={<Link to="/profile" />}>
+                    <MenuItem
+                        icon={<FaUser />}
+                        component={<Link to="/profile" />}
+                        active={location.pathname === "/profile"}
+                    >
                         Profile
                     </MenuItem>
-                    <MenuItem icon={<FaCalendarAlt />} component={<Link to="/calendar" />}>
+                    <MenuItem
+                        icon={<FaCalendarAlt />}
+                        component={<Link to="/calendar" />}
+                        active={location.pathname === "/calendar"}
+                    >
                         Calendar
                     </MenuItem>
-                    <MenuItem icon={<FaSearch />} component={<Link to="/search" />}>
+                    <MenuItem
+                        icon={<FaSearch />}
+                        component={<Link to="/search" />}
+                        active={location.pathname === "/search"}
+                    >
                         Search
                     </MenuItem>
-                    <MenuItem icon={<FaMoneyCheckAlt />} component={<Link to="/reimbursement" />}>
+                    <MenuItem
+                        icon={<FaMoneyCheckAlt />}
+                        component={<Link to="/reimbursement" />}
+                        active={location.pathname === "/reimbursement"}
+                    >
                         Reimbursement
                     </MenuItem>
-                    <MenuItem icon={<FaBookMedical />} component={<Link to="/medical-record" />}>
+                    <MenuItem
+                        icon={<FaBookMedical />}
+                        component={<Link to="/medical-record" />}
+                        active={location.pathname === "/medical-record"}
+                    >
                         Medical Record
                     </MenuItem>
                 </Menu>
@@ -120,7 +157,7 @@ export default function SideBar() {
                         }}
                         title="Logout"
                     >
-                        <FaSignOutAlt style={{ color: '#ff374b' , fontSize: '1.5rem', marginRight: collapsed ? 0 : 8 }} />
+                        <FaSignOutAlt style={{ color: '#ff374b', fontSize: '1.5rem', marginRight: collapsed ? 0 : 8 }} />
                         {!collapsed && "Logout"}
                     </button>
                 </div>
