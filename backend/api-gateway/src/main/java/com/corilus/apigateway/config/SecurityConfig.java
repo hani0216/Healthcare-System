@@ -73,6 +73,7 @@ public class SecurityConfig {
 
                     .pathMatchers(("/medical-records/**")).hasAnyRole("DOCTOR", "PATIENT")
                     .pathMatchers("/api/notifications/notifications/receiver/**").hasAnyRole("DOCTOR", "PATIENT" , "INSURANCE_ADMIN" , "ADMIN")
+                    .pathMatchers("/api/notifications/notifications/**").hasAnyRole("DOCTOR" , "PATIENT")
 
 
 
