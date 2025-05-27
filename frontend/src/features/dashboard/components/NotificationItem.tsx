@@ -8,13 +8,15 @@ import 'dayjs/locale/en';
 
 // Props pour le composant NotificationItem
 interface NotificationItemProps {
+  notifId: string;
   title: string;
   message: string;
   seen: boolean;
   time: string;
   type: "message" | "appointment" | "results" | "prescription" | "payment" | "system" | string;
-  onDelete?: () => void;
-  onMarkAsRead?: () => void;
+  frequency?: string;
+  onDelete?: (notifId: string, frequency?: string) => void;
+  onMarkAsRead?: (notifId: string) => void;
 }
 
 // Mapping type -> couleur de fond et icône FontAwesome
@@ -35,11 +37,13 @@ const typeStyles: Record<string, { color: string; icon: string }> = {
 dayjs.extend(relativeTime);
 
 export default function NotificationItem({
+  notifId,
   title,
   message,
   seen,
   time,
   type,
+  frequency,
   onDelete,
   onMarkAsRead
 }: NotificationItemProps) {
@@ -49,9 +53,9 @@ export default function NotificationItem({
 
   return (
     <div
-      className={`notification-item p-3 hover:bg-gray-50 relative rounded-xl shadow-sm mb-2 transition-all duration-300 ${!seen ? "unread" : ""}`}
+      className={`notification-item p-3 hover:bg-gray-50 relative rounded-xl shadow-sm mb-2 transition-all duration-300`}
       style={{
-        backgroundColor: !seen ? "#f0f9ff" : "#fff",
+        backgroundColor: seen ? "#fff" : "#e0f2fe",
         opacity: seen ? 0.7 : 1,
         borderLeft: `4px solid var(--tw-${color.replace("bg-", "")}-500, #06b6d4)`
       }}
@@ -78,7 +82,8 @@ export default function NotificationItem({
               cursor: "pointer",
               fontSize: "1.1rem",
             }}
-            onClick={onMarkAsRead}
+            onClick={() => onMarkAsRead && onMarkAsRead(notifId)}
+            disabled={seen}
           >
             <FontAwesomeIcon icon={faCheck} />
           </button>
@@ -91,7 +96,7 @@ export default function NotificationItem({
               cursor: "pointer",
               fontSize: "1.1rem",
             }}
-            onClick={onDelete}
+            onClick={() => onDelete && onDelete(notifId, frequency)}
           >
             <FontAwesomeIcon icon={faTrashAlt} />
           </button>

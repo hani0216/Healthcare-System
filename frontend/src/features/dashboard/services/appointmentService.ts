@@ -1,12 +1,12 @@
 export async function fetchAppointments() {
-  const response = await fetch("http://localhost:8088/api/appointments"); // adapte l'URL si besoin
+  const response = await fetch("http://localhost:8088/medical-records/appointments"); // adapte l'URL si besoin
   if (!response.ok) throw new Error("Erreur lors de la récupération des rendez-vous");
   return response.json();
 }
 
-export async function fetchMedicalRecordId(specificId: string) {
+export async function fetchMedicalRecord(specificId: string) {
   const token = localStorage.getItem("accessToken");
-  const response = await fetch(`http://localhost:8088/api/patient/${specificId}`, {
+  const response = await fetch(`http://localhost:8088/medical-records/patient/${specificId}`, {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,
@@ -14,9 +14,7 @@ export async function fetchMedicalRecordId(specificId: string) {
     }
   });
   if (!response.ok) throw new Error("Erreur lors de la récupération du dossier médical");
-  const data = await response.json();
-
-  return data.medicalRecordId;
+  return await response.json();
 }
 
 export async function getAppointments(specificId: string) {

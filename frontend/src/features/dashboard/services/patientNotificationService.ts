@@ -45,7 +45,7 @@ export function getDisplayableNotifications(notifications: any[]): any[] {
 
 export async function markNotificationAsSeen(notifId: string) {
   const token = localStorage.getItem("accessToken");
-  const url = `http://localhost:8084/api/notifications/${notifId}`;
+  const url = `http://localhost:8088/api/notifications/${notifId}`;
   const response = await fetch(url, {
     method: "PUT",
     headers: {
@@ -62,7 +62,7 @@ export async function markNotificationAsSeen(notifId: string) {
 
 export async function deleteNotification(notifId: string) {
   const token = localStorage.getItem("accessToken");
-  const url = `http://localhost:8084/api/notifications/${notifId}`;
+  const url = `http://localhost:8088/api/notifications/${notifId}`;
   const response = await fetch(url, {
     method: "DELETE",
     headers: {

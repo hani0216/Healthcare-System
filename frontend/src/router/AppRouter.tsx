@@ -8,6 +8,12 @@ import InsuranceHome from '../features/dashboard/pages/InsuranceHome'
 import DoctorHome from '../features/dashboard/pages/DoctorHome'
 import PatientHome from '../features/dashboard/pages/PatientHome';
 import PatientNotification from '../features/dashboard/pages/PatienNotification';
+import HistoryPage from '../features/dashboard/pages/HistoryPage';
+import ProfilePage from '../features/dashboard/pages/ProfilePage';
+import CalendarPage from '../features/dashboard/pages/CalendarPage';
+import SearchPage from '../features/dashboard/pages/SearchPage';
+import ReimbursementPage from '../features/dashboard/pages/ReimbursementPage';
+import MedicalRecordPage from '../features/dashboard/pages/MedicalRecordPage';
 
 
 
@@ -25,6 +31,12 @@ export default function AppRouter() {
         <Route path='/doctorHome' element={<DoctorHome />}></Route>
         <Route path='/patientHome' element={<PatientHome />}></Route>
         <Route path='/patientNotification' element={<PatientNotification />}></Route>
+        <Route path='/history' element={<HistoryPage />}></Route>
+        <Route path='/profile' element={<ProfilePage />}></Route>
+        <Route path='/calendar' element={<CalendarPage />}></Route>
+        <Route path='/search' element={<SearchPage />}></Route>
+        <Route path='/reimbursement' element={<ReimbursementPage />}></Route>
+        <Route path='/medical-record' element={<MedicalRecordPage />}></Route>
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         {/* <Route path="/profile" element={<Profile />} /> */}
         {/* <Route path="/settings" element={<Settings />} /> */}

@@ -4,7 +4,10 @@ import DashboardActionsBar from "../components/DashboardActionsBar";
 import NotificationItem from "../components/NotificationItem";
 import Seen from "../../../assets/seen.png";
 import '../style/dash.css'
-import { fetchNotificationsByReceiverId, getDisplayableNotifications } from "../services/patientNotificationService";
+import { fetchNotificationsByReceiverId, getDisplayableNotifications, markNotificationAsSeen, deleteNotification } from "../services/patientNotificationService";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 
 export default function PatientNotification() {
   const userName = localStorage.getItem("userName") || "Patient";
@@ -34,6 +37,53 @@ export default function PatientNotification() {
     page * itemsPerPage
   );
 
+  // Rafraîchir les notifications
+  const refreshNotifications = async () => {
+    if (userId) {
+      try {
+        const data = await fetchNotificationsByReceiverId(userId);
+        setNotifications(getDisplayableNotifications(data));
+      } catch {
+        setNotifications([]);
+      }
+    }
+  };
+
+  // Marquer une notification comme vue
+  const handleMarkAsRead = async (notifId: string) => {
+    try {
+      await markNotificationAsSeen(notifId);
+      refreshNotifications();
+    } catch {
+      toast.error('Error marking notification as read');
+    }
+  };
+
+  // Supprimer une notification
+  const handleDelete = async (notifId: string, frequency?: string) => {
+    if (frequency && frequency !== 'Single') {
+      toast.info("This is an important health reminder and can't be deleted !");
+      return;
+    }
+    try {
+      await deleteNotification(notifId);
+      refreshNotifications();
+    } catch {
+      toast.error('Error deleting notification');
+    }
+  };
+
+  // Tout marquer comme vu
+  const handleMarkAllAsRead = async () => {
+    const unread = notifications.filter(n => !n.seen);
+    try {
+      await Promise.all(unread.map((n) => markNotificationAsSeen(n.id)));
+      refreshNotifications();
+    } catch {
+      toast.error('Error marking all as read');
+    }
+  };
+
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
@@ -62,6 +112,7 @@ export default function PatientNotification() {
                         border: "none",
                         overflow: "hidden",
                       }}
+                      onClick={handleMarkAllAsRead}
                     >
                       <img src={Seen} alt="Vu" style={{
                         width: "100%",
@@ -85,12 +136,16 @@ export default function PatientNotification() {
             <section className="notification-list-section divide-y divide-gray-100" style={{background:'#F5F6FA'}}>
               {paginatedNotifications.map((notif, idx) => (
                 <NotificationItem
-                  key={idx}
+                  key={notif.id || idx}
+                  notifId={notif.id}
                   title={notif.title}
                   message={notif.message}
                   seen={notif.seen}
                   time={notif.timeToSend || notif.time}
                   type={notif.notificationType || notif.type}
+                  frequency={notif.frequency}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
                 />
               ))}
             </section>
@@ -145,6 +200,7 @@ export default function PatientNotification() {
           </div>
         </div>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 }
