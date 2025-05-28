@@ -4,6 +4,10 @@ import DashboardActionsBar from "../components/DashboardActionsBar";
 import "../style/dash.css";
 import { FaBrain, FaTooth, FaChild, FaHeartbeat, FaLungs, FaUserMd, FaEye, FaBone, FaStethoscope, FaUserNurse, FaXRay, FaVial, FaUser, FaSyringe, FaNotesMedical, FaMicroscope, FaRadiation, FaVenus, FaRibbon } from "react-icons/fa";
 import DoctorSpecialityCard from "../components/DoctorSpecialityCard";
+import {  FaStar, FaComment } from 'react-icons/fa';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 // Liste des spécialités
 const SPECIALITIES = [
@@ -62,6 +66,13 @@ const SPECIALITY_ICONS: Record<string, React.ReactNode> = {
   ENDOCRINOLOGY: <FaVial className="text-2xl" />,
   GENERAL: <FaUser className="text-2xl" />,
 };
+type DoctorCardProps = {
+  name: string;
+  email: string;
+  speciality: string;
+  address: string;
+  phone: string;
+};
 
 function DoctorSpecialityGrid({
   specialities,
@@ -87,18 +98,86 @@ function DoctorSpecialityGrid({
 }
 
 // Nouveau composant pour afficher un médecin sous forme de carte
-function DoctorCard({ name, email, speciality }: { name: string; email: string; speciality: string }) {
+export function DoctorCard({ name, email, speciality, address, phone }: DoctorCardProps) {
+  const handleBookNow = () => {
+    toast.info(
+      <div style={{ fontWeight: 600, fontSize: 18, color: '#1B7B2C', textAlign: 'center' }}>
+        <span style={{ fontSize: 15, color: '#222' }}>Doctor's phone:</span><br />
+        <span style={{ fontSize: 22 }}>{phone || 'No phone number'}</span>
+      </div>,
+      {
+        autoClose: 5000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: false,
+        style: { borderRadius: 16, background: '#e6f9ed', color: '#1B7B2C', fontWeight: 600, fontSize: 18 },
+        icon: <FaUserMd style={{ color: '#22c55e', fontSize: 28 }} />,
+      }
+    );
+  };
   return (
-    <div className="card-hover-effect" style={{ height: '220px', width: '300px', borderRadius: '20px', margin: '0 auto' }}>
-      <div style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)', padding: 24, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
-        <div className="card-icon bg-green-500 text-white p-4 rounded-full w-16 h-16 flex items-center justify-center shadow-lg" style={{ backgroundColor: '#22c55e', width: 64, height: 64, margin: '0 auto' }}>
-          <FaUserMd className="text-2xl" style={{ width: 36, height: 36 }} />
+    <div style={{ background: 'none', padding: '40px 0', display: 'flex', justifyContent: 'center' }}>
+      <div style={{
+        borderRadius: '15px',
+        backgroundColor: '#93e2bb',
+        padding: '24px',
+        color: '#000',
+        width: '100%',
+        maxWidth: '500px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+      }}>
+        <h4 style={{ marginBottom: '16px' }}>{speciality}</h4>
+
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{ flexShrink: 0 }}>
+            <div style={{
+              width: '70px',
+              height: '70px',
+              borderRadius: '50%',
+              backgroundColor: '#22c55e',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '3px solid #000',
+            }}>
+              <FaUserMd style={{ color: 'white', fontSize: '30px' }} />
+            </div>
+          </div>
+
+          <div style={{ marginLeft: '16px', flexGrow: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+              <p style={{ margin: 0, marginRight: '8px' }}>{name}</p>
+              
+            </div>
+
+            <p style={{ margin: '4px 0', fontSize: '14px' }}>email : {email}</p>
+            <p style={{ margin: '4px 0', fontSize: '14px' }}>Phone number :{phone}</p>
+          </div>
         </div>
-      </div>
-      <div className="p-5 flex-grow" style={{ textAlign: 'center' }}>
-        <h3 className="name" style={{ margin: 0 }}>{name}</h3>
-        <p className="desc" style={{ margin: 0 }}>{email}</p>
-        <span className="desc" style={{ color: '#22c55e', fontWeight: 600 }}>{speciality}</span>
+
+        <hr />
+
+        <p style={{ margin: '16px 0' }}>Adress :{address}</p>
+
+        <button
+          style={{
+            width: '100%',
+            backgroundColor: '#16a34a',
+            color: 'white',
+            padding: '12px',
+            borderRadius: '999px',
+            border: 'none',
+            fontSize: '16px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={handleBookNow}
+        >
+          <FaComment style={{ marginRight: '8px' }} /> Book now
+        </button>
       </div>
     </div>
   );
@@ -116,8 +195,7 @@ export default function SearchPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/doctors/speciality/${key}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`http://localhost:8081/doctors/speciality/${key}`, {
       });
       const data = await res.json();
       setDoctors(data);
@@ -138,6 +216,7 @@ export default function SearchPage() {
       <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
         <DashboardActionsBar userName={userName} />
         <div className="container mx-auto p-6 max-w-6xl" style={{ marginTop: "40px" }}>
+          <ToastContainer position="top-center" />
           <div  style={{background:'none'}}>
             <h2 className="text-2xl font-bold mb-8 text-center" style={{ color: "#28A6A7"  }}>
               Find a Doctor
@@ -159,8 +238,8 @@ export default function SearchPage() {
                 <DoctorSpecialityGrid specialities={filteredSpecialities} onSpecialityClick={handleSpecialityClick} />
               </>
             ) : (
-              <div>
-                <button className="mb-4 text-blue-500 underline" onClick={() => setSelectedSpeciality(null)}>
+              <div style={{background:'none'}}>
+                <button className="btn"  style={{width:'17%'}} onClick={() => setSelectedSpeciality(null)}>
                   &larr; Back to specialities
                 </button>
                 <h3 className="text-xl font-semibold mb-4">
@@ -169,13 +248,15 @@ export default function SearchPage() {
                 {loading ? (
                   <div>Loading...</div>
                 ) : (
-                  <div className="flex flex-wrap gap-6 justify-center">
+                  <div className="flex flex-wrap gap-6 justify-center"  >
                     {doctors.map((doc) => (
-                      <DoctorCard
+                      <DoctorCard 
                         key={doc.id}
                         name={doc.doctorInfo.name}
                         email={doc.doctorInfo.email}
                         speciality={doc.speciality}
+                        phone={doc.doctorInfo.phone}
+                        address={doc.doctorInfo.address}
                       />
                     ))}
                   </div>
