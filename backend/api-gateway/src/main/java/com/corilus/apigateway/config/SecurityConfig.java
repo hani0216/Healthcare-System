@@ -63,8 +63,11 @@ public class SecurityConfig {
                 .pathMatchers("/api/auth/**").permitAll()
                 .pathMatchers("/actuator/**").permitAll()
                 .pathMatchers("/api/users/**").permitAll()
+                    .pathMatchers("/doctors/speciality/**").hasAnyRole("DOCTOR","Patient")
                 .pathMatchers("/doctors/specialities").permitAll()
-                .pathMatchers("/doctors/{id}").hasRole("DOCTOR")// Permettre l'accès aux spécialités sans authentification
+
+
+                    .pathMatchers("/doctors/{id}").hasRole("DOCTOR")// Permettre l'accès aux spécialités sans authentification
                 // Routes protégées par rôle
                 .pathMatchers("/doctors/**").hasRole("DOCTOR")
                 .pathMatchers("/patients/**").hasAnyRole("ADMIN", "PATIENT")

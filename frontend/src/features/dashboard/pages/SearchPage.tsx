@@ -86,6 +86,24 @@ function DoctorSpecialityGrid({
   );
 }
 
+// Nouveau composant pour afficher un médecin sous forme de carte
+function DoctorCard({ name, email, speciality }: { name: string; email: string; speciality: string }) {
+  return (
+    <div className="card-hover-effect" style={{ height: '220px', width: '300px', borderRadius: '20px', margin: '0 auto' }}>
+      <div style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%)', padding: 24, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
+        <div className="card-icon bg-green-500 text-white p-4 rounded-full w-16 h-16 flex items-center justify-center shadow-lg" style={{ backgroundColor: '#22c55e', width: 64, height: 64, margin: '0 auto' }}>
+          <FaUserMd className="text-2xl" style={{ width: 36, height: 36 }} />
+        </div>
+      </div>
+      <div className="p-5 flex-grow" style={{ textAlign: 'center' }}>
+        <h3 className="name" style={{ margin: 0 }}>{name}</h3>
+        <p className="desc" style={{ margin: 0 }}>{email}</p>
+        <span className="desc" style={{ color: '#22c55e', fontWeight: 600 }}>{speciality}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function SearchPage() {
   const userName = localStorage.getItem("userName") || "Patient";
   const [selectedSpeciality, setSelectedSpeciality] = useState<string | null>(null);
@@ -151,17 +169,16 @@ export default function SearchPage() {
                 {loading ? (
                   <div>Loading...</div>
                 ) : (
-                  <ul>
+                  <div className="flex flex-wrap gap-6 justify-center">
                     {doctors.map((doc) => (
-                      <li
+                      <DoctorCard
                         key={doc.id}
-                        className="mb-3 p-4 rounded-lg bg-blue-50 flex flex-col md:flex-row md:items-center md:gap-4"
-                      >
-                        <span className="font-semibold text-blue-700">{doc.doctorInfo.name}</span>
-                        <span className="text-gray-500">{doc.doctorInfo.email}</span>
-                      </li>
+                        name={doc.doctorInfo.name}
+                        email={doc.doctorInfo.email}
+                        speciality={doc.speciality}
+                      />
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
             )}
