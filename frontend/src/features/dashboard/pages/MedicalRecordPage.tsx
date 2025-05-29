@@ -9,7 +9,7 @@ const dummyMedicalRecord = {
   patientId: 40,
   note: { title: "General Checkup", description: "Patient in good health.", date: new Date().toLocaleDateString() },
   documents: [
-    { id: 1, name: "Blood Test.pdf", date: new Date().toLocaleDateString(), url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+    { id: 1, name: "Blood Test.pdf", date: new Date().toLocaleDateString(), url: "https://ec-bievres.ac-versailles.fr/IMG/pdf/test_pdf.pdf" },
     { id: 2, name: "X-Ray.pdf", date: new Date().toLocaleDateString(), url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
   ],
 };

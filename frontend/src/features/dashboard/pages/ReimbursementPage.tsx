@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import '../style/dash.css';
-
+import PdfCard from "../components/PdfCard";
 const dummyReimbursements = [
   { id: 1, amount: 120, status: "Pending", date: new Date() },
   { id: 2, amount: 80, status: "Paid", date: new Date(Date.now() - 86400000) },
@@ -39,7 +39,15 @@ export default function ReimbursementPage() {
             </ul>
           </div>
         </div>
+        <div  style={{paddingTop:'80px' , width:'40%'}}>
+        </div>
+        
       </div>
+
+
+
+      
+
     </div>
   );
 } 
