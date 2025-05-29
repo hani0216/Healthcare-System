@@ -67,9 +67,9 @@ public class SecurityConfig {
                 .pathMatchers("/doctors/specialities").permitAll()
 
 
-                    .pathMatchers("/doctors/{id}").hasRole("DOCTOR")// Permettre l'accès aux spécialités sans authentification
+                    .pathMatchers("/doctors/{id}").hasAnyRole("DOCTOR" ,"PATIENT")// Permettre l'accès aux spécialités sans authentification
                 // Routes protégées par rôle
-                .pathMatchers("/doctors/**").hasRole("DOCTOR")
+                .pathMatchers("/doctors/**").hasAnyRole("DOCTOR" , "PATIENT")
                 .pathMatchers("/patients/**").hasAnyRole("ADMIN", "PATIENT")
                     .pathMatchers(HttpMethod.GET, "/insurance-admins").hasAnyRole("INSURANCE_ADMIN", "PATIENT")
                     .pathMatchers("/insurance-admins/**").hasRole("INSURANCE_ADMIN")
