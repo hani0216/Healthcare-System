@@ -22,4 +22,6 @@ public interface InvoiceService {
     List<InvoiceDTO> getInvoicesByMedicalRecordId(Long medicalRecordId);
 
     List<InvoiceDTO> getInvoicesByGeneratedBy(Long userId);
+
+
 }

@@ -1,53 +1,89 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import '../style/dash.css';
-import PdfCard from "../components/PdfCard";
-const dummyReimbursements = [
-  { id: 1, amount: 120, status: "Pending", date: new Date() },
-  { id: 2, amount: 80, status: "Paid", date: new Date(Date.now() - 86400000) },
-];
+import BillingItem from '../components/BillingItem';
+import { fetchMedicalRecord } from '../services/appointmentService';
+import { fetchInvoicesByMedicalRecordId, fetchDoctorName, fetchReimbursementByInvoiceId } from '../services/medicalRecordService';
 
-export default function ReimbursementPage() {
+export default function BillingPage() {
   const userName = localStorage.getItem("userName") || "Patient";
-  const [reimbursements] = useState(dummyReimbursements);
+  const specificId = localStorage.getItem('specificId');
+  const [medicalRecordId, setMedicalRecordId] = useState<string | null>(null);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [doctorNames, setDoctorNames] = useState<Record<number, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Récupérer l'id du medical record
+  useEffect(() => {
+    async function fetchMrId() {
+      if (!specificId) return;
+      try {
+        const mr = await fetchMedicalRecord(specificId);
+        setMedicalRecordId(mr.id?.toString());
+      } catch (e: any) {
+        setError('Erreur lors de la récupération du dossier médical');
+      }
+    }
+    fetchMrId();
+  }, [specificId]);
+
+  // Récupérer les factures et les noms des médecins
+  useEffect(() => {
+    async function fetchInvoices() {
+      if (!medicalRecordId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const invs = await fetchInvoicesByMedicalRecordId(medicalRecordId);
+        setInvoices(invs);
+        // Récupérer les noms des médecins pour chaque facture
+        const uniqueDoctorIds: number[] = Array.from(new Set(invs.map((inv: any) => inv.generatedBy)));
+        const names: Record<number, string> = {};
+        await Promise.all(uniqueDoctorIds.map(async (id) => {
+          try {
+            names[id] = await fetchDoctorName(id);
+          } catch {
+            names[id] = 'Unknown';
+          }
+        }));
+        setDoctorNames(names);
+      } catch (e: any) {
+        setError(e.message || 'Erreur');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchInvoices();
+  }, [medicalRecordId]);
 
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
       <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
         <DashboardActionsBar userName={userName} />
-        <div className="container mx-auto p-6 max-w-2xl" style={{ marginTop: "40px" }}>
-          <div className="bg-white rounded-xl shadow-md overflow-hidden p-8" >
-            <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: '#28A6A7' }}>My Reimbursements</h2>
-            <ul>
-              {reimbursements.map(r => (
-                <li key={r.id} className="mb-3 p-4 rounded-lg flex justify-between items-center bg-blue-50">
-                  <div>
-                    <span className="font-semibold text-blue-700">{r.amount} €</span>
-                    <span className="ml-4 text-gray-500">{r.date.toLocaleDateString()}</span>
-                  </div>
-                  <span className={
-                    r.status === "Paid"
-                      ? "bg-green-200 text-green-800 px-3 py-1 rounded-full font-semibold"
-                      : "bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full font-semibold"
-                  }>
-                    {r.status}
-                  </span>
-                </li>
+        <div className="container mx-auto p-6 max-w-3xl" style={{ marginTop: "40px" , background: "#f5f6fa" , width:'60%'   }}>
+          <div className=" rounded-xl shadow-md overflow-hidden p-8"  style={{background: "#f5f6fa"}}>
+            <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: '#28A6A7' , background: "#f5f6fa"  }}>Invoices And Reimbursement</h2>
+            {loading && <div>Loading invoices...</div>}
+            {error && <div className="text-red-500">{error}</div>}
+            <div style={{background: "#f5f6fa", borderRadius:'10%'}}>
+              {invoices.map(inv => (
+                <BillingItem
+                  key={inv.id}
+                  date={inv.invoiceDate}
+                  price={inv.amount}
+                  description={inv.description}
+                  doctorName={doctorNames[inv.generatedBy] || 'Unknown'}
+                  invoiceId={inv.id}
+                  fetchReimbursement={fetchReimbursementByInvoiceId}
+                />
               ))}
-            </ul>
+            </div>
           </div>
         </div>
-        <div  style={{paddingTop:'80px' , width:'40%'}}>
-        </div>
-        
       </div>
-
-
-
-      
-
     </div>
   );
 } 

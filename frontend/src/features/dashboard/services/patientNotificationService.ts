@@ -14,6 +14,7 @@ export async function fetchPatientNotifications(specificId: string) {
   return response.json();
 }
 
+
 export async function fetchNotificationsByReceiverId(receiverId: string) {
   const token = localStorage.getItem("accessToken");
   const url = `http://localhost:8088/api/notifications/notifications/receiver/${receiverId}`;
@@ -62,7 +63,7 @@ export async function markNotificationAsSeen(notifId: string) {
 
 export async function deleteNotification(notifId: string) {
   const token = localStorage.getItem("accessToken");
-  const url = `http://localhost:/8088/api/notifications/notifications/${notifId}`;
+  const url = `http://localhost:8088/api/notifications/${notifId}`;
   const response = await fetch(url, {
     method: "DELETE",
     headers: {

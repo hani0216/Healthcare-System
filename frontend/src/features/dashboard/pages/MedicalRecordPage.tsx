@@ -26,6 +26,7 @@ export default function MedicalRecordPage() {
   const [error, setError] = useState<string | null>(null);
   const [medicalRecordId, setMedicalRecordId] = useState<string | null>(null);
   const specificId = localStorage.getItem('specificId');
+  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | null>(null);
 
   // Récupérer l'id du medical record au chargement
   useEffect(() => {
@@ -82,8 +83,9 @@ export default function MedicalRecordPage() {
       <SideBar />
       <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
         <DashboardActionsBar userName={userName} />
-        <div className="container mx-auto p-6 max-w-3xl" style={{ marginTop: "20px"  }}>
-          <div className=" rounded-xl shadow-md overflow-hidden p-8" style={{backgroundColor:'#f5f6fa' ,marginBottom:'12vh'}} >
+        <div className="container mx-auto p-6 max-w-6xl flex gap-8" style={{ marginTop: "20px" }}>
+          {/* Liste des documents à gauche */}
+          <div className="flex flex-col gap-4" style={{ width: '420px', minWidth: 320 }}>
             <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: '#28A6A7' }}>My Medical Record</h2>
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-2">Main Note</h3>
@@ -97,7 +99,7 @@ export default function MedicalRecordPage() {
               <h3 className="text-lg font-semibold mb-2">Documents</h3>
               {loading && <div>Loading documents...</div>}
               {error && <div className="text-red-500">{error}</div>}
-              <div className="flex flex-col gap-4"  style={{width:'70vh'}}>
+              <div className="flex flex-col gap-4">
                 {documents.map(doc => (
                   <PdfCard
                     key={doc.id}
@@ -106,16 +108,19 @@ export default function MedicalRecordPage() {
                     creator={doc.creator}
                     noteDescription={doc.note?.description || ''}
                     creationDate={doc.creationDate}
-                    onClick={() => setSelectedPdf(doc.content?.[0] || '')}
+                    onClick={() => setSelectedPdfBase64(doc.content?.[0] || '')}
                   />
                 ))}
               </div>
-              {selectedPdf && (
-                <div className="mt-6">
-                  <PDFViewer url={selectedPdf} onClose={() => setSelectedPdf(null)} />
-                </div>
-              )}
             </div>
+          </div>
+          {/* PDF Viewer à droite */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {selectedPdfBase64 ? (
+              <PDFViewer base64={selectedPdfBase64} onClose={() => setSelectedPdfBase64(null)} />
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>Sélectionnez un document pour l'afficher ici</div>
+            )}
           </div>
         </div>
       </div>

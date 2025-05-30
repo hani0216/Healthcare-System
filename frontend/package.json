@@ -25,6 +25,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "lucide-react": "^0.509.0",
+    "pdfjs-dist": "^5.2.133",
     "react": "^19.1.0",
     "react-big-calendar": "^1.18.0",
     "react-calendar": "^5.1.0",
