@@ -14,6 +14,7 @@ import CalendarPage from '../features/dashboard/pages/CalendarPage';
 import SearchPage from '../features/dashboard/pages/SearchPage';
 import ReimbursementPage from '../features/dashboard/pages/ReimbursementPage';
 import MedicalRecordPage from '../features/dashboard/pages/MedicalRecordPage';
+import NOTFOUNDPAGE from '../pages/NotFoundPage.jsx'
 
 
 
@@ -37,6 +38,7 @@ export default function AppRouter() {
         <Route path='/search' element={<SearchPage />}></Route>
         <Route path='/reimbursement' element={<ReimbursementPage />}></Route>
         <Route path='/medical-record' element={<MedicalRecordPage />}></Route>
+        <Route path='/notFound' element={<NOTFOUNDPAGE />}></Route>
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         {/* <Route path="/profile" element={<Profile />} /> */}
         {/* <Route path="/settings" element={<Settings />} /> */}

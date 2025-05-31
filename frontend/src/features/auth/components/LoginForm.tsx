@@ -4,6 +4,7 @@ import corilus from '../../../assets/corilus.png';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,7 +60,7 @@ export default function LoginForm() {
         console.error("Erreur lors de la récupération du specificId", e);
       }
 
-      // Appel pour récupérer le nom de l'utilisateur
+      // Appel pour récupérer le nom de l'utilisateur et le rôle
       try {
         const userDataResponse = await axios.get(
           `http://localhost:8088/api/users/email/${email}`,
@@ -71,14 +72,28 @@ export default function LoginForm() {
         );
         if (userDataResponse.data && userDataResponse.data.name) {
           localStorage.setItem('userName', userDataResponse.data.name);
-          console.log("userName ok :", userDataResponse.data.name);
+          console.log("userName ok :", userDataResponse.data.role);
+        }
+        if (userDataResponse.data && userDataResponse.data.role) {
+          localStorage.setItem('role', userDataResponse.data.role);
+          console.log(userDataResponse.data.doctorInfo)
+          if (userDataResponse.data.role === 'DOCTOR') {
+            navigate('/doctorHome');
+            return;
+          } else if (userDataResponse.data.role === 'INSURANCE_ADMIN') {
+            navigate('/insuranceHome');
+            return;
+          } else if(userDataResponse.data.role === 'PATIENT'){
+            navigate('/patientHome');
+            return;
+          }
         }
       } catch (e) {
-        console.error("Erreur lors de la récupération du userName", e);
+        console.error("Erreur lors de la récupération du userName ou du rôle", e);
+        // Par défaut, rediriger vers patientHome
+        navigate('/notFound');
+        return;
       }
-
-      // Rediriger l'utilisateur vers la page d'accueil ou une autre page
-      navigate('/patientHome');
     } catch (err) {
       setError('Invalid email or password');
     }
