@@ -4,8 +4,8 @@ import SignUpPage from '../features/auth/pages/SignUpPage';
 import DoctorSecondSignupPage from '../features/auth/pages/DoctorSecondSignupPage'
 import PatientSecondSignupPage from '../features/auth/pages/PatientSecondSignupPage'
 import InsuranceSignUp from '../features/auth/pages/InsuranceSecondSignupPage'
-import InsuranceHome from '../features/dashboard/pages/InsuranceHome'
-import DoctorHome from '../features/dashboard/pages/DoctorHome'
+import InsuranceHome from '../features/insuranceDashboard/pages/InsuranceHome'
+import DoctorHome from '../features/doctorDashboard/pages/DoctorHome'
 import PatientHome from '../features/dashboard/pages/PatientHome';
 import PatientNotification from '../features/dashboard/pages/PatienNotification';
 import HistoryPage from '../features/dashboard/pages/HistoryPage';
@@ -14,7 +14,7 @@ import CalendarPage from '../features/dashboard/pages/CalendarPage';
 import SearchPage from '../features/dashboard/pages/SearchPage';
 import ReimbursementPage from '../features/dashboard/pages/ReimbursementPage';
 import MedicalRecordPage from '../features/dashboard/pages/MedicalRecordPage';
-import NOTFOUNDPAGE from '../pages/NotFoundPage.jsx'
+
 
 
 
@@ -38,7 +38,6 @@ export default function AppRouter() {
         <Route path='/search' element={<SearchPage />}></Route>
         <Route path='/reimbursement' element={<ReimbursementPage />}></Route>
         <Route path='/medical-record' element={<MedicalRecordPage />}></Route>
-        <Route path='/notFound' element={<NOTFOUNDPAGE />}></Route>
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         {/* <Route path="/profile" element={<Profile />} /> */}
         {/* <Route path="/settings" element={<Settings />} /> */}
