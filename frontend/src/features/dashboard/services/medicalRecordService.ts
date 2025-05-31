@@ -23,6 +23,19 @@ export async function fetchDoctorName(authorId: number) {
   return data.doctorInfo?.name || 'Unknown';
 }
 
+export async function fetchDoctorInfo(authorId: number) {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`http://localhost:8088/doctors/${authorId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) throw new Error('Erreur lors de la récupération du docteur');
+  const data = await res.json();
+  return data.doctorInfo || 'Unknown';
+}
+
 export async function fetchInvoicesByMedicalRecordId(medicalRecordId: string) {
   const token = localStorage.getItem("accessToken");
 

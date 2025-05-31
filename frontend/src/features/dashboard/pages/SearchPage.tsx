@@ -176,7 +176,7 @@ export function DoctorCard({ name, email, speciality, address, phone }: DoctorCa
           }}
           onClick={handleBookNow}
         >
-          <FaComment style={{ marginRight: '8px' }} /> Book now
+          <FaComment style={{ marginRight: '8px' }} /> Contact now !
         </button>
       </div>
     </div>

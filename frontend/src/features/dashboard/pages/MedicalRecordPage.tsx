@@ -50,7 +50,7 @@ export default function MedicalRecordPage() {
       setError(null);
       try {
         const docs = await fetchPatientDocuments(medicalRecordId);
-                console.log("en train de recuperer")
+                console.log("en train de recuperer" , docs)
 
         const docsWithCreator = await Promise.all(
           docs.map(async (doc: any) => {
@@ -83,12 +83,18 @@ export default function MedicalRecordPage() {
       <SideBar />
       <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
         <DashboardActionsBar userName={userName} />
-        <div className="container mx-auto p-6 max-w-6xl flex gap-8" style={{ marginTop: "20px" }}>
+        <div className="container mx-auto p-6 max-w-6xl flex gap-8" style={{ marginTop: "20px"  }}>
           {/* Liste des documents à gauche */}
-          <div className="flex flex-col gap-4" style={{ width: '420px', minWidth: 320 }}>
-            <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: '#28A6A7' }}>My Medical Record</h2>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Main Note</h3>
+          <div className="flex flex-col gap-4" style={{ width: '420px', minWidth: 320    }}>
+            <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: '#28A6A7'  }}>My Medical Record</h2>
+            <div className="mb-6" style={{  backgroundColor: 'white',
+        borderRadius: '0.5rem',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        overflow: 'hidden',
+        transition: 'all 0.3s ease-in-out',
+        cursor: 'pointer',
+}}>
+              <h3 className="text-lg font-semibold mb-2" style={{margin:'4vh' }}>Main Note</h3>
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="font-semibold text-blue-700">{dummyMedicalRecord.note.title}</div>
                 <div className="text-gray-500 mb-2">{dummyMedicalRecord.note.date}</div>
@@ -103,10 +109,12 @@ export default function MedicalRecordPage() {
                 {documents.map(doc => (
                   <PdfCard
                     key={doc.id}
-                    title={doc.note?.title || doc.name}
+                    documentTitle={doc.name}
+                    noteTitle={doc.note?.title || ''}
+                    noteDescription={doc.note?.description || ''}
+                    doctorId={doc.uploadedById}
                     contentUrl={doc.content?.[0] || ''}
                     creator={doc.creator}
-                    noteDescription={doc.note?.description || ''}
                     creationDate={doc.creationDate}
                     onClick={() => setSelectedPdfBase64(doc.content?.[0] || '')}
                   />
@@ -119,7 +127,7 @@ export default function MedicalRecordPage() {
             {selectedPdfBase64 ? (
               <PDFViewer base64={selectedPdfBase64} onClose={() => setSelectedPdfBase64(null)} />
             ) : (
-              <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>Sélectionnez un document pour l'afficher ici</div>
+              <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>Select document to view</div>
             )}
           </div>
         </div>
