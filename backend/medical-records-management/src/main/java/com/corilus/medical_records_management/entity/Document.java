@@ -15,10 +15,17 @@ public class Document {
 
     private Date creationDate;
 
+    // Utiliser FetchType.LAZY pour éviter de charger le contenu automatiquement
     @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(columnDefinition = "LONGBLOB")
     private byte[] content;
 
     private String name;
+    
+    // Ajouter des métadonnées utiles
+    private String contentType;
+    private Long fileSize;
 
     @JoinColumn(name = "medical_record_id")
     @JsonIgnore
@@ -26,6 +33,6 @@ public class Document {
 
     private Long uploadedById;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     private Note note;
 }
