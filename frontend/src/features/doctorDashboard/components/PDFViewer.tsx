@@ -1,16 +1,44 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface PDFViewerProps {
-  url?: string;
-  base64?: string; // base64 string (sans data:...)
+  bytes?: number[]; // tableau de bytes (rare avec Spring)
+  base64?: string;  // chaîne base64 (cas courant avec Spring)
   onClose: () => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ url, base64, onClose }) => {
-  // Si base64 fourni, construire un data URL
-  const src = base64
-    ? `data:application/pdf;base64,${base64}`
-    : url || undefined;
+// Utilitaire pour décoder le base64 en Uint8Array
+function base64ToUint8Array(base64: string): Uint8Array {
+  const binaryString = window.atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose }) => {
+  const src = useMemo(() => {
+    console.log("PDFViewer props:", { bytes, base64 });
+    if (bytes && Array.isArray(bytes) && bytes.length > 0) {
+      console.log("PDFViewer utilise bytes, taille:", bytes.length);
+      const uint8 = new Uint8Array(bytes);
+      const blob = new Blob([uint8], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      console.log("PDFViewer url (bytes):", url);
+      return url;
+    }
+    if (base64 && typeof base64 === "string") {
+      console.log("PDFViewer utilise base64, taille:", base64.length);
+      const uint8 = base64ToUint8Array(base64);
+      const blob = new Blob([uint8], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      console.log("PDFViewer url (base64):", url);
+      return url;
+    }
+    console.log("PDFViewer : aucune donnée PDF à afficher");
+    return undefined;
+  }, [base64, bytes]);
 
   return (
     <div style={{ position: 'relative', width: '100%', minHeight: 500, background: '#f9fafb', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', padding: 16 }}>
@@ -41,10 +69,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ url, base64, onClose }) => {
           style={{ border: 'none', borderRadius: 12, marginTop: 16 }}
         />
       ) : (
-        <div style={{ textAlign: 'center', marginTop: 40, color: '#888' }}>No PDF to display</div>
+        <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>No PDF to display</div>
       )}
     </div>
   );
 };
 
-export default PDFViewer; 
+export default PDFViewer;

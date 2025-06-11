@@ -15,7 +15,8 @@ export default function DoctorMedicalRecordPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | null>(null);
+  const [selectedPdfBytes, setSelectedPdfBytes] = useState<number[] | null>(null);
+  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | undefined>(undefined);
   const [doctorName, setDoctorName] = useState<string>("");
   const [doctorNames, setDoctorNames] = useState<{ [key: number]: string }>({});
   // States pour l'upload
@@ -68,20 +69,18 @@ export default function DoctorMedicalRecordPage() {
     setUploadLoading(true);
     setUploadError(null);
     try {
-      // Lire le fichier en ArrayBuffer puis en Uint8Array
-      const arrayBuffer = await uploadFile.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
+
 
       // Encoder en base64 pour l'envoyer dans le JSON (le backend doit décoder en byte[])
-      const base64String = btoa(String.fromCharCode(...uint8Array));
+    const arrayBuffer = await uploadFile.arrayBuffer();
+const uint8Array = new Uint8Array(arrayBuffer);
+const specificId = localStorage.getItem("specificId");
 
-      const specificId = localStorage.getItem("specificId");
-      const payload = {
-        content: [base64String],
-        name: documentTitle,
-        uploadedById: specificId ? parseInt(specificId) : 0,
-      };
-
+const payload = {
+  content: Array.from(uint8Array), // ✅ Bon : tableau de bytes (nombres)
+  name: documentTitle,
+  uploadedById: specificId ? parseInt(specificId) : 0,
+};
       const token = localStorage.getItem("accessToken");
       const res = await fetch(`http://localhost:8088/medical-records/${medicalRecord.id}/addDocument`, {
         method: "POST",
@@ -98,11 +97,15 @@ export default function DoctorMedicalRecordPage() {
         try {
           const errorData = await res.json();
           errorMsg = errorData.message || JSON.stringify(errorData) || errorMsg;
+          console.log("Erreur API (json):", errorData); // <-- Ajout du log JSON
         } catch {
           // Si ce n'est pas du JSON, lire le texte brut
           try {
             errorMsg = await res.text();
-          } catch {}
+            console.log("Erreur API (texte):", errorMsg); // <-- Ajout du log texte brut
+          } catch (e) {
+            console.log("Erreur API (exception):", e); // <-- Ajout du log exception
+          }
         }
         throw new Error(errorMsg);
       }
@@ -232,7 +235,16 @@ export default function DoctorMedicalRecordPage() {
                     contentUrl={doc.content?.[0] || ''}
                     creator={doctorNames[doc.uploadedById] || "-"}
                     creationDate={doc.creationDate}
-                    onClick={() => setSelectedPdfBase64(doc.content?.[0] || '')}
+                    
+                    onClick={() => {
+  if (Array.isArray(doc.content)) {
+    setSelectedPdfBytes(doc.content);
+    setSelectedPdfBase64(undefined);
+  } else if (typeof doc.content === "string") {
+    setSelectedPdfBase64(doc.content);
+    setSelectedPdfBytes(undefined);
+  }
+}}
                   />
                 ))}
               </div>
@@ -305,11 +317,13 @@ export default function DoctorMedicalRecordPage() {
               )}
             </div>
             {/* PDF Viewer */}
-            {selectedPdfBase64 ? (
-              <PDFViewer base64={selectedPdfBase64} onClose={() => setSelectedPdfBase64(null)} />
-            ) : (
-              <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>Select document to view</div>
-            )}
+            {selectedPdfBytes && Array.isArray(selectedPdfBytes) && selectedPdfBytes.length > 0 ? (
+  <PDFViewer bytes={selectedPdfBytes} onClose={() => setSelectedPdfBytes(null)} />
+) : selectedPdfBase64 ? (
+  <PDFViewer base64={selectedPdfBase64} onClose={() => setSelectedPdfBase64(undefined)} />
+) : (
+  <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>No PDF to display</div>
+)}
           </div>
         </div>
       </div>
