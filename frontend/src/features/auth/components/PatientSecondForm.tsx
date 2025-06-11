@@ -51,6 +51,7 @@ export default function PatientSecondForm() {
 
       const token = localStorage.getItem('accessToken');
       const userId = localStorage.getItem('userId');
+      console.log('Payload:', payload);
 
       await updatePatient(userId, payload, token);
 

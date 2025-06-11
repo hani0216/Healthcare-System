@@ -251,9 +251,9 @@ const payload = {
             </div>
           </div>
           {/* PDF Viewer à droite + Upload */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0  }}>
             {/* Section Upload */}
-            <div style={{ marginBottom: 24, background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 20 }}>
+            <div style={{ marginBottom: 24, background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 20, marginTop: 70 ,paddingTop: '20px'}}>
               <button
                 style={{
                   background: "#2563eb",
@@ -267,7 +267,8 @@ const payload = {
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  marginBottom: showUpload ? 16 : 0
+                  marginBottom: showUpload ? 16 : 0,
+                  
                 }}
                 onClick={() => setShowUpload(v => !v)}
               >
