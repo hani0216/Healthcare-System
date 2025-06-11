@@ -4,9 +4,9 @@ import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import PdfCard from "../components/PdfCard";
 import PDFViewer from "../components/PDFViewer";
-import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName } from "../services/medicalRecordService";
+import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote } from "../services/medicalRecordService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPen, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faPen, faUpload, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 export default function DoctorMedicalRecordPage() {
   const { patientId } = useParams();
@@ -26,6 +26,12 @@ export default function DoctorMedicalRecordPage() {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [documentTitle, setDocumentTitle] = useState("");
+
+  // Nouveaux états pour l'édition de note
+  const [editNoteMode, setEditNoteMode] = useState(false);
+  const [editNoteTitle, setEditNoteTitle] = useState("");
+  const [editNoteDescription, setEditNoteDescription] = useState("");
+  const [noteUpdateLoading, setNoteUpdateLoading] = useState(false);
 
   useEffect(() => {
     if (!patientId) return;
@@ -60,27 +66,69 @@ export default function DoctorMedicalRecordPage() {
     // eslint-disable-next-line
   }, [patientId]);
 
+  // Synchronise les champs d'édition avec la note actuelle
+  useEffect(() => {
+    if (medicalRecord?.note) {
+      setEditNoteTitle(medicalRecord.note.title || "");
+      setEditNoteDescription(medicalRecord.note.description || "");
+    }
+  }, [medicalRecord?.note]);
+
+  // Fonction pour valider la modification de la note principale
+  const handleSubmitNoteUpdate = async () => {
+    let timeoutTriggered = false;
+    // Lance un timeout qui forcera le reload après 1 seconde
+    const timeout = setTimeout(() => {
+      timeoutTriggered = true;
+      window.location.reload();
+    }, 1000);
+
+    try {
+      setNoteUpdateLoading(true);
+      const token = localStorage.getItem("accessToken") || "";
+      const mrId = medicalRecord?.id?.toString();
+      const specificId = localStorage.getItem("specificId") || "";
+      if (!mrId || !specificId) throw new Error("Identifiants manquants");
+      const noteId = await fetchNoteIdFromMedicalRecord(mrId, token);
+      await updateMainNote(noteId, specificId, editNoteTitle, editNoteDescription, token);
+      if (!timeoutTriggered) {
+        clearTimeout(timeout);
+        window.location.reload();
+      }
+    } catch (e: any) {
+      // Ne rien afficher, pas d'alert ni de console.error
+    } finally {
+      setNoteUpdateLoading(false);
+    }
+  };
+  
+
   // Nouvelle fonction d'upload adaptée à l'API demandée
   const handleUpload = async () => {
+    let timeoutTriggered = false;
+    // Timeout qui forcera le reload après 2 secondes
+    const timeout = setTimeout(() => {
+      timeoutTriggered = true;
+      window.location.reload();
+    }, 2000);
+
     if (!uploadFile || !medicalRecord?.id || !documentTitle) {
       setUploadError("Please select a PDF file and enter a document title.");
+      clearTimeout(timeout);
       return;
     }
     setUploadLoading(true);
     setUploadError(null);
     try {
+      const arrayBuffer = await uploadFile.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const specificId = localStorage.getItem("specificId");
 
-
-      // Encoder en base64 pour l'envoyer dans le JSON (le backend doit décoder en byte[])
-    const arrayBuffer = await uploadFile.arrayBuffer();
-const uint8Array = new Uint8Array(arrayBuffer);
-const specificId = localStorage.getItem("specificId");
-
-const payload = {
-  content: Array.from(uint8Array), // ✅ Bon : tableau de bytes (nombres)
-  name: documentTitle,
-  uploadedById: specificId ? parseInt(specificId) : 0,
-};
+      const payload = {
+        content: Array.from(uint8Array),
+        name: documentTitle,
+        uploadedById: specificId ? parseInt(specificId) : 0,
+      };
       const token = localStorage.getItem("accessToken");
       const res = await fetch(`http://localhost:8088/medical-records/${medicalRecord.id}/addDocument`, {
         method: "POST",
@@ -97,14 +145,13 @@ const payload = {
         try {
           const errorData = await res.json();
           errorMsg = errorData.message || JSON.stringify(errorData) || errorMsg;
-          console.log("Erreur API (json):", errorData); // <-- Ajout du log JSON
+          console.log("Erreur API (json):", errorData);
         } catch {
-          // Si ce n'est pas du JSON, lire le texte brut
           try {
             errorMsg = await res.text();
-            console.log("Erreur API (texte):", errorMsg); // <-- Ajout du log texte brut
+            console.log("Erreur API (texte):", errorMsg);
           } catch (e) {
-            console.log("Erreur API (exception):", e); // <-- Ajout du log exception
+            console.log("Erreur API (exception):", e);
           }
         }
         throw new Error(errorMsg);
@@ -112,11 +159,13 @@ const payload = {
       setShowUpload(false);
       setUploadFile(null);
       setDocumentTitle("");
-      // Refresh documents
-      const docs = await fetchPatientDocuments(medicalRecord.id);
-      setDocuments(docs);
+      // Refresh documents (optionnel, car reload va tout recharger)
+      if (!timeoutTriggered) {
+        clearTimeout(timeout);
+        window.location.reload();
+      }
     } catch (err: any) {
-      setUploadError(err.message || "Upload failed");
+      // Ne rien afficher, pas d'alert ni de console.error
     } finally {
       setUploadLoading(false);
     }
@@ -153,9 +202,18 @@ const payload = {
                     textDecoration: 'none',
                     fontWeight: 500,
                   }}>Title:</span>
-                  <span className="font-semibold text-blue-700" style={{ fontSize: 16 }}>
-                    {medicalRecord?.note?.title || "No note"}
-                  </span>
+                  {editNoteMode ? (
+                    <input
+                      type="text"
+                      value={editNoteTitle}
+                      onChange={e => setEditNoteTitle(e.target.value)}
+                      style={{ fontSize: 16, fontWeight: 600, borderRadius: 4, border: '1px solid #d1d5db', padding: 4, width: 220 }}
+                    />
+                  ) : (
+                    <span className="font-semibold text-blue-700" style={{ fontSize: 16 }}>
+                      {medicalRecord?.note?.title || "No note"}
+                    </span>
+                  )}
                 </div>
                 {/* Description */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -168,9 +226,17 @@ const payload = {
                     textDecoration: 'none',
                     fontWeight: 500,
                   }}>Note Description:</span>
-                  <span style={{ fontSize: 15, color: "#222" }}>
-                    {medicalRecord?.note?.description || ""}
-                  </span>
+                  {editNoteMode ? (
+                    <textarea
+                      value={editNoteDescription}
+                      onChange={e => setEditNoteDescription(e.target.value)}
+                      style={{ fontSize: 15, borderRadius: 4, border: '1px solid #d1d5db', padding: 4, width: 220, minHeight: 40 }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: 15, color: "#222" }}>
+                      {medicalRecord?.note?.description || ""}
+                    </span>
+                  )}
                 </div>
                 {/* Last update */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -211,9 +277,32 @@ const payload = {
                 display: 'flex',
                 gap: 16
               }}>
-                <span style={{ cursor: 'pointer', color: '#2563eb', fontSize: 22 }} title="Edit">
-                  <FontAwesomeIcon icon={faPen} />
-                </span>
+                {editNoteMode ? (
+                  <>
+                    <span
+                      style={{ cursor: 'pointer', color: '#22c55e', fontSize: 22 }}
+                      title="Valider"
+                      onClick={handleSubmitNoteUpdate
+                        
+                      }
+                    >
+                      <FontAwesomeIcon icon={faCheck} />
+                    </span>
+                   
+                  </>
+                ) : (
+                  <span
+                    style={{ cursor: 'pointer', color: '#2563eb', fontSize: 22 }}
+                    title="Edit"
+                    onClick={() => {
+                      setEditNoteTitle(medicalRecord?.note?.title || "");
+                      setEditNoteDescription(medicalRecord?.note?.description || "");
+                      setEditNoteMode(true);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faPen} />
+                  </span>
+                )}
                 <span style={{ cursor: 'pointer', color: '#e11d48', fontSize: 22 }} title="Delete">
                   <FontAwesomeIcon icon={faTrash} />
                 </span>
@@ -235,16 +324,15 @@ const payload = {
                     contentUrl={doc.content?.[0] || ''}
                     creator={doctorNames[doc.uploadedById] || "-"}
                     creationDate={doc.creationDate}
-                    
                     onClick={() => {
-  if (Array.isArray(doc.content)) {
-    setSelectedPdfBytes(doc.content);
-    setSelectedPdfBase64(undefined);
-  } else if (typeof doc.content === "string") {
-    setSelectedPdfBase64(doc.content);
-    setSelectedPdfBytes(undefined);
-  }
-}}
+                      if (Array.isArray(doc.content)) {
+                        setSelectedPdfBytes(doc.content);
+                        setSelectedPdfBase64(undefined);
+                      } else if (typeof doc.content === "string") {
+                        setSelectedPdfBase64(doc.content);
+                        setSelectedPdfBytes(undefined);
+                      }
+                    }}
                   />
                 ))}
               </div>

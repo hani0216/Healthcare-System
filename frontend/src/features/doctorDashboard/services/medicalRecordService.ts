@@ -102,4 +102,34 @@ export async function fetchMedicalRecordById(mrId: string) {
   return await response.json();
 }
 
+export async function fetchNoteIdFromMedicalRecord(mrId: string, token: string): Promise<number> {
+  const res = await fetch(`http://localhost:8088/medical-records/${mrId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (!res.ok) throw new Error("Erreur lors de la récupération du dossier médical");
+  const data = await res.json();
+  if (!data.note || typeof data.note.id !== "number") throw new Error("Note introuvable");
+  return data.note.id;
+}
+
+export async function updateMainNote(noteId: number, specificId: string, title: string, description: string, token: string) {
+  const res = await fetch(`http://localhost:8088/medical-records/${noteId}/updateNoteForMr/${specificId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ title, description })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || "Erreur lors de la mise à jour de la note");
+  }
+  
+  return await res.json();
+}
+
 
