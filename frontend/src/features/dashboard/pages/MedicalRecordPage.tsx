@@ -21,12 +21,12 @@ const dummyMedicalRecord = {
 export default function MedicalRecordPage() {
   const userName = localStorage.getItem("userName") || "Patient";
   const [documents, setDocuments] = useState<any[]>([]);
-  const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
+  const [selectedPdfBytes, setSelectedPdfBytes] = useState<number[] | null>(null);
+  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [medicalRecordId, setMedicalRecordId] = useState<string | null>(null);
   const specificId = localStorage.getItem('specificId');
-  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | null>(null);
 
   // Récupérer l'id du medical record au chargement
   useEffect(() => {
@@ -50,17 +50,13 @@ export default function MedicalRecordPage() {
       setError(null);
       try {
         const docs = await fetchPatientDocuments(medicalRecordId);
-                console.log("en train de recuperer" , docs)
-
         const docsWithCreator = await Promise.all(
           docs.map(async (doc: any) => {
             let creator = 'Unknown';
             try {
               creator = await fetchDoctorName(doc.note.authorId);
-              console.log("rec")
-              console.log(doc.note.authorId)
             } catch (e){
-              console.log("erreur de recuperation" , e)
+              // ignore
             }
             return {
               ...doc,
@@ -116,7 +112,15 @@ export default function MedicalRecordPage() {
                     contentUrl={doc.content?.[0] || ''}
                     creator={doc.creator}
                     creationDate={doc.creationDate}
-                    onClick={() => setSelectedPdfBase64(doc.content?.[0] || '')}
+                    onClick={() => {
+                      if (Array.isArray(doc.content)) {
+                        setSelectedPdfBytes(doc.content);
+                        setSelectedPdfBase64(undefined);
+                      } else if (typeof doc.content === "string") {
+                        setSelectedPdfBase64(doc.content);
+                        setSelectedPdfBytes(null);
+                      }
+                    }}
                   />
                 ))}
               </div>
@@ -124,8 +128,10 @@ export default function MedicalRecordPage() {
           </div>
           {/* PDF Viewer à droite */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            {selectedPdfBase64 ? (
-              <PDFViewer base64={selectedPdfBase64} onClose={() => setSelectedPdfBase64(null)} />
+            {selectedPdfBytes && Array.isArray(selectedPdfBytes) && selectedPdfBytes.length > 0 ? (
+              <PDFViewer bytes={selectedPdfBytes} onClose={() => setSelectedPdfBytes(null)} />
+            ) : selectedPdfBase64 ? (
+              <PDFViewer base64={selectedPdfBase64} onClose={() => setSelectedPdfBase64(undefined)} />
             ) : (
               <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>Select document to view</div>
             )}
@@ -134,4 +140,4 @@ export default function MedicalRecordPage() {
       </div>
     </div>
   );
-} 
+}
