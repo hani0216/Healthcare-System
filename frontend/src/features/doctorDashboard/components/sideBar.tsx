@@ -1,6 +1,8 @@
 import { Sidebar, Menu, MenuItem } from 'react-pro-sidebar';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaUser, FaCalendarAlt, FaSearch, FaMoneyCheckAlt, FaBookMedical, FaBars, FaSignOutAlt, FaTachometerAlt, FaHistory, FaBell } from 'react-icons/fa';
+import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 import '../../../index.css';
 
@@ -108,6 +110,13 @@ export default function SideBar() {
                         active={location.pathname === "/doctorSearch"}
                     >
                         Search
+                    </MenuItem>
+                    <MenuItem
+                        icon={<FontAwesomeIcon icon={faEnvelope} />}
+                        component={<Link to="/messages" />}
+                        active={location.pathname === "/messages"}
+                    >
+                        Messages
                     </MenuItem>
                     {/* Ajoute ici d'autres liens spécifiques au médecin si besoin */}
                 </Menu>
