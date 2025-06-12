@@ -17,6 +17,7 @@ export default function DoctorMedicalRecordPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedPdfBytes, setSelectedPdfBytes] = useState<number[] | null>(null);
   const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | undefined>(undefined);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(null); // AJOUT
   const [doctorName, setDoctorName] = useState<string>("");
   const [doctorNames, setDoctorNames] = useState<{ [key: number]: string }>({});
   // States pour l'upload
@@ -348,6 +349,7 @@ export default function DoctorMedicalRecordPage() {
                         setSelectedPdfBase64(doc.content);
                         setSelectedPdfBytes(undefined);
                       }
+                      setSelectedDocumentId(doc.id); // AJOUT : mémorise l'id du doc sélectionné
                     }}
                     onDelete={() => handleDeleteDocument(doc.id)}
                   />
@@ -424,12 +426,12 @@ export default function DoctorMedicalRecordPage() {
             </div>
             {/* PDF Viewer */}
             {selectedPdfBytes && Array.isArray(selectedPdfBytes) && selectedPdfBytes.length > 0 ? (
-  <PDFViewer bytes={selectedPdfBytes} onClose={() => setSelectedPdfBytes(null)} />
-) : selectedPdfBase64 ? (
-  <PDFViewer base64={selectedPdfBase64} onClose={() => setSelectedPdfBase64(undefined)} />
-) : (
-  <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>No PDF to display</div>
-)}
+              <PDFViewer documentId={selectedDocumentId ?? 0} bytes={selectedPdfBytes} onClose={() => { setSelectedPdfBytes(null); setSelectedDocumentId(null); }} />
+            ) : selectedPdfBase64 ? (
+              <PDFViewer documentId={selectedDocumentId ?? 0} base64={selectedPdfBase64} onClose={() => { setSelectedPdfBase64(undefined); setSelectedDocumentId(null); }} />
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>No PDF to display</div>
+            )}
           </div>
         </div>
       </div>

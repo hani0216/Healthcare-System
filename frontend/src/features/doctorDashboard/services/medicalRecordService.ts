@@ -248,4 +248,38 @@ export async function fetchDoctorsByName(doctorName: string) {
   }
 }
 
+/**
+ * Envoie un message de partage de document à un autre médecin
+ * @param senderId ID de l'expéditeur (médecin courant)
+ * @param receiverId ID du destinataire (médecin sélectionné)
+ * @param description Message à envoyer
+ * @param resourceId ID du document à partager
+ */
+export async function sendDocument(senderId: number, receiverId: number, description: string, resourceId: number) {
+  const token = localStorage.getItem("accessToken");
+  const body = {
+    receiverId,
+    description,
+    resourceType: "DOCUMENT",
+    resourceId,
+    senderId
+  };
+
+  const res = await fetch(`http://localhost:8088/api/sharing-messages/${senderId}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || "Erreur lors du partage du document");
+  }
+
+  return await res.json();
+}
+
 

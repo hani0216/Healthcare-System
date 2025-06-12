@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { fetchSpecialities, fetchDoctorsBySpeciality, fetchDoctorsByName } from '../services/medicalRecordService';
+import { sendDocument, fetchSpecialities, fetchDoctorsBySpeciality, fetchDoctorsByName } from '../services/medicalRecordService';
 import { data } from 'react-router-dom';
 
 interface PDFViewerProps {
@@ -7,9 +7,10 @@ interface PDFViewerProps {
   base64?: string;
   onClose: () => void;
   documentTitle?: string;
+  documentId: number; 
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentTitle }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentTitle, documentId }) => {
   const [showShare, setShowShare] = useState(false);
   const [message, setMessage] = useState('');
   const [doctors, setDoctors] = useState<{ id: number; name: string; speciality?: string }[]>([]);
@@ -83,6 +84,30 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentT
       setDoctors([]);
     }
   }, [showShare, searchMode, searchValue]);
+
+  const handleShare = async () => {
+    const senderId = Number(localStorage.getItem("specificId"));
+    const receiverId = selectedDoctor;
+    const description = message;
+    const resourceId = documentId; // Assure-toi de passer documentId en prop à PDFViewer
+
+    console.log("sendDocument params:", { senderId, receiverId, description, resourceId });
+
+    if (!senderId || !receiverId || !resourceId) {
+      alert("Veuillez sélectionner un médecin et vérifier les informations.");
+      return;
+    }
+
+    try {
+      await sendDocument(senderId, receiverId, description, resourceId);
+      alert("Document partagé avec succès !");
+      setShowShare(false);
+      setMessage('');
+      setSelectedDoctor(undefined);
+    } catch (err) {
+      alert("Erreur lors du partage du document.");
+    }
+  };
 
   return (
     <div style={{ position: 'relative', width: '100%', minHeight: 800, background: '#f9fafb', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', padding: 16 }}>
@@ -244,8 +269,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentT
                 fontSize: 16,
                 cursor: 'pointer',
               }}
-              // À relier à ta future API de partage
-              onClick={() => {/* Appel API de partage ici */}}
+              onClick={handleShare}
             >
               Share
             </button>

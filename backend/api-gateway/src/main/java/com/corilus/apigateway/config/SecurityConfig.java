@@ -82,6 +82,8 @@ public class SecurityConfig {
                     .pathMatchers("/api/invoices/**").hasAnyRole("PATIENT" ,"DOCTOR")
                     .pathMatchers("/api/reimbursements/**").hasAnyRole("PATIENT","DOCTOR")
 
+                    .pathMatchers("api/sharing-messages/**").hasAnyRole("DOCTOR", "INSURANCE_ADMIN")
+
 
 
                 // Toutes les autres routes nécessitent une authentification
