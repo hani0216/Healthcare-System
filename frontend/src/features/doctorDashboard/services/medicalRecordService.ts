@@ -132,4 +132,19 @@ export async function updateMainNote(noteId: number, specificId: string, title: 
   return await res.json();
 }
 
+export async function deleteDocument(documentId: number, token: string) {
+  const res = await fetch(`http://localhost:8088/medical-records/document/${documentId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || "Erreur lors de la suppression du document");
+  }
+  return true;
+}
+
 

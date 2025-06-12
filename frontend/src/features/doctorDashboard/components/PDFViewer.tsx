@@ -41,7 +41,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose }) => {
   }, [base64, bytes]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', minHeight: 500, background: '#f9fafb', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', padding: 16 }}>
+    <div style={{ position: 'relative', width: '100%', minHeight: 800, background: '#f9fafb', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', padding: 16 }}>
       <button
         onClick={onClose}
         style={{
@@ -65,7 +65,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose }) => {
           src={src}
           title="PDF Viewer"
           width="100%"
-          height="500px"
+          height="800px"
           style={{ border: 'none', borderRadius: 12, marginTop: 16 }}
         />
       ) : (

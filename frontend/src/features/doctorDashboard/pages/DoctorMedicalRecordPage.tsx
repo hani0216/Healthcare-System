@@ -4,7 +4,7 @@ import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import PdfCard from "../components/PdfCard";
 import PDFViewer from "../components/PDFViewer";
-import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote } from "../services/medicalRecordService";
+import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote, deleteDocument } from "../services/medicalRecordService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen, faUpload, faCheck } from '@fortawesome/free-solid-svg-icons';
 
@@ -171,6 +171,20 @@ export default function DoctorMedicalRecordPage() {
     }
   };
 
+  const handleDeleteDocument = async (documentId: number) => {
+    try {
+      const token = localStorage.getItem("accessToken") || "";
+      await deleteDocument(documentId, token);
+      // Rafraîchir la liste après suppression
+      if (medicalRecord?.id) {
+        const docs = await fetchPatientDocuments(medicalRecord.id);
+        setDocuments(docs);
+      }
+    } catch (e: any) {
+      // Optionnel : afficher une erreur
+    }
+  };
+
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
@@ -333,6 +347,7 @@ export default function DoctorMedicalRecordPage() {
                         setSelectedPdfBytes(undefined);
                       }
                     }}
+                    onDelete={() => handleDeleteDocument(doc.id)}
                   />
                 ))}
               </div>
