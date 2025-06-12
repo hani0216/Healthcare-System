@@ -338,6 +338,8 @@ export default function DoctorMedicalRecordPage() {
                     contentUrl={doc.content?.[0] || ''}
                     creator={doctorNames[doc.uploadedById] || "-"}
                     creationDate={doc.creationDate}
+                    documentId={doc.id}
+                    noteId={doc.note?.id}
                     onClick={() => {
                       if (Array.isArray(doc.content)) {
                         setSelectedPdfBytes(doc.content);

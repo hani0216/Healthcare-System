@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import PdfImg from '../../../assets/pdf.png';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { fetchDoctorInfo } from '../services/medicalRecordService';
+import { fetchDoctorInfo, initializeNote, updateNote } from '../services/medicalRecordService';
 // Import dynamique de DoctorCard
 // @ts-ignore
 import { DoctorCard } from '../../dashboard/pages/SearchPage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faPen } from '@fortawesome/free-solid-svg-icons';
 
 interface PdfCardProps {
   noteTitle: string;
@@ -19,6 +19,8 @@ interface PdfCardProps {
   doctorId: number;
   onClick: () => void;
   onDelete?: () => void; // <-- Ajoute cette prop pour la suppression
+  documentId?: string; // <-- Ajoute cette prop si besoin
+  noteId?: string;     // <-- Ajoute cette prop si besoin
 }
 
 // Modal simple
@@ -47,6 +49,8 @@ const PdfCard: React.FC<PdfCardProps> = ({
   doctorId,
   onClick,
   onDelete,
+  documentId, // <-- Ajoute cette prop si besoin
+  noteId,     // <-- Ajoute cette prop si besoin
 }) => {
   // Convertir Timestamp → Date JS si nécessaire
   const dateObj = creationDate?.toDate ? creationDate.toDate() : new Date(creationDate);
@@ -55,10 +59,22 @@ const PdfCard: React.FC<PdfCardProps> = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [doctorInfo, setDoctorInfo] = useState<any>(null);
   const [showDescription, setShowDescription] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(noteTitle);
+  const [editedDescription, setEditedDescription] = useState(noteDescription);
 
   const handleTitleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowDescription((prev) => !prev);
+    setEditMode(false); // lecture seule
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDescription(true);
+    setEditMode(true);
+    setEditedTitle(noteTitle); // reset à la valeur actuelle
+    setEditedDescription(noteDescription); // reset à la valeur actuelle
   };
 
   // Récupérer les infos du médecin (dummy fetch, à adapter si besoin)
@@ -72,6 +88,30 @@ const PdfCard: React.FC<PdfCardProps> = ({
       setDoctorInfo(null);
       setModalOpen(true);
     }
+  };
+
+  // Ajoute cette fonction pour gérer le bouton "Update note"
+  const handleUpdateNote = async () => {
+    const token = localStorage.getItem("accessToken");
+    const specificId = localStorage.getItem("specificId");
+
+    // Lance la requête mais ne l'attend pas
+    if (!noteDescription) {
+      if (documentId && specificId && token) {
+        initializeNote(documentId, specificId, editedTitle, editedDescription, token);
+      }
+    } else {
+      if (noteId && token) {
+        updateNote(noteId, editedTitle, editedDescription, token);
+      }
+    }
+    setEditMode(false);
+    setShowDescription(false);
+
+    // Rafraîchir la page après 1.5 secondes, sans attendre la réponse de l'API
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
 
   return (
@@ -154,10 +194,27 @@ const PdfCard: React.FC<PdfCardProps> = ({
                 cursor: 'pointer',
                 textDecoration: 'none',
                 fontWeight: 500,
+                position: 'relative',
+                display: 'inline-block',
+                minWidth: 90,
               }}
               onClick={handleTitleClick}
             >
               Note : {noteTitle}
+              <span
+                style={{
+                  position: 'absolute',
+                  right: 4,
+                  bottom: 2,
+                  color: '#1e40af',
+                  fontSize: 14,
+                  cursor: 'pointer',
+                }}
+                onClick={handleEditClick}
+                title="Modifier la note"
+              >
+                <FontAwesomeIcon icon={faPen} />
+              </span>
             </span>
           </div>
         </div>
@@ -165,7 +222,58 @@ const PdfCard: React.FC<PdfCardProps> = ({
       {/* Affichage de la description sous la carte si showDescription */}
       {showDescription && (
         <div style={{ background: '#f1f5f9', color: '#1e293b', padding: 16, borderRadius: 8, margin: 16, marginTop: 0, fontSize: 15 }}>
-          {noteDescription || <span style={{ color: '#888' }}>No description</span>}
+          {editMode ? (
+            <>
+              <input
+                type="text"
+                style={{
+                  width: '100%',
+                  borderRadius: 6,
+                  border: '1px solid #cbd5e1',
+                  padding: 8,
+                  fontSize: 15,
+                  marginBottom: 8,
+                }}
+                value={editedTitle}
+                onChange={e => setEditedTitle(e.target.value)}
+                placeholder="Titre de la note"
+              />
+              <textarea
+                style={{
+                  width: '100%',
+                  minHeight: 60,
+                  borderRadius: 6,
+                  border: '1px solid #cbd5e1',
+                  padding: 8,
+                  fontSize: 15,
+                  resize: 'vertical',
+                }}
+                value={editedDescription}
+                onChange={e => setEditedDescription(e.target.value)}
+                placeholder="Description de la note"
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                <button
+                  style={{
+                    backgroundColor: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '6px 18px',
+                    fontWeight: 500,
+                    fontSize: 15,
+                    cursor: 'pointer',
+                  }}
+                  type="button"
+                  onClick={handleUpdateNote}
+                >
+                  Update note
+                </button>
+              </div>
+            </>
+          ) : (
+            noteDescription || <span style={{ color: '#888' }}>No description</span>
+          )}
         </div>
       )}
       {/* Modal DoctorCard */}

@@ -19,24 +19,18 @@ function base64ToUint8Array(base64: string): Uint8Array {
 
 const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose }) => {
   const src = useMemo(() => {
-    console.log("PDFViewer props:", { bytes, base64 });
     if (bytes && Array.isArray(bytes) && bytes.length > 0) {
-      console.log("PDFViewer utilise bytes, taille:", bytes.length);
       const uint8 = new Uint8Array(bytes);
       const blob = new Blob([uint8], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-      console.log("PDFViewer url (bytes):", url);
       return url;
     }
     if (base64 && typeof base64 === "string") {
-      console.log("PDFViewer utilise base64, taille:", base64.length);
       const uint8 = base64ToUint8Array(base64);
       const blob = new Blob([uint8], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-      console.log("PDFViewer url (base64):", url);
       return url;
     }
-    console.log("PDFViewer : aucune donnée PDF à afficher");
     return undefined;
   }, [base64, bytes]);
 

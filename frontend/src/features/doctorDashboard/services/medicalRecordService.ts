@@ -147,4 +147,52 @@ export async function deleteDocument(documentId: number, token: string) {
   return true;
 }
 
+/**
+ * Crée une note pour un document spécifique
+ * @param documentId ID du document
+ * @param specificId ID spécifique (ex: patient, medicalRecord, etc.)
+ * @param title Titre de la note
+ * @param description Description de la note
+ * @param token Bearer token
+ */
+export async function initializeNote(documentId: string, specificId: string, title: string, description: string, token: string) {
+  const res = await fetch(`http://localhost:8088/medical-records/document/${documentId}/addNoteForDocument/${specificId}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ title, description })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || "Erreur lors de la création de la note");
+  }
+  
+  return await res.json();
+}
+
+/**
+ * Met à jour une note existante d'un document
+ * @param noteId ID de la note à mettre à jour
+ * @param title Titre de la note
+ * @param description Description de la note
+ * @param token Bearer token
+ */
+export async function updateNote(noteId: string, title: string, description: string, token: string) {
+  const res = await fetch(`http://localhost:8088/medical-records/noteDocument/${noteId}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ title, description })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || "Erreur lors de la mise à jour de la note");
+  }
+  return await res.json();
+}
+
 
