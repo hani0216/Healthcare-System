@@ -51,6 +51,9 @@ const PdfCard: React.FC<PdfCardProps> = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [doctorInfo, setDoctorInfo] = useState<any>(null);
   const [showDescription, setShowDescription] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editTitle, setEditTitle] = useState(noteTitle);
+  const [editBody, setEditBody] = useState(noteDescription);
 
   const handleTitleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
