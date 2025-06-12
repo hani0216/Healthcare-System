@@ -1,19 +1,23 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { fetchSpecialities, fetchDoctorsBySpeciality, fetchDoctorsByName } from '../services/medicalRecordService';
+import { data } from 'react-router-dom';
 
 interface PDFViewerProps {
   bytes?: number[];
   base64?: string;
   onClose: () => void;
-  documentTitle?: string; // Ajoute cette prop si besoin
+  documentTitle?: string;
 }
 
 const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentTitle }) => {
   const [showShare, setShowShare] = useState(false);
   const [message, setMessage] = useState('');
-  const [doctors, setDoctors] = useState<{ id: number; name: string }[]>([]);
+  const [doctors, setDoctors] = useState<{ id: number; name: string; speciality?: string }[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<number | undefined>(undefined);
   const [searchMode, setSearchMode] = useState<'name' | 'speciality'>('name');
   const [searchValue, setSearchValue] = useState('');
+  const [specialities, setSpecialities] = useState<string[]>([]);
+  const [specialityError, setSpecialityError] = useState<string | null>(null);
 
   // Génère l'URL du PDF
   const src = useMemo(() => {
@@ -37,16 +41,48 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentT
     return undefined;
   }, [base64, bytes]);
 
-  // Fetch la liste des médecins quand on affiche le partage
+  // Charger tous les médecins pour la recherche par nom
   useEffect(() => {
-    if (showShare) {
-      // Remplace l'URL par celle de ton API pour récupérer les médecins
-      fetch("http://localhost:8088/doctors")
+    if (showShare && searchMode === 'name') {
+      const token = localStorage.getItem("accessToken");
+      fetch("http://localhost:8088/doctors", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
         .then(res => res.json())
         .then(data => setDoctors(data))
         .catch(() => setDoctors([]));
     }
-  }, [showShare]);
+  }, [showShare, searchMode]);
+
+  // Charger les spécialités quand on passe en mode "speciality"
+  useEffect(() => {
+    if (showShare && searchMode === 'speciality' && specialities.length === 0) {
+      fetchSpecialities()
+        .then(data => setSpecialities(data))
+        .catch(() => setSpecialityError('Erreur lors du chargement des spécialités'));
+    }
+  }, [showShare, searchMode, specialities.length]);
+
+  // Charger les médecins selon la spécialité sélectionnée
+  useEffect(() => {
+    if (showShare && searchMode === 'speciality' && searchValue) {
+      fetchDoctorsBySpeciality(searchValue)
+        .then(data => setDoctors(data))
+        .catch(() => setDoctors([]));
+        console.log(data);
+    }
+  }, [showShare, searchMode, searchValue]);
+
+  // Charger les médecins selon le nom tapé
+  useEffect(() => {
+    if (showShare && searchMode === 'name' && searchValue) {
+      fetchDoctorsByName(searchValue)
+        .then(data => setDoctors(data))
+        .catch(() => setDoctors([]));
+    } else if (showShare && searchMode === 'name' && !searchValue) {
+      setDoctors([]);
+    }
+  }, [showShare, searchMode, searchValue]);
 
   return (
     <div style={{ position: 'relative', width: '100%', minHeight: 800, background: '#f9fafb', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', padding: 16 }}>
@@ -114,12 +150,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentT
               marginBottom: 16,
               resize: 'vertical',
             }}
-            placeholder="Message pour le médecin"
+            placeholder="Enter a message to share with the doctor..."
             value={message}
             onChange={e => setMessage(e.target.value)}
           />
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontWeight: 500, marginBottom: 8, display: 'block' }}>Choisir un médecin :</label>
+            <label style={{ fontWeight: 500, marginBottom: 8, display: 'block' }}>Select a doctor :</label>
             <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
               <button
                 style={{
@@ -151,21 +187,32 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentT
               >
                 By speciality
               </button>
-              <input
-                type="text"
-                placeholder={searchMode === 'name' ? "Rechercher par nom..." : "Rechercher par spécialité..."}
-                value={searchValue}
-                onChange={e => setSearchValue(e.target.value)}
-                style={{
-                  flex: 1,
-                  border: '1px solid #cbd5e1',
-                  borderRadius: 6,
-                  padding: '6px 12px',
-                  fontSize: 15,
-                  marginLeft: 8
-                }}
-              />
+              {searchMode === 'name' ? (
+                <>
+                 
+                
+                </>
+              ) : (
+                <select
+                  style={{
+                    flex: 1,
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 6,
+                    padding: '6px 12px',
+                    fontSize: 15,
+                    marginLeft: 8
+                  }}
+                  value={searchValue}
+                  onChange={e => setSearchValue(e.target.value)}
+                >
+                  <option value="">Toutes les spécialités</option>
+                  {specialities.map((spec, idx) => (
+                    <option key={idx} value={spec}>{spec}</option>
+                  ))}
+                </select>
+              )}
             </div>
+            {specialityError && <div style={{ color: 'red', marginBottom: 8 }}>{specialityError}</div>}
             <select
               style={{
                 width: '100%',
@@ -178,17 +225,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentT
               onChange={e => setSelectedDoctor(Number(e.target.value))}
             >
               <option value="">Sélectionner...</option>
-              {doctors
-                .filter(doc =>
-                  searchMode === 'name'
-                    ? doc.name.toLowerCase().includes(searchValue.toLowerCase())
-                    : (doc.speciality || '').toLowerCase().includes(searchValue.toLowerCase())
-                )
-                .map(doc => (
-                  <option key={doc.id} value={doc.id}>
-                    {doc.name} {doc.speciality ? `- ${doc.speciality}` : ''}
-                  </option>
-                ))}
+              {doctors.map(doc => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.doctorInfo?.name || doc.name} {doc.speciality ? `(${doc.speciality})` : ''}
+                </option>
+              ))}
             </select>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

@@ -195,4 +195,57 @@ export async function updateNote(noteId: string, title: string, description: str
   return await res.json();
 }
 
+/**
+ * Récupère la liste des spécialités de médecins
+ */
+export async function fetchSpecialities(): Promise<string[]> {
+  try {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch('http://localhost:8088/doctors/specialities', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error('Erreur lors de la récupération des spécialités');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching specialities:', error);
+    throw error;
+  }
+}
+
+/**
+ * Récupère la liste des médecins selon la spécialité
+ * @param speciality La spécialité à rechercher
+ */
+export async function fetchDoctorsBySpeciality(speciality: string) {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const res = await fetch(`http://localhost:8081/doctors/speciality/${speciality}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Erreur lors de la récupération des médecins par spécialité");
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching doctors by speciality:", error);
+    throw error;
+  }
+}
+
+/**
+ * Récupère la liste des médecins par nom
+ * @param doctorName Le nom du médecin à rechercher
+ */
+export async function fetchDoctorsByName(doctorName: string) {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const res = await fetch(`http://localhost:8088/doctors/name/${doctorName}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Erreur lors de la récupération des médecins par nom");
+    return await res.json();
+  } catch (error) {
+    console.log("Error fetching doctors by name:", error);
+    throw error;
+  }
+}
+
 
