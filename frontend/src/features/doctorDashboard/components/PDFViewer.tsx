@@ -1,23 +1,21 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 
 interface PDFViewerProps {
-  bytes?: number[]; // tableau de bytes (rare avec Spring)
-  base64?: string;  // chaîne base64 (cas courant avec Spring)
+  bytes?: number[];
+  base64?: string;
   onClose: () => void;
+  documentTitle?: string; // Ajoute cette prop si besoin
 }
 
-// Utilitaire pour décoder le base64 en Uint8Array
-function base64ToUint8Array(base64: string): Uint8Array {
-  const binaryString = window.atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
+const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose, documentTitle }) => {
+  const [showShare, setShowShare] = useState(false);
+  const [message, setMessage] = useState('');
+  const [doctors, setDoctors] = useState<{ id: number; name: string }[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<number | undefined>(undefined);
+  const [searchMode, setSearchMode] = useState<'name' | 'speciality'>('name');
+  const [searchValue, setSearchValue] = useState('');
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose }) => {
+  // Génère l'URL du PDF
   const src = useMemo(() => {
     if (bytes && Array.isArray(bytes) && bytes.length > 0) {
       const uint8 = new Uint8Array(bytes);
@@ -26,7 +24,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose }) => {
       return url;
     }
     if (base64 && typeof base64 === "string") {
-      const uint8 = base64ToUint8Array(base64);
+      const binaryString = window.atob(base64);
+      const len = binaryString.length;
+      const uint8 = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        uint8[i] = binaryString.charCodeAt(i);
+      }
       const blob = new Blob([uint8], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       return url;
@@ -34,8 +37,39 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose }) => {
     return undefined;
   }, [base64, bytes]);
 
+  // Fetch la liste des médecins quand on affiche le partage
+  useEffect(() => {
+    if (showShare) {
+      // Remplace l'URL par celle de ton API pour récupérer les médecins
+      fetch("http://localhost:8088/doctors")
+        .then(res => res.json())
+        .then(data => setDoctors(data))
+        .catch(() => setDoctors([]));
+    }
+  }, [showShare]);
+
   return (
     <div style={{ position: 'relative', width: '100%', minHeight: 800, background: '#f9fafb', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', padding: 16 }}>
+      {!showShare && (
+        <button
+          style={{
+            position: 'absolute',
+            left: 16,
+            top: 16,
+            background: 'rgb(37, 99, 235)',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            padding: '6px 16px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            zIndex: 10,
+          }}
+          onClick={() => setShowShare(true)}
+        >
+          Share this document
+        </button>
+      )}
       <button
         onClick={onClose}
         style={{
@@ -54,16 +88,128 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ bytes, base64, onClose }) => {
       >
         Close
       </button>
-      {src ? (
-        <iframe
-          src={src}
-          title="PDF Viewer"
-          width="100%"
-          height="800px"
-          style={{ border: 'none', borderRadius: 12, marginTop: 16 }}
-        />
+      {!showShare ? (
+        src ? (
+          <iframe
+            src={src}
+            title="PDF Viewer"
+            width="100%"
+            height="800px"
+            style={{ border: 'none', borderRadius: 12, marginTop: 50 }}
+          />
+        ) : (
+          <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>No PDF to display</div>
+        )
       ) : (
-        <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>No PDF to display</div>
+        <div style={{ marginTop: 60, padding: 32 }}>
+          <h2 style={{ marginBottom: 24 }}>{documentTitle || "Document"}</h2>
+          <textarea
+            style={{
+              width: '100%',
+              minHeight: 60,
+              borderRadius: 6,
+              border: '1px solid #cbd5e1',
+              padding: 8,
+              fontSize: 15,
+              marginBottom: 16,
+              resize: 'vertical',
+            }}
+            placeholder="Message pour le médecin"
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+          />
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontWeight: 500, marginBottom: 8, display: 'block' }}>Choisir un médecin :</label>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+              <button
+                style={{
+                  background: searchMode === 'name' ? '#2563eb' : '#e5e7eb',
+                  color: searchMode === 'name' ? 'white' : '#1e293b',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '6px 18px',
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+                onClick={() => setSearchMode('name')}
+                type="button"
+              >
+                By name
+              </button>
+              <button
+                style={{
+                  background: searchMode === 'speciality' ? '#2563eb' : '#e5e7eb',
+                  color: searchMode === 'speciality' ? 'white' : '#1e293b',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '6px 18px',
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+                onClick={() => setSearchMode('speciality')}
+                type="button"
+              >
+                By speciality
+              </button>
+              <input
+                type="text"
+                placeholder={searchMode === 'name' ? "Rechercher par nom..." : "Rechercher par spécialité..."}
+                value={searchValue}
+                onChange={e => setSearchValue(e.target.value)}
+                style={{
+                  flex: 1,
+                  border: '1px solid #cbd5e1',
+                  borderRadius: 6,
+                  padding: '6px 12px',
+                  fontSize: 15,
+                  marginLeft: 8
+                }}
+              />
+            </div>
+            <select
+              style={{
+                width: '100%',
+                padding: 8,
+                borderRadius: 6,
+                border: '1px solid #cbd5e1',
+                fontSize: 15,
+              }}
+              value={selectedDoctor ?? ''}
+              onChange={e => setSelectedDoctor(Number(e.target.value))}
+            >
+              <option value="">Sélectionner...</option>
+              {doctors
+                .filter(doc =>
+                  searchMode === 'name'
+                    ? doc.name.toLowerCase().includes(searchValue.toLowerCase())
+                    : (doc.speciality || '').toLowerCase().includes(searchValue.toLowerCase())
+                )
+                .map(doc => (
+                  <option key={doc.id} value={doc.id}>
+                    {doc.name} {doc.speciality ? `- ${doc.speciality}` : ''}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              style={{
+                backgroundColor: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px 24px',
+                fontWeight: 500,
+                fontSize: 16,
+                cursor: 'pointer',
+              }}
+              // À relier à ta future API de partage
+              onClick={() => {/* Appel API de partage ici */}}
+            >
+              Share
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
