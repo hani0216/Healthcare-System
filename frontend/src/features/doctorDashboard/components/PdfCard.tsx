@@ -6,6 +6,8 @@ import { fetchDoctorInfo } from '../services/medicalRecordService';
 // Import dynamique de DoctorCard
 // @ts-ignore
 import { DoctorCard } from '../../dashboard/pages/SearchPage';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 interface PdfCardProps {
   noteTitle: string;
@@ -16,6 +18,7 @@ interface PdfCardProps {
   documentTitle: string;
   doctorId: number;
   onClick: () => void;
+  onDelete?: () => void; // <-- Ajoute cette prop pour la suppression
 }
 
 // Modal simple
@@ -43,6 +46,7 @@ const PdfCard: React.FC<PdfCardProps> = ({
   documentTitle,
   doctorId,
   onClick,
+  onDelete,
 }) => {
   // Convertir Timestamp → Date JS si nécessaire
   const dateObj = creationDate?.toDate ? creationDate.toDate() : new Date(creationDate);
@@ -51,9 +55,6 @@ const PdfCard: React.FC<PdfCardProps> = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [doctorInfo, setDoctorInfo] = useState<any>(null);
   const [showDescription, setShowDescription] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editTitle, setEditTitle] = useState(noteTitle);
-  const [editBody, setEditBody] = useState(noteDescription);
 
   const handleTitleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,6 +85,7 @@ const PdfCard: React.FC<PdfCardProps> = ({
         transition: 'all 0.3s ease-in-out',
         cursor: 'pointer',
         marginBottom: showDescription ? 16 : 0,
+        position: 'relative', // <-- Pour positionner la poubelle
       }}
     >
       <div style={{ display: 'flex' }}>
@@ -154,8 +156,8 @@ const PdfCard: React.FC<PdfCardProps> = ({
                 fontWeight: 500,
               }}
               onClick={handleTitleClick}
-            >Note :
-              {noteTitle}
+            >
+              Note : {noteTitle}
             </span>
           </div>
         </div>
@@ -178,6 +180,25 @@ const PdfCard: React.FC<PdfCardProps> = ({
           />
         )}
       </Modal>
+      {/* Bouton de suppression en bas à droite */}
+      <div
+        style={{
+          position: 'relative',
+          left: 390,
+          bottom: 6,
+        }}
+      >
+        <span
+          style={{ cursor: 'pointer', color: '#e11d48', fontSize: 22 }}
+          title="Supprimer"
+          onClick={e => {
+            e.stopPropagation();
+            if (onDelete) onDelete();
+          }}
+        >
+          <FontAwesomeIcon icon={faTrash} />
+        </span>
+      </div>
     </div>
   );
 };
