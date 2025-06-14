@@ -30,7 +30,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
         <div style={{ fontWeight: 600, color: "#2563eb" }}>
           De: {message.senderId}
         </div>
-        <div style={{ fontSize: 13, color: "#888", marginBottom: 6 }}>
+        <div style={{ fontSize: 13, color: "#888", marginBottom: 6  }}>
           {new Date(message.sendingDate).toLocaleString()}
         </div>
         <div style={{ marginBottom: 8 }}>{message.description}</div>
