@@ -3,9 +3,12 @@ import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import MessageItem from "../components/MessageItem";
 import MessageListItem from "../components/MessageListItem";
+import MessageContent from "../components/MessageContent";
 import { fetchReceivedMessages } from "../services/messagesService";
-import { fetchDoctorName } from "../services/medicalRecordService";
+import { fetchDocumentById, fetchDoctorName } from "../services/medicalRecordService";
 import { FaEnvelopeOpenText } from "react-icons/fa";
+import PdfCard from "../components/PdfCard";
+import PdfCardReadOnly from "../components/PdfCardReadOnly";
 
 export default function MessagesPage() {
   const userName = localStorage.getItem("userName") || "Doctor";
@@ -13,6 +16,7 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
 
   useEffect(() => {
     if (!receiverId) return;
@@ -31,6 +35,26 @@ export default function MessagesPage() {
       .catch(() => setMessages([]))
       .finally(() => setLoading(false));
   }, [receiverId]);
+
+  useEffect(() => {
+    if (selectedMessage && selectedMessage.resourceType === "DOCUMENT") {
+      fetchDocumentById(selectedMessage.resourceId)
+        .then(async (doc) => {
+          // Récupérer le nom du médecin si besoin
+          let doctorName = doc.uploadedById
+            ? await fetchDoctorName(doc.uploadedById)
+            : "Unknown";
+          setSelectedDocument({ 
+            ...doc, 
+            doctorName,
+            patientId: selectedMessage.patientId
+          });
+        })
+        .catch(() => setSelectedDocument(null));
+    } else {
+      setSelectedDocument(null);
+    }
+  }, [selectedMessage]);
 
   return (
     <div style={{ height: "auto", display: "flex" }}>
@@ -74,23 +98,41 @@ export default function MessagesPage() {
             </div>
           </div>
           {/* Affichage du message sélectionné à droite */}
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }}>
+          <div style={{ flex: 1, background: "#f9fafb", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {selectedMessage ? (
-              <div style={{ maxWidth: 500, width: "100%", background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 32 }}>
-                <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8, color: "#2563eb" }}>
-                  Message de : {selectedMessage.senderId}
+              selectedMessage.resourceType === "DOCUMENT" && selectedDocument ? (
+                <div style={{ width:'100%', height:'800px' , marginTop:'0px', margin:'0' ,padding:'0'}}>
+                  {/* Affichage du message comme avant */}
+                  <MessageContent
+                    senderName={selectedMessage.senderName}
+                    senderEmail={selectedMessage.senderEmail}
+                    subject={selectedMessage.subject || selectedMessage.description?.split(" ").slice(0, 4).join(" ")}
+                    date={new Date(selectedMessage.sendingDate).toLocaleDateString()}
+                    message={selectedMessage.description}
+                  >
+                    <div style={{ marginTop: 32, width: "100%", padding: "0 20px" }}>
+                      <PdfCardReadOnly
+                        documentTitle={selectedDocument.name}
+                        noteTitle={selectedDocument.note?.title || ""}
+                        noteDescription={selectedDocument.note?.description || ""}
+                        creator={selectedDocument.doctorName}
+                        creationDate={selectedDocument.creationDate}
+                        contentUrl={selectedDocument.content?.[0] || ""}
+                        doctorId={selectedDocument.uploadedById}
+                        patientId={selectedDocument.patientId}
+                      />
+                    </div>
+                  </MessageContent>
                 </div>
-                <div style={{ fontSize: 13, color: "#888", marginBottom: 16 }}>
-                  {new Date(selectedMessage.sendingDate).toLocaleString()}
-                </div>
-                <div style={{ marginBottom: 16 }}>{selectedMessage.description}</div>
-                {selectedMessage.resourceType === "DOCUMENT" && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f1f5f9", borderRadius: 6, padding: "6px 12px", width: "fit-content" }}>
-                    <FaEnvelopeOpenText style={{ color: "#e11d48" }} />
-                    <span style={{ fontSize: 15 }}>Document ID: {selectedMessage.resourceId}</span>
-                  </div>
-                )}
-              </div>
+              ) : (
+                <MessageContent
+                  senderName={selectedMessage.senderName}
+                  senderEmail={selectedMessage.senderEmail}
+                  subject={selectedMessage.subject || selectedMessage.description?.split(" ").slice(0, 4).join(" ")}
+                  date={new Date(selectedMessage.sendingDate).toLocaleDateString()}
+                  message={selectedMessage.description}
+                />
+              )
             ) : (
               <div style={{ textAlign: "center", color: "#6b7280" }}>
                 <FaEnvelopeOpenText style={{ fontSize: 48, marginBottom: 16 }} />

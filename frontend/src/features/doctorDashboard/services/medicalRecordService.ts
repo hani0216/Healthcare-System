@@ -282,4 +282,15 @@ export async function sendDocument(senderId: number, receiverId: number, descrip
   return await res.json();
 }
 
+export async function fetchDocumentById(documentId: number) {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`http://localhost:8088/medical-records/document/${documentId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error("Erreur lors de la récupération du document");
+  return await res.json();
+}
+
 
