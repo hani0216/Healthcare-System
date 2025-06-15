@@ -16,6 +16,7 @@ import ReimbursementPage from '../features/dashboard/pages/ReimbursementPage';
 import MedicalRecordPage from '../features/dashboard/pages/MedicalRecordPage';
 import DoctorMedicalRecordPage from '../features/doctorDashboard/pages/DoctorMedicalRecordPage';
 import MessagesPage from "../features/doctorDashboard/pages/MessagesPage";
+import DoctorProfile from '../features/doctorDashboard/pages/DoctorProfile';
 
 
 
@@ -44,6 +45,7 @@ export default function AppRouter() {
         <Route path='/medical-record' element={<MedicalRecordPage />}></Route>
         <Route path="/doctor/patient/:patientId/medical-record" element={<DoctorMedicalRecordPage />} />
         <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/doctorProfile" element={<DoctorProfile />} />
 
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         {/* <Route path="/profile" element={<Profile />} /> */}

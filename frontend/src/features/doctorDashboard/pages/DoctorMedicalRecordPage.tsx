@@ -4,9 +4,11 @@ import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import PdfCard from "../components/PdfCard";
 import PDFViewer from "../components/PDFViewer";
-import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote, deleteDocument } from "../services/medicalRecordService";
+import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote, deleteDocument, addAppointment, createInvoice } from "../services/medicalRecordService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPen, faUpload, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faPen, faUpload, faCheck, faCalendar, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function DoctorMedicalRecordPage() {
   const { patientId } = useParams();
@@ -16,10 +18,10 @@ export default function DoctorMedicalRecordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPdfBytes, setSelectedPdfBytes] = useState<number[] | null>(null);
-  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | undefined>(undefined);
+  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | null>(null);
   const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(null); // AJOUT
   const [doctorName, setDoctorName] = useState<string>("");
-  const [doctorNames, setDoctorNames] = useState<{ [key: number]: string }>({});
+  const [doctorNames, setDoctorNames] = useState<Record<number, string>>({});
   // States pour l'upload
   const [showUpload, setShowUpload] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -33,6 +35,17 @@ export default function DoctorMedicalRecordPage() {
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteDescription, setEditNoteDescription] = useState("");
   const [noteUpdateLoading, setNoteUpdateLoading] = useState(false);
+
+  const [showUploadSection, setShowUploadSection] = useState(false);
+  const [showAppointmentSection, setShowAppointmentSection] = useState(false);
+  const [appointmentTitle, setAppointmentTitle] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState("");
+  const [appointmentType, setAppointmentType] = useState("MEDICAL_APPOINTMENT");
+
+  const [showInvoiceSection, setShowInvoiceSection] = useState(false);
+  const [invoiceAmount, setInvoiceAmount] = useState("");
+  const [invoiceDescription, setInvoiceDescription] = useState("");
+  const [invoiceStatus, setInvoiceStatus] = useState("DRAFT");
 
   useEffect(() => {
     if (!patientId) return;
@@ -53,8 +66,8 @@ export default function DoctorMedicalRecordPage() {
       })
       .then((docs) => {
         setDocuments(docs);
-        const uniqueDoctorIds = Array.from(new Set(docs.map((doc: any) => doc.uploadedById)));
-        uniqueDoctorIds.forEach((id) => {
+        const uniqueDoctorIds = Array.from(new Set(docs.map((doc: any) => doc.uploadedById))) as number[];
+        uniqueDoctorIds.forEach((id: number) => {
           if (id && !doctorNames[id]) {
             fetchDoctorName(id)
               .then((name) => setDoctorNames(prev => ({ ...prev, [id]: name })))
@@ -186,11 +199,107 @@ export default function DoctorMedicalRecordPage() {
     }
   };
 
+  const handleAddAppointment = async () => {
+    try {
+      const appointmentData = {
+        date: appointmentDate,
+        title: appointmentTitle,
+        status: "SCHEDULED",
+        type: appointmentType
+      };
+
+      // Fermer la section et réinitialiser les champs immédiatement
+      setShowAppointmentSection(false);
+      setAppointmentTitle("");
+      setAppointmentDate("");
+      setAppointmentType("MEDICAL_APPOINTMENT");
+      
+      // Afficher le message de succès
+      toast.success("Appointment added successfully!", {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Envoyer la requête en arrière-plan
+      await addAppointment(medicalRecord.id, appointmentData);
+    } catch (error) {
+      console.error("Error adding appointment:", error);
+      toast.error("Failed to add appointment", {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  };
+
+  const handlePdfClick = (doc: any) => {
+    if (Array.isArray(doc.content)) {
+      setSelectedPdfBytes(doc.content);
+      setSelectedPdfBase64(null);
+    } else if (typeof doc.content === "string") {
+      setSelectedPdfBase64(doc.content);
+      setSelectedPdfBytes(null);
+    }
+    setSelectedDocumentId(doc.id);
+  };
+
+  const handleCreateInvoice = async () => {
+    try {
+      const specificId = localStorage.getItem("specificId");
+      if (!specificId) {
+        throw new Error("No specific ID found");
+      }
+
+      const invoiceData = {
+        amount: parseFloat(invoiceAmount),
+        description: invoiceDescription,
+        status: invoiceStatus
+      };
+
+      // Fermer la section et réinitialiser les champs immédiatement
+      setShowInvoiceSection(false);
+      setInvoiceAmount("");
+      setInvoiceDescription("");
+      setInvoiceStatus("DRAFT");
+      
+      // Afficher le message de succès
+      toast.success("Invoice generated successfully!", {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Envoyer la requête en arrière-plan
+      await createInvoice(medicalRecord.id, parseInt(specificId), invoiceData);
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      toast.error("Failed to generate invoice", {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  };
+
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
       <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
         <DashboardActionsBar userName={userName} />
+        <ToastContainer position="top-center" autoClose={2000} />
         <div className="container mx-auto p-6 max-w-6xl flex gap-8" style={{ marginTop: "20px" }}>
           {/* Colonne de gauche */}
           <div className="flex flex-col gap-4" style={{ width: '420px', minWidth: 320 }}>
@@ -341,16 +450,7 @@ export default function DoctorMedicalRecordPage() {
                     creationDate={doc.creationDate}
                     documentId={doc.id}
                     noteId={doc.note?.id}
-                    onClick={() => {
-                      if (Array.isArray(doc.content)) {
-                        setSelectedPdfBytes(doc.content);
-                        setSelectedPdfBase64(undefined);
-                      } else if (typeof doc.content === "string") {
-                        setSelectedPdfBase64(doc.content);
-                        setSelectedPdfBytes(undefined);
-                      }
-                      setSelectedDocumentId(doc.id); // AJOUT : mémorise l'id du doc sélectionné
-                    }}
+                    onClick={() => handlePdfClick(doc)}
                     onDelete={() => handleDeleteDocument(doc.id)}
                   />
                 ))}
@@ -359,29 +459,68 @@ export default function DoctorMedicalRecordPage() {
           </div>
           {/* PDF Viewer à droite + Upload */}
           <div style={{ flex: 1, minWidth: 0  }}>
-            {/* Section Upload */}
-            <div style={{ marginBottom: 24, background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 20, marginTop: 70 ,paddingTop: '20px'}}>
-              <button
-                style={{
-                  background: "#2563eb",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "8px 18px",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: showUpload ? 16 : 0,
-                  
-                }}
-                onClick={() => setShowUpload(v => !v)}
-              >
-                <FontAwesomeIcon icon={faUpload} />
-                Upload new document
-              </button>
+            {/* Section Upload, Appointment et Invoice */}
+            <div style={{ marginBottom: 24, background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 20, marginTop: 70, paddingTop: '20px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <button
+                  style={{
+                    background: "#2563eb",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "8px 18px",
+                    fontWeight: 600,
+                    fontSize: 16,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                  onClick={() => setShowUpload(v => !v)}
+                >
+                  <FontAwesomeIcon icon={faUpload} />
+                  Upload new document
+                </button>
+                <button
+                  style={{
+                    background: "#2563eb",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "8px 18px",
+                    fontWeight: 600,
+                    fontSize: 16,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                  onClick={() => setShowAppointmentSection(v => !v)}
+                >
+                  <FontAwesomeIcon icon={faCalendar} />
+                  Add new appointment
+                </button>
+                <button
+                  style={{
+                    background: "#2563eb",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "8px 18px",
+                    fontWeight: 600,
+                    fontSize: 16,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                  onClick={() => setShowInvoiceSection(v => !v)}
+                >
+                  <FontAwesomeIcon icon={faFileInvoice} />
+                  Generate invoice
+                </button>
+              </div>
+
               {showUpload && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ marginBottom: 12 }}>
@@ -423,12 +562,119 @@ export default function DoctorMedicalRecordPage() {
                   </button>
                 </div>
               )}
+
+              {showAppointmentSection && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ marginBottom: 12 }}>
+                    <input
+                      type="text"
+                      placeholder="Appointment title..."
+                      value={appointmentTitle}
+                      onChange={e => setAppointmentTitle(e.target.value)}
+                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <input
+                      type="datetime-local"
+                      value={appointmentDate}
+                      onChange={e => setAppointmentDate(e.target.value)}
+                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <select
+                      value={appointmentType}
+                      onChange={e => setAppointmentType(e.target.value)}
+                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
+                    >
+                      <option value="MEDICAL_APPOINTMENT">Medical Appointment</option>
+                      <option value="TREATMENT">Treatment</option>
+                      <option value="VACCINATION">Vaccination</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={handleAddAppointment}
+                    style={{
+                      background: "#22c55e",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "8px 18px",
+                      fontWeight: 600,
+                      fontSize: 16,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      width: "100%"
+                    }}
+                  >
+                    Submit Appointment
+                  </button>
+                </div>
+              )}
+
+              {showInvoiceSection && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ marginBottom: 12 }}>
+                    <input
+                      type="number"
+                      placeholder="Amount..."
+                      value={invoiceAmount}
+                      onChange={e => setInvoiceAmount(e.target.value)}
+                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <input
+                      type="text"
+                      placeholder="Description..."
+                      value={invoiceDescription}
+                      onChange={e => setInvoiceDescription(e.target.value)}
+                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <select
+                      value={invoiceStatus}
+                      onChange={e => setInvoiceStatus(e.target.value)}
+                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
+                    >
+                      <option value="DRAFT">Draft</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="PAID">Paid</option>
+                      <option value="CANCELED">Canceled</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={handleCreateInvoice}
+                    style={{
+                      background: "#22c55e",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "8px 18px",
+                      fontWeight: 600,
+                      fontSize: 16,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      width: "100%"
+                    }}
+                  >
+                    Submit Invoice
+                  </button>
+                </div>
+              )}
             </div>
+
             {/* PDF Viewer */}
             {selectedPdfBytes && Array.isArray(selectedPdfBytes) && selectedPdfBytes.length > 0 ? (
               <PDFViewer documentId={selectedDocumentId ?? 0} bytes={selectedPdfBytes} onClose={() => { setSelectedPdfBytes(null); setSelectedDocumentId(null); }} />
             ) : selectedPdfBase64 ? (
-              <PDFViewer documentId={selectedDocumentId ?? 0} base64={selectedPdfBase64} onClose={() => { setSelectedPdfBase64(undefined); setSelectedDocumentId(null); }} />
+              <PDFViewer documentId={selectedDocumentId ?? 0} base64={selectedPdfBase64} onClose={() => { setSelectedPdfBase64(null); setSelectedDocumentId(null); }} />
             ) : (
               <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>No PDF to display</div>
             )}

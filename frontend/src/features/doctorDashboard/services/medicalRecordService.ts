@@ -293,4 +293,70 @@ export async function fetchDocumentById(documentId: number) {
   return await res.json();
 }
 
+export const addAppointment = async (medicalRecordId: number, appointmentData: {
+  date: string;
+  title: string;
+  status: string;
+  type: string;
+}) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  const response = await fetch(`http://localhost:8088/medical-records/addAppointment/${medicalRecordId}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(appointmentData)
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+export const createInvoice = async (
+  medicalRecordId: number,
+  authorId: number,
+  invoiceData: {
+    amount: number;
+    description: string;
+    status: string;
+  }
+) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  const payload = {
+    invoiceDate: new Date().toISOString(),
+    amount: invoiceData.amount,
+    description: invoiceData.description,
+    status: invoiceData.status,
+    generatedBy: authorId,
+    medicalRecordId: medicalRecordId
+  };
+
+  const response = await fetch(`http://localhost:8088/api/invoices/createInvoice/${medicalRecordId}/${authorId}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 
