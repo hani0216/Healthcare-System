@@ -4,7 +4,8 @@ import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import PdfCard from "../components/PdfCard";
 import PDFViewer from "../components/PDFViewer";
-import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote, deleteDocument, addAppointment, createInvoice } from "../services/medicalRecordService";
+import InvoiceItem from "../components/InvoiceItem";
+import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote, deleteDocument, addAppointment, createInvoice, fetchInvoices } from "../services/medicalRecordService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen, faUpload, faCheck, faCalendar, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
@@ -46,6 +47,11 @@ export default function DoctorMedicalRecordPage() {
   const [invoiceAmount, setInvoiceAmount] = useState("");
   const [invoiceDescription, setInvoiceDescription] = useState("");
   const [invoiceStatus, setInvoiceStatus] = useState("DRAFT");
+
+  const [activeTab, setActiveTab] = useState<'documents' | 'invoices'>('documents');
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [invoicesError, setInvoicesError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!patientId) return;
@@ -294,6 +300,23 @@ export default function DoctorMedicalRecordPage() {
     }
   };
 
+  useEffect(() => {
+    if (activeTab === 'invoices' && medicalRecord?.id) {
+      setInvoicesLoading(true);
+      const specificId = localStorage.getItem("specificId");
+      if (!specificId) {
+        setInvoicesError("No specific ID found");
+        setInvoicesLoading(false);
+        return;
+      }
+
+      fetchInvoices(medicalRecord.id, parseInt(specificId))
+        .then(setInvoices)
+        .catch(err => setInvoicesError(err.message))
+        .finally(() => setInvoicesLoading(false));
+    }
+  }, [activeTab, medicalRecord?.id]);
+
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
@@ -432,29 +455,93 @@ export default function DoctorMedicalRecordPage() {
                 </span>
               </div>
             </div>
-            {/* Documents */}
+            {/* Documents/Invoices Section */}
             <div>
-              <h3 className="text-lg font-semibold mb-2">Documents</h3>
-              {loading && <div>Loading documents...</div>}
-              {error && <div className="text-red-500">{error}</div>}
-              <div className="flex flex-col gap-4">
-                {documents.map(doc => (
-                  <PdfCard
-                    key={doc.id}
-                    documentTitle={doc.name}
-                    noteTitle={doc.note?.title || ''}
-                    noteDescription={doc.note?.description || ''}
-                    doctorId={doc.uploadedById}
-                    contentUrl={doc.content?.[0] || ''}
-                    creator={doctorNames[doc.uploadedById] || "-"}
-                    creationDate={doc.creationDate}
-                    documentId={doc.id}
-                    noteId={doc.note?.id}
-                    onClick={() => handlePdfClick(doc)}
-                    onDelete={() => handleDeleteDocument(doc.id)}
-                  />
-                ))}
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                <button
+                  onClick={() => setActiveTab('documents')}
+                  style={{
+                    background: activeTab === 'documents' ? '#2563eb' : '#e2e8f0',
+                    color: activeTab === 'documents' ? 'white' : '#64748b',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Documents
+                </button>
+                <button
+                  onClick={() => setActiveTab('invoices')}
+                  style={{
+                    background: activeTab === 'invoices' ? '#2563eb' : '#e2e8f0',
+                    color: activeTab === 'invoices' ? 'white' : '#64748b',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Invoices
+                </button>
               </div>
+
+              {activeTab === 'documents' ? (
+                <>
+                  {loading && <div>Loading documents...</div>}
+                  {error && <div className="text-red-500">{error}</div>}
+                  <div className="flex flex-col gap-4">
+                    {documents.map(doc => (
+                      <PdfCard
+                        key={doc.id}
+                        documentTitle={doc.name}
+                        noteTitle={doc.note?.title || ''}
+                        noteDescription={doc.note?.description || ''}
+                        doctorId={doc.uploadedById}
+                        contentUrl={doc.content?.[0] || ''}
+                        creator={doctorNames[doc.uploadedById] || "-"}
+                        creationDate={doc.creationDate}
+                        documentId={doc.id}
+                        noteId={doc.note?.id}
+                        onClick={() => handlePdfClick(doc)}
+                        onDelete={() => handleDeleteDocument(doc.id)}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {invoicesLoading && <div>Loading invoices...</div>}
+                  {invoicesError && <div className="text-red-500">{invoicesError}</div>}
+                  <div className="flex flex-col gap-4">
+                    {invoices.map(invoice => (
+                      <InvoiceItem
+                        key={invoice.id}
+                        id={invoice.id}
+                        invoiceDate={invoice.invoiceDate}
+                        amount={invoice.amount}
+                        description={invoice.description}
+                        status={invoice.status}
+                        medicalRecordId={medicalRecord.id}
+                        onUpdate={() => {
+                          if (medicalRecord?.id) {
+                            const specificId = localStorage.getItem("specificId");
+                            if (specificId) {
+                              fetchInvoices(medicalRecord.id, parseInt(specificId))
+                                .then(setInvoices)
+                                .catch(err => setInvoicesError(err.message));
+                            }
+                          }
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
           {/* PDF Viewer à droite + Upload */}

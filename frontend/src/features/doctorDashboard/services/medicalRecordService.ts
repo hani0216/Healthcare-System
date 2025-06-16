@@ -359,4 +359,67 @@ export const createInvoice = async (
   return response.json();
 };
 
+export const fetchInvoices = async (medicalRecordId: number, generatedById: number) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  const response = await fetch(`http://localhost:8088/api/invoices/medical-record/${medicalRecordId}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const invoices = await response.json();
+  // Filtrer les factures pour ne garder que celles générées par le docteur spécifié
+  return invoices.filter((invoice: any) => invoice.generatedBy === generatedById);
+};
+
+export const updateInvoice = async (
+  invoiceId: number,
+  authorId: number,
+  invoiceData: {
+    amount: number;
+    description: string;
+    status: string;
+    medicalRecordId: number;
+  }
+) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  const payload = {
+    invoiceDate: new Date().toISOString(),
+    amount: invoiceData.amount,
+    description: invoiceData.description,
+    status: invoiceData.status,
+    generatedBy: authorId,
+    medicalRecordId: invoiceData.medicalRecordId
+  };
+
+  const response = await fetch(`http://localhost:8088/api/invoices/${invoiceId}/${authorId}`, {
+    method: "PUT",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 
