@@ -422,4 +422,78 @@ export const updateInvoice = async (
   return response.json();
 };
 
+export async function shareInvoice(senderId: number, receiverId: number, description: string, resourceId: number) {
+  const token = localStorage.getItem("accessToken");
+  const body = {
+    receiverId,
+    description,
+    resourceType: "INVOICE",
+    resourceId,
+    senderId
+  };
+
+  const res = await fetch(`http://localhost:8088/api/sharing-messages/${senderId}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || "Erreur lors du partage de la facture");
+  }
+
+  return await res.json();
+}
+
+export async function fetchInsuranceAdminByName(insuranceName: string) {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  const response = await fetch(`http://localhost:8088/insurance-admins/insuranceByName/${insuranceName}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data || data.length === 0) {
+    throw new Error("No insurance admin found");
+  }
+
+  return data[0].id; // Retourne l'ID du premier administrateur d'assurance trouvé
+}
+
+export async function fetchPatientById(patientId: number) {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  const response = await fetch(`http://localhost:8088/patients/id/${patientId}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
 

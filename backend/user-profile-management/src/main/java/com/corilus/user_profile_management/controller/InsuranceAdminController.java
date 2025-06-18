@@ -42,4 +42,9 @@ public class InsuranceAdminController {
     public ResponseEntity<InsuranceAdmin> getInsuranceAdminById(@PathVariable Long id) {
         return ResponseEntity.ok(insuranceAdminService.getInsuranceById(id));
     }
+
+    @GetMapping("/insuranceByName/{insuranceCompany}")
+    public ResponseEntity<List<InsuranceAdmin>> getInsuranceAdminsByCompany(@PathVariable String insuranceCompany) {
+        return ResponseEntity.ok(insuranceAdminService.getInsuranceAdminsByCompany(insuranceCompany));
+    }
 }

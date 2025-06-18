@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileInvoice, faPen, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { updateInvoice } from '../services/medicalRecordService';
+import { faFileInvoice, faPen, faCheck, faTimes, faShare } from '@fortawesome/free-solid-svg-icons';
+import { updateInvoice, shareInvoice, fetchInsuranceAdminByName, fetchPatientById } from '../services/medicalRecordService';
 import { toast } from 'react-toastify';
+import { useParams } from 'react-router-dom';
 
 interface InvoiceItemProps {
   id: number;
@@ -23,11 +24,13 @@ const InvoiceItem: React.FC<InvoiceItemProps> = ({
   medicalRecordId,
   onUpdate
 }) => {
+  const { patientId } = useParams<{ patientId: string }>();
   const [isEditing, setIsEditing] = useState(false);
   const [editAmount, setEditAmount] = useState(amount.toString());
   const [editDescription, setEditDescription] = useState(description);
   const [editStatus, setEditStatus] = useState(status);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
@@ -92,6 +95,89 @@ const InvoiceItem: React.FC<InvoiceItemProps> = ({
     setIsEditing(false);
   };
 
+  const handleShare = async () => {
+    try {
+      console.log("Starting share process...");
+      console.log("Patient ID from URL:", patientId);
+      
+      setIsSharing(true);
+      const specificId = localStorage.getItem("specificId");
+      console.log("Doctor ID (specificId) from localStorage:", specificId);
+      
+      if (!specificId) {
+        throw new Error("No doctor ID found");
+      }
+
+      if (!patientId) {
+        console.log("No patient ID available in URL");
+        throw new Error("No patient ID available");
+      }
+
+      // Récupérer les informations du patient
+      console.log("Fetching patient data for ID:", patientId);
+      const patientData = await fetchPatientById(parseInt(patientId));
+      console.log("Patient data:", patientData);
+
+      if (!patientData) {
+        console.log("No patient data received");
+        throw new Error("Failed to fetch patient data");
+      }
+
+      if (!patientData.insurance) {
+        console.log("No insurance company in patient data:", patientData);
+        throw new Error("No insurance company found for this patient");
+      }
+
+      console.log("Insurance company found:", patientData.insurance);
+
+      // Récupérer l'ID de l'administrateur d'assurance
+      console.log("Fetching insurance admin for company:", patientData.insurance);
+      const insuranceAdminId = await fetchInsuranceAdminByName(patientData.insurance);
+      console.log("Insurance Admin ID received:", insuranceAdminId);
+
+      if (!insuranceAdminId) {
+        console.log("No insurance admin ID received");
+        throw new Error("Failed to find insurance admin");
+      }
+
+      console.log("Sharing invoice with insurance admin ID:", insuranceAdminId);
+      await shareInvoice(
+        parseInt(specificId), // ID du médecin (sender)
+        insuranceAdminId,     // ID de l'administrateur d'assurance (receiver)
+        `${description}`,
+        id
+      );
+
+      console.log("Invoice shared successfully");
+      toast.success("Invoice shared successfully with insurance provider!", {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch (error) {
+      console.error("Error in share process:", error);
+      console.log("Error details:", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      toast.error(error instanceof Error ? error.message : "Failed to share invoice with insurance provider", {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setIsSharing(false);
+      console.log("Share process completed");
+    }
+  };
+
   return (
     <div style={{
       backgroundColor: 'white',
@@ -112,22 +198,42 @@ const InvoiceItem: React.FC<InvoiceItemProps> = ({
                 {description}
               </h4>
             </div>
-            <button
-              onClick={() => setIsEditing(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#2563eb',
-                cursor: 'pointer',
-                padding: '0.25rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem'
-              }}
-            >
-              <FontAwesomeIcon icon={faPen} />
-              <span style={{ fontSize: '0.9rem' }}>Edit</span>
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={handleShare}
+                disabled={isSharing}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2563eb',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem'
+                }}
+                title="Share with insurance provider"
+              >
+                <FontAwesomeIcon icon={faShare} />
+                <span style={{ fontSize: '0.9rem' }}>Share</span>
+              </button>
+              <button
+                onClick={() => setIsEditing(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2563eb',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem'
+                }}
+              >
+                <FontAwesomeIcon icon={faPen} />
+                <span style={{ fontSize: '0.9rem' }}>Edit</span>
+              </button>
+            </div>
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

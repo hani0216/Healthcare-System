@@ -1,6 +1,6 @@
 import { Sidebar, Menu, MenuItem } from 'react-pro-sidebar';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaUser, FaCalendarAlt, FaSearch, FaMoneyCheckAlt, FaBookMedical, FaBars, FaSignOutAlt, FaTachometerAlt, FaHistory, FaBell } from 'react-icons/fa';
+import { FaUser, FaCalendarAlt, FaSearch, FaMoneyCheckAlt, FaBookMedical, FaBars, FaSignOutAlt, FaTachometerAlt, FaHistory, FaBell, FaMoneyBillWave } from 'react-icons/fa';
 import { useState } from 'react';
 import '../../../index.css';
 
@@ -73,6 +73,13 @@ export default function SideBar() {
                         active={location.pathname === "/insuranceHome"}
                     >
                         Dashboard
+                    </MenuItem>
+                    <MenuItem
+                        icon={<FaMoneyBillWave />}
+                        component={<Link to="/insuranceReimbursements" />}
+                        active={location.pathname === "/insuranceReimbursements"}
+                    >
+                        Reimbursements
                     </MenuItem>
                     <MenuItem
                         icon={<FaBell />}

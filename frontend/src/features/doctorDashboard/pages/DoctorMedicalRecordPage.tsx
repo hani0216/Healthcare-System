@@ -58,6 +58,7 @@ export default function DoctorMedicalRecordPage() {
     setLoading(true);
     fetchMedicalRecord(patientId)
       .then((mr) => {
+        console.log("Medical Record Data:", mr); // Log pour voir la structure
         setMedicalRecord(mr);
         if (mr?.note?.authorId) {
           fetchDoctorName(mr.note.authorId)

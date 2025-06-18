@@ -95,8 +95,8 @@ public class InsuranceAdminServiceImpl implements InsuranceAdminService {
     }
 
     @Override
-    public List<InsuranceAdmin> getAllInsuranceAdmins(){
-        return insuranceAdminRepository.findAll() ;
+    public List<InsuranceAdmin> getAllInsuranceAdmins() {
+        return insuranceAdminRepository.findAll();
     }
 
     @Override
@@ -110,4 +110,12 @@ public class InsuranceAdminServiceImpl implements InsuranceAdminService {
         return insuranceAdminRepository.findByUserInfoId(userInfoId)
                 .orElseThrow(() -> new RuntimeException("Insurance Admin not found for user info ID: " + userInfoId));
     }
+
+
+    @Override
+    public List<InsuranceAdmin> getInsuranceAdminsByCompany(String insuranceCompany) {
+        return insuranceAdminRepository.findByInsuranceCompany(insuranceCompany);
+    }
+
+
 }

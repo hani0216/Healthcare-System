@@ -11,4 +11,5 @@ public interface InsuranceAdminService {
     InsuranceAdmin getInsuranceById(Long id);
     List<InsuranceAdmin> getAllInsuranceAdmins();
     InsuranceAdmin getInsuranceAdminByUserInfoId(Long userInfoId);
+    List<InsuranceAdmin> getInsuranceAdminsByCompany(String insuranceCompany) ;
 }

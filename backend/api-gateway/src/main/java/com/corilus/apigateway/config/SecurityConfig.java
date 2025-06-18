@@ -67,22 +67,22 @@ public class SecurityConfig {
                 .pathMatchers("/doctors/specialities").permitAll()
 
 
-                    .pathMatchers("/doctors/{id}").hasAnyRole("DOCTOR" ,"PATIENT")// Permettre l'accès aux spécialités sans authentification
+                    .pathMatchers("/doctors/{id}").hasAnyRole("DOCTOR" ,"PATIENT" , "INSURANCE_ADMIN")// Permettre l'accès aux spécialités sans authentification
                 // Routes protégées par rôle
-                .pathMatchers("/doctors/**").hasAnyRole("DOCTOR" , "PATIENT")
+                .pathMatchers("/doctors/**").hasAnyRole("DOCTOR" , "PATIENT" , "INSURANCE_ADMIN")
                     .pathMatchers("/patients").hasAnyRole("ADMIN", "PATIENT" , "DOCTOR")
                 .pathMatchers("/patients/**").hasAnyRole("ADMIN", "PATIENT","DOCTOR")
                     .pathMatchers(HttpMethod.GET, "/insurance-admins").hasAnyRole("INSURANCE_ADMIN", "PATIENT")
-                    .pathMatchers("/insurance-admins/**").hasRole("INSURANCE_ADMIN")
+                    .pathMatchers("/insurance-admins/**").hasAnyRole("INSURANCE_ADMIN","DOCTOR")
 
                     .pathMatchers(("/medical-records/**")).hasAnyRole("DOCTOR", "PATIENT")
-                    .pathMatchers("/api/notifications/notifications/receiver/**").hasAnyRole("DOCTOR", "PATIENT" , "INSURANCE_ADMIN" , "ADMIN")
-                    .pathMatchers("/api/notifications/notifications/**").hasAnyRole("DOCTOR" , "PATIENT" )
+                    .pathMatchers("/api/notifications/notifications/receiver/**").permitAll()
+                    .pathMatchers("/api/notifications/notifications/**").permitAll()
 
                     .pathMatchers("/api/invoices/**").hasAnyRole("PATIENT" ,"DOCTOR")
-                    .pathMatchers("/api/reimbursements/**").hasAnyRole("PATIENT","DOCTOR")
+                    .pathMatchers("/api/reimbursements/**").hasAnyRole("PATIENT","DOCTOR","INSURANCE_ADMIN")
 
-                    .pathMatchers("api/sharing-messages/**").hasAnyRole("DOCTOR", "INSURANCE_ADMIN")
+                    .pathMatchers("api/sharing-messages/**").permitAll()
 
 
 

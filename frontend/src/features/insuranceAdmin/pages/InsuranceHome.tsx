@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import SideBar from '../components/sideBar';
-import DashboardActionsBar from '../components/DashboardActionsBar';
-import MessageItem from '../components/MessageItem';
-import { fetchReceivedMessages, fetchDoctorName } from '../services/insuranceService';
+import React, { useEffect, useState } from "react";
+import SideBar from "../components/sideBar";
+import DashboardActionsBar from "../components/DashboardActionsBar";
+import MessageItem from "../components/MessageItem";
+import { fetchReceivedMessages, fetchDoctorName } from "../services/insuranceService";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -25,7 +25,7 @@ export default function InsuranceHome() {
         setMessages(receivedMessages);
 
         // Récupérer les noms des médecins expéditeurs
-        const uniqueDoctorIds = Array.from(new Set(receivedMessages.map((msg: any) => msg.senderId))) as number[];
+        const uniqueDoctorIds = Array.from(new Set(receivedMessages.map((msg: any) => msg.senderId)));
         const doctorNamesMap: Record<number, string> = {};
         
         for (const doctorId of uniqueDoctorIds) {
@@ -54,16 +54,14 @@ export default function InsuranceHome() {
     window.location.reload();
   };
 
-  const userName = localStorage.getItem('userName') || 'Insurance';
-  
   return (
-    <div style={{ height: 'auto', display: 'flex' }}>
+    <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
-      <div style={{ flex: 1, background: '#f5f6fa', position: 'relative', minHeight: '100vh' }}>
-        <DashboardActionsBar userName={userName} />
+      <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
+        <DashboardActionsBar userName={localStorage.getItem("userName") || "Insurance Admin"} />
         <ToastContainer position="top-center" autoClose={2000} />
         
-        <div className="container mx-auto p-6 max-w-6xl" style={{ marginTop: '40px' }}>
+        <div className="container mx-auto p-6 max-w-6xl" style={{ marginTop: "20px" }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
             <h2 className="text-2xl font-bold" style={{ color: '#28A6A7' }}>Received Messages</h2>
             <button
