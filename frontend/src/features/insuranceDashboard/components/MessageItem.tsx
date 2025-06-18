@@ -32,9 +32,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const [showReimbursementForm, setShowReimbursementForm] = useState(false);
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [reimbursementForm, setReimbursementForm] = useState({
-    amount: '',
-    insuredId: '',
-    medicalRecordId: ''
+    amount: ''
   });
 
   const handleViewInvoice = async () => {
@@ -69,12 +67,24 @@ const MessageItem: React.FC<MessageItemProps> = ({
     try {
       setIsReimbursementLoading(true);
       
+      // Récupérer l'ID de l'assuré depuis le localStorage
+      const insuredId = localStorage.getItem('specificId');
+      if (!insuredId) {
+        throw new Error('Insured ID not found in local storage');
+      }
+
+      // Récupérer les détails de la facture pour obtenir le medicalRecordId
+      const invoice = await fetchInvoiceById(resourceId);
+      if (!invoice || !invoice.medicalRecordId) {
+        throw new Error('Medical record ID not found in invoice');
+      }
+
       const reimbursementData = {
         status: "Processing",
         amount: parseFloat(reimbursementForm.amount),
         invoiceId: resourceId,
-        insuredId: parseInt(reimbursementForm.insuredId),
-        medicalRecordId: parseInt(reimbursementForm.medicalRecordId)
+        insuredId: parseInt(insuredId),
+        medicalRecordId: invoice.medicalRecordId
       };
 
       await initializeReimbursement(reimbursementData);
@@ -89,7 +99,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
       });
 
       setShowReimbursementForm(false);
-      setReimbursementForm({ amount: '', insuredId: '', medicalRecordId: '' });
+      setReimbursementForm({ amount: '' });
       onUpdate();
     } catch (error) {
       console.error("Error initializing reimbursement:", error);
@@ -206,35 +216,11 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 fontSize: '0.9rem'
               }}
             />
-            <input
-              type="number"
-              placeholder="Insured ID"
-              value={reimbursementForm.insuredId}
-              onChange={(e) => setReimbursementForm(prev => ({ ...prev, insuredId: e.target.value }))}
-              style={{
-                padding: '0.5rem',
-                borderRadius: '0.25rem',
-                border: '1px solid #d1d5db',
-                fontSize: '0.9rem'
-              }}
-            />
-            <input
-              type="number"
-              placeholder="Medical Record ID"
-              value={reimbursementForm.medicalRecordId}
-              onChange={(e) => setReimbursementForm(prev => ({ ...prev, medicalRecordId: e.target.value }))}
-              style={{
-                padding: '0.5rem',
-                borderRadius: '0.25rem',
-                border: '1px solid #d1d5db',
-                fontSize: '0.9rem'
-              }}
-            />
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => {
                   setShowReimbursementForm(false);
-                  setReimbursementForm({ amount: '', insuredId: '', medicalRecordId: '' });
+                  setReimbursementForm({ amount: '' });
                 }}
                 style={{
                   padding: '0.5rem 1rem',
@@ -249,7 +235,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
               </button>
               <button
                 onClick={handleInitializeReimbursement}
-                disabled={isReimbursementLoading || !reimbursementForm.amount || !reimbursementForm.insuredId || !reimbursementForm.medicalRecordId}
+                disabled={isReimbursementLoading || !reimbursementForm.amount}
                 style={{
                   padding: '0.5rem 1rem',
                   borderRadius: '0.25rem',
@@ -257,7 +243,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                   background: '#22c55e',
                   color: 'white',
                   cursor: 'pointer',
-                  opacity: (isReimbursementLoading || !reimbursementForm.amount || !reimbursementForm.insuredId || !reimbursementForm.medicalRecordId) ? 0.5 : 1
+                  opacity: (isReimbursementLoading || !reimbursementForm.amount) ? 0.5 : 1
                 }}
               >
                 {isReimbursementLoading ? 'Processing...' : 'Submit'}

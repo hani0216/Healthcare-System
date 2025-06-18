@@ -79,7 +79,7 @@ public class SecurityConfig {
                     .pathMatchers("/api/notifications/notifications/receiver/**").permitAll()
                     .pathMatchers("/api/notifications/notifications/**").permitAll()
 
-                    .pathMatchers("/api/invoices/**").hasAnyRole("PATIENT" ,"DOCTOR")
+                    .pathMatchers("/api/invoices/**").hasAnyRole("PATIENT" ,"DOCTOR" , "INSURANCE_ADMIN")
                     .pathMatchers("/api/reimbursements/**").hasAnyRole("PATIENT","DOCTOR","INSURANCE_ADMIN")
 
                     .pathMatchers("api/sharing-messages/**").permitAll()
