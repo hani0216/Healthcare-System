@@ -4,6 +4,8 @@ import DashboardActionsBar from '../components/DashboardActionsBar';
 import MessageItem from '../components/MessageItem';
 import { fetchReceivedMessages, fetchDoctorName } from '../services/insuranceService';
 import { ToastContainer, toast } from 'react-toastify';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function InsuranceHome() {
@@ -11,6 +13,8 @@ export default function InsuranceHome() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doctorNames, setDoctorNames] = useState<Record<number, string>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -55,6 +59,16 @@ export default function InsuranceHome() {
   };
 
   const userName = localStorage.getItem('userName') || 'Insurance';
+
+  // Calcul de la pagination
+  const totalPages = Math.ceil(messages.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentMessages = messages.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
   
   return (
     <div style={{ height: 'auto', display: 'flex' }}>
@@ -114,22 +128,103 @@ export default function InsuranceHome() {
           )}
 
           {!loading && !error && messages.length > 0 && (
-            <div className="flex flex-col gap-4">
-              {messages.map((message) => (
-                <MessageItem
-                  key={message.id}
-                  id={message.id}
-                  senderId={message.senderId}
-                  receiverId={message.receiverId}
-                  description={message.description}
-                  resourceType={message.resourceType}
-                  resourceId={message.resourceId}
-                  date={message.date}
-                  senderName={doctorNames[message.senderId]}
-                  onUpdate={handleRefresh}
-                />
-              ))}
-            </div>
+            <>
+              <div className="flex flex-col gap-4">
+                {currentMessages.map((message) => (
+                  <MessageItem
+                    key={message.id}
+                    id={message.id}
+                    senderId={message.senderId}
+                    receiverId={message.receiverId}
+                    description={message.description}
+                    resourceType={message.resourceType}
+                    resourceId={message.resourceId}
+                    date={message.date}
+                    senderName={doctorNames[message.senderId]}
+                    onUpdate={handleRefresh}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  gap: '1rem',
+                  marginTop: '2rem',
+                  padding: '1rem'
+                }}>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '0.25rem',
+                      border: '1px solid #d1d5db',
+                      background: currentPage === 1 ? '#f1f5f9' : 'white',
+                      color: currentPage === 1 ? '#94a3b8' : '#64748b',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faChevronLeft} />
+                    Previous
+                  </button>
+
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.25rem',
+                          border: '1px solid #d1d5db',
+                          background: currentPage === page ? '#2563eb' : 'white',
+                          color: currentPage === page ? 'white' : '#64748b',
+                          cursor: 'pointer',
+                          fontWeight: currentPage === page ? 600 : 400
+                        }}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '0.25rem',
+                      border: '1px solid #d1d5db',
+                      background: currentPage === totalPages ? '#f1f5f9' : 'white',
+                      color: currentPage === totalPages ? '#94a3b8' : '#64748b',
+                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    Next
+                    <FontAwesomeIcon icon={faChevronRight} />
+                  </button>
+                </div>
+              )}
+
+              <div style={{ 
+                textAlign: 'center', 
+                marginTop: '1rem',
+                color: '#64748b',
+                fontSize: '0.9rem'
+              }}>
+                Showing {startIndex + 1} to {Math.min(endIndex, messages.length)} of {messages.length} messages
+              </div>
+            </>
           )}
         </div>
       </div>

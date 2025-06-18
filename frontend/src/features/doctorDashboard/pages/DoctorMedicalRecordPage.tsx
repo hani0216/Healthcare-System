@@ -4,12 +4,9 @@ import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import PdfCard from "../components/PdfCard";
 import PDFViewer from "../components/PDFViewer";
-import InvoiceItem from "../components/InvoiceItem";
-import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote, deleteDocument, addAppointment, createInvoice, fetchInvoices } from "../services/medicalRecordService";
+import { fetchMedicalRecord, fetchPatientDocuments, fetchDoctorName, fetchNoteIdFromMedicalRecord, updateMainNote, deleteDocument } from "../services/medicalRecordService";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPen, faUpload, faCheck, faCalendar, faFileInvoice, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { faTrash, faPen, faUpload, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 export default function DoctorMedicalRecordPage() {
   const { patientId } = useParams();
@@ -18,43 +15,30 @@ export default function DoctorMedicalRecordPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPdfBytes, setSelectedPdfBytes] = useState<Uint8Array | null>(null);
-  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | null>(null);
-  const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(null);
+  const [selectedPdfBytes, setSelectedPdfBytes] = useState<number[] | null>(null);
+  const [selectedPdfBase64, setSelectedPdfBase64] = useState<string | undefined>(undefined);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(null); // AJOUT
   const [doctorName, setDoctorName] = useState<string>("");
-  const [doctorNames, setDoctorNames] = useState<Record<number, string>>({});
+  const [doctorNames, setDoctorNames] = useState<{ [key: number]: string }>({});
+  // States pour l'upload
   const [showUpload, setShowUpload] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadNote, setUploadNote] = useState("");
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [documentTitle, setDocumentTitle] = useState("");
+
+  // Nouveaux états pour l'édition de note
   const [editNoteMode, setEditNoteMode] = useState(false);
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteDescription, setEditNoteDescription] = useState("");
   const [noteUpdateLoading, setNoteUpdateLoading] = useState(false);
-  const [showUploadSection, setShowUploadSection] = useState(false);
-  const [showAppointmentSection, setShowAppointmentSection] = useState(false);
-  const [appointmentTitle, setAppointmentTitle] = useState("");
-  const [appointmentDate, setAppointmentDate] = useState("");
-  const [appointmentType, setAppointmentType] = useState("MEDICAL_APPOINTMENT");
-  const [showInvoiceSection, setShowInvoiceSection] = useState(false);
-  const [invoiceAmount, setInvoiceAmount] = useState("");
-  const [invoiceDescription, setInvoiceDescription] = useState("");
-  const [invoiceStatus, setInvoiceStatus] = useState("DRAFT");
-  const [activeTab, setActiveTab] = useState<'documents' | 'invoices'>('documents');
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [invoicesLoading, setInvoicesLoading] = useState(false);
-  const [invoicesError, setInvoicesError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
 
   useEffect(() => {
     if (!patientId) return;
     setLoading(true);
     fetchMedicalRecord(patientId)
       .then((mr) => {
-        console.log("Medical Record Data:", mr);
         setMedicalRecord(mr);
         if (mr?.note?.authorId) {
           fetchDoctorName(mr.note.authorId)
@@ -69,8 +53,8 @@ export default function DoctorMedicalRecordPage() {
       })
       .then((docs) => {
         setDocuments(docs);
-        const uniqueDoctorIds = Array.from(new Set(docs.map((doc: any) => doc.uploadedById))) as number[];
-        uniqueDoctorIds.forEach((id: number) => {
+        const uniqueDoctorIds = Array.from(new Set(docs.map((doc: any) => doc.uploadedById)));
+        uniqueDoctorIds.forEach((id) => {
           if (id && !doctorNames[id]) {
             fetchDoctorName(id)
               .then((name) => setDoctorNames(prev => ({ ...prev, [id]: name })))
@@ -80,8 +64,10 @@ export default function DoctorMedicalRecordPage() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line
   }, [patientId]);
 
+  // Synchronise les champs d'édition avec la note actuelle
   useEffect(() => {
     if (medicalRecord?.note) {
       setEditNoteTitle(medicalRecord.note.title || "");
@@ -89,45 +75,39 @@ export default function DoctorMedicalRecordPage() {
     }
   }, [medicalRecord?.note]);
 
+  // Fonction pour valider la modification de la note principale
   const handleSubmitNoteUpdate = async () => {
+    let timeoutTriggered = false;
+    // Lance un timeout qui forcera le reload après 1 seconde
+    const timeout = setTimeout(() => {
+      timeoutTriggered = true;
+      window.location.reload();
+    }, 1000);
+
     try {
-      if (!medicalRecord?.note?.id) {
-        throw new Error("Note ID not found");
-      }
-
-      const specificId = localStorage.getItem("specificId");
-      if (!specificId) {
-        throw new Error("No specific ID found");
-      }
-
+      setNoteUpdateLoading(true);
       const token = localStorage.getItem("accessToken") || "";
-      await updateMainNote(medicalRecord.note.id, specificId, editNoteTitle, editNoteDescription, token);
-
-      toast.success("Note updated successfully!", {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-
-      setEditNoteMode(false);
-    } catch (error) {
-      console.error("Error updating note:", error);
-      toast.error("Failed to update note", {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      const mrId = medicalRecord?.id?.toString();
+      const specificId = localStorage.getItem("specificId") || "";
+      if (!mrId || !specificId) throw new Error("Identifiants manquants");
+      const noteId = await fetchNoteIdFromMedicalRecord(mrId, token);
+      await updateMainNote(noteId, specificId, editNoteTitle, editNoteDescription, token);
+      if (!timeoutTriggered) {
+        clearTimeout(timeout);
+        window.location.reload();
+      }
+    } catch (e: any) {
+      // Ne rien afficher, pas d'alert ni de console.error
+    } finally {
+      setNoteUpdateLoading(false);
     }
   };
+  
 
+  // Nouvelle fonction d'upload adaptée à l'API demandée
   const handleUpload = async () => {
     let timeoutTriggered = false;
+    // Timeout qui forcera le reload après 2 secondes
     const timeout = setTimeout(() => {
       timeoutTriggered = true;
       window.location.reload();
@@ -161,6 +141,7 @@ export default function DoctorMedicalRecordPage() {
       });
 
       if (!res.ok) {
+        // Essayer de lire le message d'erreur retourné par l'API
         let errorMsg = "Upload failed";
         try {
           const errorData = await res.json();
@@ -179,11 +160,13 @@ export default function DoctorMedicalRecordPage() {
       setShowUpload(false);
       setUploadFile(null);
       setDocumentTitle("");
+      // Refresh documents (optionnel, car reload va tout recharger)
       if (!timeoutTriggered) {
         clearTimeout(timeout);
         window.location.reload();
       }
     } catch (err: any) {
+      // Ne rien afficher, pas d'alert ni de console.error
     } finally {
       setUploadLoading(false);
     }
@@ -193,498 +176,212 @@ export default function DoctorMedicalRecordPage() {
     try {
       const token = localStorage.getItem("accessToken") || "";
       await deleteDocument(documentId, token);
+      // Rafraîchir la liste après suppression
       if (medicalRecord?.id) {
         const docs = await fetchPatientDocuments(medicalRecord.id);
         setDocuments(docs);
       }
     } catch (e: any) {
+      // Optionnel : afficher une erreur
     }
   };
-
-  const handleAddAppointment = async () => {
-    try {
-      const appointmentData = {
-        date: appointmentDate,
-        title: appointmentTitle,
-        status: "SCHEDULED",
-        type: appointmentType
-      };
-
-      setShowAppointmentSection(false);
-      setAppointmentTitle("");
-      setAppointmentDate("");
-      setAppointmentType("MEDICAL_APPOINTMENT");
-      
-      toast.success("Appointment added successfully!", {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-
-      await addAppointment(medicalRecord.id, appointmentData);
-    } catch (error) {
-      console.error("Error adding appointment:", error);
-      toast.error("Failed to add appointment", {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    }
-  };
-
-  const handlePdfClick = (doc: any) => {
-    if (Array.isArray(doc.content)) {
-      setSelectedPdfBytes(doc.content);
-      setSelectedPdfBase64(null);
-    } else if (typeof doc.content === "string") {
-      setSelectedPdfBase64(doc.content);
-      setSelectedPdfBytes(null);
-    }
-    setSelectedDocumentId(doc.id);
-  };
-
-  const handleCreateInvoice = async () => {
-    try {
-      const specificId = localStorage.getItem("specificId");
-      if (!specificId) {
-        throw new Error("No specific ID found");
-      }
-
-      const invoiceData = {
-        amount: parseFloat(invoiceAmount),
-        description: invoiceDescription,
-        status: invoiceStatus
-      };
-
-      setShowInvoiceSection(false);
-      setInvoiceAmount("");
-      setInvoiceDescription("");
-      setInvoiceStatus("DRAFT");
-      
-      toast.success("Invoice generated successfully!", {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-
-      await createInvoice(medicalRecord.id, parseInt(specificId), invoiceData);
-    } catch (error) {
-      console.error("Error creating invoice:", error);
-      toast.error("Failed to generate invoice", {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'invoices' && medicalRecord?.id) {
-      setInvoicesLoading(true);
-      const specificId = localStorage.getItem("specificId");
-      if (!specificId) {
-        setInvoicesError("No specific ID found");
-        setInvoicesLoading(false);
-        return;
-      }
-
-      fetchInvoices(medicalRecord.id, parseInt(specificId))
-        .then(setInvoices)
-        .catch(err => setInvoicesError(err.message))
-        .finally(() => setInvoicesLoading(false));
-    }
-  }, [activeTab, medicalRecord?.id]);
-
-  const totalPages = Math.ceil(invoices.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentInvoices = invoices.slice(startIndex, endIndex);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  if (loading) {
-    return (
-      <div style={{ height: "auto", display: "flex" }}>
-        <SideBar />
-        <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
-          <DashboardActionsBar userName={userName} />
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
-            <div>Loading medical record...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ height: "auto", display: "flex" }}>
-        <SideBar />
-        <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
-          <DashboardActionsBar userName={userName} />
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
-            <div style={{ color: "#e11d48" }}>{error}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
       <div style={{ flex: 1, background: "#f5f6fa", position: "relative", minHeight: "100vh" }}>
         <DashboardActionsBar userName={userName} />
-        <ToastContainer position="top-center" autoClose={2000} />
-        <div style={{ display: "flex", height: "calc(100vh - 80px)", marginTop: "40px" }}>
-          <div style={{ flex: 1, padding: "20px", overflowY: "auto" }}>
-            <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 20, marginBottom: 24 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h2 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 600, color: "#1e293b" }}>
-                  Medical Record - Patient {patientId}
-                </h2>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    onClick={() => setActiveTab('documents')}
-                    style={{
-                      background: activeTab === 'documents' ? "#2563eb" : "#f1f5f9",
-                      color: activeTab === 'documents' ? "white" : "#64748b",
-                      border: "none",
-                      borderRadius: 8,
-                      padding: "8px 16px",
-                      fontWeight: 600,
-                      cursor: "pointer"
-                    }}
-                  >
-                    Documents
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('invoices')}
-                    style={{
-                      background: activeTab === 'invoices' ? "#2563eb" : "#f1f5f9",
-                      color: activeTab === 'invoices' ? "white" : "#64748b",
-                      border: "none",
-                      borderRadius: 8,
-                      padding: "8px 16px",
-                      fontWeight: 600,
-                      cursor: "pointer"
-                    }}
-                  >
-                    Invoices
-                  </button>
-                </div>
-              </div>
-
-              {medicalRecord?.note && (
-                <div style={{ marginBottom: 20, padding: 16, background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                  {!editNoteMode ? (
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                        <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 600, color: "#1e293b" }}>
-                          {medicalRecord.note.title || "Main Note"}
-                        </h3>
-                        <button
-                          onClick={() => setEditNoteMode(true)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            color: "#2563eb",
-                            cursor: "pointer",
-                            padding: "4px 8px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px"
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faPen} style={{ fontSize: "0.9rem" }} />
-                          Edit
-                        </button>
-                      </div>
-                      <p style={{ margin: 0, color: "#64748b", lineHeight: 1.5 }}>
-                        {medicalRecord.note.description || "No description available"}
-                      </p>
-                      <div style={{ marginTop: 8, fontSize: "0.9rem", color: "#94a3b8" }}>
-                        By: {doctorName} | Created: {new Date(medicalRecord.note.creationDate).toLocaleDateString()}
-                      </div>
-                    </div>
+        <div className="container mx-auto p-6 max-w-6xl flex gap-8" style={{ marginTop: "20px" }}>
+          {/* Colonne de gauche */}
+          <div className="flex flex-col gap-4" style={{ width: '420px', minWidth: 320 }}>
+            <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: '#28A6A7' }}>Medical Record</h2>
+            {/* Main Note */}
+            <div className="mb-6" style={{
+              backgroundColor: 'white',
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease-in-out',
+              position: 'relative' // <-- cursor retiré ici
+            }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ margin: '4vh' }}>Main Note</h3>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                {/* Title */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{
+                    backgroundColor: '#dbeafe',
+                    color: '#1e40af',
+                    fontSize: '0.75rem',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}>Title:</span>
+                  {editNoteMode ? (
+                    <input
+                      type="text"
+                      value={editNoteTitle}
+                      onChange={e => setEditNoteTitle(e.target.value)}
+                      style={{ fontSize: 16, fontWeight: 600, borderRadius: 4, border: '1px solid #d1d5db', padding: 4, width: 220 }}
+                    />
                   ) : (
-                    <div>
-                      <div style={{ marginBottom: 12 }}>
-                        <input
-                          type="text"
-                          value={editNoteTitle}
-                          onChange={(e) => setEditNoteTitle(e.target.value)}
-                          placeholder="Note title"
-                          style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
-                        />
-                      </div>
-                      <div style={{ marginBottom: 12 }}>
-                        <textarea
-                          value={editNoteDescription}
-                          onChange={(e) => setEditNoteDescription(e.target.value)}
-                          placeholder="Note description"
-                          rows={3}
-                          style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15, resize: "vertical" }}
-                        />
-                      </div>
-                      <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                        <button
-                          onClick={() => setEditNoteMode(false)}
-                          style={{
-                            padding: "6px 12px",
-                            borderRadius: 6,
-                            border: "1px solid #d1d5db",
-                            background: "white",
-                            color: "#64748b",
-                            cursor: "pointer"
-                          }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleSubmitNoteUpdate}
-                          style={{
-                            padding: "6px 12px",
-                            borderRadius: 6,
-                            border: "none",
-                            background: "#2563eb",
-                            color: "white",
-                            cursor: "pointer"
-                          }}
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </div>
+                    <span className="font-semibold text-blue-700" style={{ fontSize: 16 }}>
+                      {medicalRecord?.note?.title || "No note"}
+                    </span>
                   )}
                 </div>
-              )}
-
-              <div>
-                {activeTab === 'documents' ? (
+                {/* Description */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{
+                    backgroundColor: '#dbeafe',
+                    color: '#1e40af',
+                    fontSize: '0.75rem',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}>Note Description:</span>
+                  {editNoteMode ? (
+                    <textarea
+                      value={editNoteDescription}
+                      onChange={e => setEditNoteDescription(e.target.value)}
+                      style={{ fontSize: 15, borderRadius: 4, border: '1px solid #d1d5db', padding: 4, width: 220, minHeight: 40 }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: 15, color: "#222" }}>
+                      {medicalRecord?.note?.description || ""}
+                    </span>
+                  )}
+                </div>
+                {/* Last update */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{
+                    backgroundColor: '#dbeafe',
+                    color: '#1e40af',
+                    fontSize: '0.75rem',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}>Last update:</span>
+                  <span style={{ color: "#888", fontSize: 14 }}>
+                    {medicalRecord?.note?.date ? new Date(medicalRecord.note.date).toLocaleString() : "-"}
+                  </span>
+                </div>
+                {/* Author Name */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{
+                    backgroundColor: '#dbeafe',
+                    color: '#1e40af',
+                    fontSize: '0.75rem',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '0.25rem',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}>Last author:</span>
+                  <span style={{ color: "#888", fontSize: 14 }}>
+                    {doctorName || "-"}
+                  </span>
+                </div>
+              </div>
+              {/* Icons en bas à droite */}
+              <div style={{
+                position: 'absolute',
+                right: 16,
+                bottom: 16,
+                display: 'flex',
+                gap: 16
+              }}>
+                {editNoteMode ? (
                   <>
-                    {loading && <div>Loading documents...</div>}
-                    {error && <div className="text-red-500">{error}</div>}
-                    {documents.length === 0 ? (
-                      <div style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>
-                        No documents uploaded yet.
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-4">
-                        {documents.map((doc) => (
-                          <PdfCard
-                            key={doc.id}
-                            documentTitle={doc.name}
-                            noteTitle={doc.note?.title || ''}
-                            noteDescription={doc.note?.description || ''}
-                            doctorId={doc.uploadedById}
-                            contentUrl={doc.content?.[0] || ''}
-                            creator={doctorNames[doc.uploadedById] || "-"}
-                            creationDate={doc.creationDate}
-                            documentId={doc.id}
-                            noteId={doc.note?.id}
-                            onClick={() => handlePdfClick(doc)}
-                            onDelete={() => handleDeleteDocument(doc.id)}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    <span
+                      style={{ cursor: 'pointer', color: '#22c55e', fontSize: 22 }}
+                      title="Valider"
+                      onClick={handleSubmitNoteUpdate
+                        
+                      }
+                    >
+                      <FontAwesomeIcon icon={faCheck} />
+                    </span>
+                   
                   </>
                 ) : (
-                  <>
-                    {invoicesLoading && <div>Loading invoices...</div>}
-                    {invoicesError && <div className="text-red-500">{invoicesError}</div>}
-                    {!invoicesLoading && !invoicesError && invoices.length === 0 && (
-                      <div style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>
-                        No invoices found.
-                      </div>
-                    )}
-                    {!invoicesLoading && !invoicesError && invoices.length > 0 && (
-                      <>
-                        <div className="flex flex-col gap-4">
-                          {currentInvoices.map(invoice => (
-                            <InvoiceItem
-                              key={invoice.id}
-                              id={invoice.id}
-                              invoiceDate={invoice.invoiceDate}
-                              amount={invoice.amount}
-                              description={invoice.description}
-                              status={invoice.status}
-                              medicalRecordId={medicalRecord.id}
-                              onUpdate={() => {
-                                if (medicalRecord?.id) {
-                                  const specificId = localStorage.getItem("specificId");
-                                  if (specificId) {
-                                    fetchInvoices(medicalRecord.id, parseInt(specificId))
-                                      .then(setInvoices)
-                                      .catch(err => setInvoicesError(err.message));
-                                  }
-                                }
-                              }}
-                            />
-                          ))}
-                        </div>
-
-                        {totalPages > 1 && (
-                          <div style={{ 
-                            display: 'flex', 
-                            justifyContent: 'center', 
-                            alignItems: 'center', 
-                            gap: '1rem',
-                            marginTop: '2rem',
-                            padding: '1rem'
-                          }}>
-                            <button
-                              onClick={() => handlePageChange(currentPage - 1)}
-                              disabled={currentPage === 1}
-                              style={{
-                                padding: '0.5rem 1rem',
-                                borderRadius: '0.25rem',
-                                border: '1px solid #d1d5db',
-                                background: currentPage === 1 ? '#f1f5f9' : 'white',
-                                color: currentPage === 1 ? '#94a3b8' : '#64748b',
-                                cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faChevronLeft} />
-                              Previous
-                            </button>
-
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-                                <button
-                                  key={page}
-                                  onClick={() => handlePageChange(page)}
-                                  style={{
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '0.25rem',
-                                    border: '1px solid #d1d5db',
-                                    background: currentPage === page ? '#2563eb' : 'white',
-                                    color: currentPage === page ? 'white' : '#64748b',
-                                    cursor: 'pointer',
-                                    fontWeight: currentPage === page ? 600 : 400
-                                  }}
-                                >
-                                  {page}
-                                </button>
-                              ))}
-                            </div>
-
-                            <button
-                              onClick={() => handlePageChange(currentPage + 1)}
-                              disabled={currentPage === totalPages}
-                              style={{
-                                padding: '0.5rem 1rem',
-                                borderRadius: '0.25rem',
-                                border: '1px solid #d1d5db',
-                                background: currentPage === totalPages ? '#f1f5f9' : 'white',
-                                color: currentPage === totalPages ? '#94a3b8' : '#64748b',
-                                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                              }}
-                            >
-                              Next
-                              <FontAwesomeIcon icon={faChevronRight} />
-                            </button>
-                          </div>
-                        )}
-
-                        <div style={{ 
-                          textAlign: 'center', 
-                          marginTop: '1rem',
-                          color: '#64748b',
-                          fontSize: '0.9rem'
-                        }}>
-                          Showing {startIndex + 1} to {Math.min(endIndex, invoices.length)} of {invoices.length} invoices
-                        </div>
-                      </>
-                    )}
-                  </>
+                  <span
+                    style={{ cursor: 'pointer', color: '#2563eb', fontSize: 22 }}
+                    title="Edit"
+                    onClick={() => {
+                      setEditNoteTitle(medicalRecord?.note?.title || "");
+                      setEditNoteDescription(medicalRecord?.note?.description || "");
+                      setEditNoteMode(true);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faPen} />
+                  </span>
                 )}
+                <span style={{ cursor: 'pointer', color: '#e11d48', fontSize: 22 }} title="Delete">
+                  <FontAwesomeIcon icon={faTrash} />
+                </span>
+              </div>
+            </div>
+            {/* Documents */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Documents</h3>
+              {loading && <div>Loading documents...</div>}
+              {error && <div className="text-red-500">{error}</div>}
+              <div className="flex flex-col gap-4">
+                {documents.map(doc => (
+                  <PdfCard
+                    key={doc.id}
+                    documentTitle={doc.name}
+                    noteTitle={doc.note?.title || ''}
+                    noteDescription={doc.note?.description || ''}
+                    doctorId={doc.uploadedById}
+                    contentUrl={doc.content?.[0] || ''}
+                    creator={doctorNames[doc.uploadedById] || "-"}
+                    creationDate={doc.creationDate}
+                    documentId={doc.id}
+                    noteId={doc.note?.id}
+                    onClick={() => {
+                      if (Array.isArray(doc.content)) {
+                        setSelectedPdfBytes(doc.content);
+                        setSelectedPdfBase64(undefined);
+                      } else if (typeof doc.content === "string") {
+                        setSelectedPdfBase64(doc.content);
+                        setSelectedPdfBytes(undefined);
+                      }
+                      setSelectedDocumentId(doc.id); // AJOUT : mémorise l'id du doc sélectionné
+                    }}
+                    onDelete={() => handleDeleteDocument(doc.id)}
+                  />
+                ))}
               </div>
             </div>
           </div>
+          {/* PDF Viewer à droite + Upload */}
           <div style={{ flex: 1, minWidth: 0  }}>
-            <div style={{ marginBottom: 24, background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 20, marginTop: 70, paddingTop: '20px' }}>
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                <button
-                  style={{
-                    background: "#2563eb",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "8px 18px",
-                    fontWeight: 600,
-                    fontSize: 16,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                  onClick={() => setShowUpload(v => !v)}
-                >
-                  <FontAwesomeIcon icon={faUpload} />
-                  Upload new document
-                </button>
-                <button
-                  style={{
-                    background: "#2563eb",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "8px 18px",
-                    fontWeight: 600,
-                    fontSize: 16,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                  onClick={() => setShowAppointmentSection(v => !v)}
-                >
-                  <FontAwesomeIcon icon={faCalendar} />
-                  Add new appointment
-                </button>
-                <button
-                  style={{
-                    background: "#2563eb",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "8px 18px",
-                    fontWeight: 600,
-                    fontSize: 16,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                  onClick={() => setShowInvoiceSection(v => !v)}
-                >
-                  <FontAwesomeIcon icon={faFileInvoice} />
-                  Generate invoice
-                </button>
-              </div>
-
+            {/* Section Upload */}
+            <div style={{ marginBottom: 24, background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 20, marginTop: 70 ,paddingTop: '20px'}}>
+              <button
+                style={{
+                  background: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "8px 18px",
+                  fontWeight: 600,
+                  fontSize: 16,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: showUpload ? 16 : 0,
+                  
+                }}
+                onClick={() => setShowUpload(v => !v)}
+              >
+                <FontAwesomeIcon icon={faUpload} />
+                Upload new document
+              </button>
               {showUpload && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ marginBottom: 12 }}>
@@ -726,127 +423,14 @@ export default function DoctorMedicalRecordPage() {
                   </button>
                 </div>
               )}
-
-              {showAppointmentSection && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ marginBottom: 12 }}>
-                    <input
-                      type="text"
-                      placeholder="Appointment title..."
-                      value={appointmentTitle}
-                      onChange={e => setAppointmentTitle(e.target.value)}
-                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <input
-                      type="datetime-local"
-                      value={appointmentDate}
-                      onChange={e => setAppointmentDate(e.target.value)}
-                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <select
-                      value={appointmentType}
-                      onChange={e => setAppointmentType(e.target.value)}
-                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
-                    >
-                      <option value="MEDICAL_APPOINTMENT">Medical Appointment</option>
-                      <option value="TREATMENT">Treatment</option>
-                      <option value="VACCINATION">Vaccination</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={handleAddAppointment}
-                    style={{
-                      background: "#22c55e",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 8,
-                      padding: "8px 18px",
-                      fontWeight: 600,
-                      fontSize: 16,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      width: "100%"
-                    }}
-                  >
-                    Submit Appointment
-                  </button>
-                </div>
-              )}
-
-              {showInvoiceSection && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={{ marginBottom: 12 }}>
-                    <input
-                      type="number"
-                      placeholder="Amount..."
-                      value={invoiceAmount}
-                      onChange={e => setInvoiceAmount(e.target.value)}
-                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <input
-                      type="text"
-                      placeholder="Description..."
-                      value={invoiceDescription}
-                      onChange={e => setInvoiceDescription(e.target.value)}
-                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
-                    />
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <select
-                      value={invoiceStatus}
-                      onChange={e => setInvoiceStatus(e.target.value)}
-                      style={{ width: "100%", borderRadius: 6, border: "1px solid #d1d5db", padding: 8, fontSize: 15 }}
-                    >
-                      <option value="DRAFT">Draft</option>
-                      <option value="PENDING">Pending</option>
-                      <option value="PAID">Paid</option>
-                      <option value="CANCELED">Canceled</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={handleCreateInvoice}
-                    style={{
-                      background: "#22c55e",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 8,
-                      padding: "8px 18px",
-                      fontWeight: 600,
-                      fontSize: 16,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      width: "100%"
-                    }}
-                  >
-                    Submit Invoice
-                  </button>
-                </div>
-              )}
             </div>
-
-            {(selectedPdfBytes || selectedPdfBase64) && selectedDocumentId && (
-              <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 20, height: "calc(100vh - 400px)", overflow: "hidden" }}>
-                <PDFViewer
-                  bytes={selectedPdfBytes ? Array.from(selectedPdfBytes) : undefined}
-                  base64={selectedPdfBase64 || undefined}
-                  documentId={selectedDocumentId}
-                  onClose={() => {
-                    setSelectedPdfBytes(null);
-                    setSelectedPdfBase64(null);
-                    setSelectedDocumentId(null);
-                  }}
-                />
-              </div>
+            {/* PDF Viewer */}
+            {selectedPdfBytes && Array.isArray(selectedPdfBytes) && selectedPdfBytes.length > 0 ? (
+              <PDFViewer documentId={selectedDocumentId ?? 0} bytes={selectedPdfBytes} onClose={() => { setSelectedPdfBytes(null); setSelectedDocumentId(null); }} />
+            ) : selectedPdfBase64 ? (
+              <PDFViewer documentId={selectedDocumentId ?? 0} base64={selectedPdfBase64} onClose={() => { setSelectedPdfBase64(undefined); setSelectedDocumentId(null); }} />
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', marginTop: 80 }}>No PDF to display</div>
             )}
           </div>
         </div>

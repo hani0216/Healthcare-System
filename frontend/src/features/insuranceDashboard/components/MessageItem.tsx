@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileInvoice, faEye, faCheck, faTimes, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
+import { faFileInvoice, faEye, faCheck, faTimes, faMoneyBillWave, faBan } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
-import { fetchInvoiceById, initializeReimbursement } from '../services/insuranceService';
+import { fetchInvoiceById, initializeReimbursement, checkReimbursementExistsForInvoice } from '../services/insuranceService';
 
 interface MessageItemProps {
   id: number;
@@ -34,36 +34,35 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const [reimbursementForm, setReimbursementForm] = useState({
     amount: ''
   });
+  const [hasReimbursement, setHasReimbursement] = useState(false);
+  const [checkingReimbursement, setCheckingReimbursement] = useState(true);
+  const [reimbursementAction, setReimbursementAction] = useState<'initialize' | 'refuse' | null>(null);
 
-  const handleViewInvoice = async () => {
-    try {
-      setIsLoading(true);
-      const invoice = await fetchInvoiceById(resourceId);
-      setInvoiceData(invoice);
-      toast.success("Invoice details loaded!", {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    } catch (error) {
-      console.error("Error viewing invoice:", error);
-      toast.error("Failed to load invoice details", {
-        position: "top-center",
-        autoClose: 1500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    } finally {
-      setIsLoading(false);
+  // Vérifier si un remboursement existe déjà pour cette facture
+  useEffect(() => {
+    const checkExistingReimbursement = async () => {
+      try {
+        console.log(`Checking existing reimbursement for resourceId: ${resourceId}, resourceType: ${resourceType}`);
+        setCheckingReimbursement(true);
+        const exists = await checkReimbursementExistsForInvoice(resourceId);
+        console.log(`Reimbursement exists for resourceId ${resourceId}: ${exists}`);
+        setHasReimbursement(exists);
+      } catch (error) {
+        console.error("Error checking existing reimbursement:", error);
+        setHasReimbursement(false);
+      } finally {
+        setCheckingReimbursement(false);
+      }
+    };
+
+    if (resourceType.toUpperCase() === 'INVOICE') {
+      checkExistingReimbursement();
+    } else {
+      setCheckingReimbursement(false);
     }
-  };
+  }, [resourceId, resourceType]);
 
-  const handleInitializeReimbursement = async () => {
+  const handleInitializeReimbursement = async (status: string = "Processing") => {
     try {
       setIsReimbursementLoading(true);
       
@@ -80,7 +79,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
       }
 
       const reimbursementData = {
-        status: "Processing",
+        status: status,
         amount: parseFloat(reimbursementForm.amount),
         invoiceId: resourceId,
         insuredId: parseInt(insuredId),
@@ -89,7 +88,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
       await initializeReimbursement(reimbursementData);
       
-      toast.success("Reimbursement initialized successfully!", {
+      const actionText = status === "REJECTED" ? "rejected" : "initialized";
+      toast.success(`Reimbursement ${actionText} successfully!`, {
         position: "top-center",
         autoClose: 1500,
         hideProgressBar: false,
@@ -100,10 +100,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
       setShowReimbursementForm(false);
       setReimbursementForm({ amount: '' });
+      setReimbursementAction(null);
+      setHasReimbursement(true); // Mettre à jour l'état local
       onUpdate();
     } catch (error) {
       console.error("Error initializing reimbursement:", error);
-      toast.error("Failed to initialize reimbursement", {
+      toast.error("Failed to process reimbursement", {
         position: "top-center",
         autoClose: 1500,
         hideProgressBar: false,
@@ -156,41 +158,69 @@ const MessageItem: React.FC<MessageItemProps> = ({
           </h4>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
-            onClick={handleViewInvoice}
-            disabled={isLoading}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#2563eb',
-              cursor: 'pointer',
-              padding: '0.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem'
-            }}
-            title="View invoice details"
-          >
-            <FontAwesomeIcon icon={faEye} />
-            <span style={{ fontSize: '0.9rem' }}>View</span>
-          </button>
-          <button
-            onClick={() => setShowReimbursementForm(!showReimbursementForm)}
-            style={{
-              background: 'none',
-              border: 'none',
+          {/* Afficher les boutons seulement si pas de remboursement existant et pas en cours de vérification */}
+          {!checkingReimbursement && !hasReimbursement && (
+            <>
+              <button
+                onClick={() => {
+                  setReimbursementAction('initialize');
+                  setShowReimbursementForm(true);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2563eb',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem'
+                }}
+                title="Initialize reimbursement"
+              >
+                <FontAwesomeIcon icon={faMoneyBillWave} />
+                <span style={{ fontSize: '0.9rem' }}>Initialize Reimbursement</span>
+              </button>
+              <button
+                onClick={() => {
+                  setReimbursementAction('refuse');
+                  setShowReimbursementForm(true);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ef4444',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem'
+                }}
+                title="Refuse reimbursement"
+              >
+                <FontAwesomeIcon icon={faBan} />
+                <span style={{ fontSize: '0.9rem' }}>Refuse Reimbursement</span>
+              </button>
+            </>
+          )}
+
+          {/* Afficher un indicateur si un remboursement existe déjà */}
+          {!checkingReimbursement && hasReimbursement && (
+            <span style={{
               color: '#22c55e',
-              cursor: 'pointer',
-              padding: '0.25rem',
+              fontSize: '0.9rem',
+              fontWeight: 500,
+              padding: '0.25rem 0.5rem',
+              borderRadius: '0.25rem',
+              backgroundColor: '#dcfce7',
               display: 'flex',
               alignItems: 'center',
               gap: '0.25rem'
-            }}
-            title="Initialize reimbursement"
-          >
-            <FontAwesomeIcon icon={faMoneyBillWave} />
-            <span style={{ fontSize: '0.9rem' }}>Initialize Reimbursement</span>
-          </button>
+            }}>
+              <FontAwesomeIcon icon={faCheck} />
+              Reimbursement Exists
+            </span>
+          )}
         </div>
       </div>
       
@@ -202,7 +232,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
           border: '1px solid #e2e8f0',
           marginTop: '0.5rem'
         }}>
-          <h5 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>Initialize Reimbursement</h5>
+          <h5 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>
+            {reimbursementAction === 'refuse' ? 'Refuse Reimbursement' : 'Initialize Reimbursement'}
+          </h5>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <input
               type="number"
@@ -221,6 +253,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 onClick={() => {
                   setShowReimbursementForm(false);
                   setReimbursementForm({ amount: '' });
+                  setReimbursementAction(null);
                 }}
                 style={{
                   padding: '0.5rem 1rem',
@@ -234,19 +267,19 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 Cancel
               </button>
               <button
-                onClick={handleInitializeReimbursement}
+                onClick={() => handleInitializeReimbursement(reimbursementAction === 'refuse' ? "REJECTED" : "Processing")}
                 disabled={isReimbursementLoading || !reimbursementForm.amount}
                 style={{
                   padding: '0.5rem 1rem',
                   borderRadius: '0.25rem',
                   border: 'none',
-                  background: '#22c55e',
+                  background: reimbursementAction === 'refuse' ? '#ef4444' : '#2563eb',
                   color: 'white',
                   cursor: 'pointer',
                   opacity: (isReimbursementLoading || !reimbursementForm.amount) ? 0.5 : 1
                 }}
               >
-                {isReimbursementLoading ? 'Processing...' : 'Submit'}
+                {isReimbursementLoading ? 'Processing...' : (reimbursementAction === 'refuse' ? 'Refuse' : 'Initialize')}
               </button>
             </div>
           </div>
