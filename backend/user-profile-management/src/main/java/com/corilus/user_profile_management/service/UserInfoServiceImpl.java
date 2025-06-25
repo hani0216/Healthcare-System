@@ -6,6 +6,8 @@ import com.corilus.user_profile_management.repository.UserInfoRepository;
 import com.corilus.user_profile_management.service.UserInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -48,5 +50,10 @@ public class UserInfoServiceImpl implements UserInfoService {
             case INSURANCE_ADMIN -> insuranceAdminService.getInsuranceAdminByUserInfoId(userInfo.getId()).getId();
             default -> throw new RuntimeException("Invalid role for user with email: " + email);
         };
+    }
+
+    @Override
+    public List<UserInfo> findAll() {
+        return userInfoRepository.findAll();
     }
 }

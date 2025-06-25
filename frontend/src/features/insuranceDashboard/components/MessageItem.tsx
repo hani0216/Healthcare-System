@@ -14,6 +14,7 @@ interface MessageItemProps {
   date: string;
   senderName?: string;
   onUpdate: () => void;
+  displayDate?: string;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
@@ -25,7 +26,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
   resourceId,
   date,
   senderName,
-  onUpdate
+  onUpdate,
+  displayDate
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isReimbursementLoading, setIsReimbursementLoading] = useState(false);
@@ -292,7 +294,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
             From: {senderName || `Doctor ID: ${senderId}`}
           </span>
           <span style={{ color: '#64748b', fontSize: '0.9rem' }}>
-            {new Date(date).toLocaleDateString()}
+            {(() => {
+              const d = displayDate ? new Date(displayDate) : new Date(date);
+              return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+            })()}
           </span>
         </div>
         <span style={{ 

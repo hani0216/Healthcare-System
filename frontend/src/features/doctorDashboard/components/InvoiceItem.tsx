@@ -144,7 +144,7 @@ const InvoiceItem: React.FC<InvoiceItemProps> = ({
       await shareInvoice(
         parseInt(specificId), // ID du médecin (sender)
         insuranceAdminId,     // ID de l'administrateur d'assurance (receiver)
-        `${description}`,
+        `${description} - Invoice amount: ${amount} €`, // Message
         id
       );
 

@@ -1,6 +1,8 @@
 package com.corilus.user_profile_management.service;
 
 import com.corilus.user_profile_management.entity.UserInfo;
+
+import java.util.List;
 import java.util.Optional;
 
 public interface UserInfoService {
@@ -9,4 +11,5 @@ public interface UserInfoService {
     boolean existsByPhone(String phone);
     UserInfo save(UserInfo userInfo);
     Long getSpecificUserIdByEmail(String email);
+    List<UserInfo> findAll();
 }

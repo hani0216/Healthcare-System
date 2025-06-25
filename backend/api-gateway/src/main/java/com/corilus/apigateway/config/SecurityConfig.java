@@ -63,24 +63,24 @@ public class SecurityConfig {
                 .pathMatchers("/api/auth/**").permitAll()
                 .pathMatchers("/actuator/**").permitAll()
                 .pathMatchers("/api/users/**").permitAll()
-                    .pathMatchers("/doctors/speciality/**").hasAnyRole("DOCTOR","Patient")
+                    .pathMatchers("/doctors/speciality/**").hasAnyRole("DOCTOR","Patient","ADMIN")
                 .pathMatchers("/doctors/specialities").permitAll()
 
 
-                    .pathMatchers("/doctors/{id}").hasAnyRole("DOCTOR" ,"PATIENT" , "INSURANCE_ADMIN")// Permettre l'accès aux spécialités sans authentification
+                    .pathMatchers("/doctors/{id}").hasAnyRole("DOCTOR" ,"PATIENT" , "INSURANCE_ADMIN","ADMIN")// Permettre l'accès aux spécialités sans authentification
                 // Routes protégées par rôle
-                .pathMatchers("/doctors/**").hasAnyRole("DOCTOR" , "PATIENT" , "INSURANCE_ADMIN")
+                .pathMatchers("/doctors/**").hasAnyRole("DOCTOR" , "PATIENT" , "INSURANCE_ADMIN","ADMIN")
                     .pathMatchers("/patients").hasAnyRole("ADMIN", "PATIENT" , "DOCTOR")
                 .pathMatchers("/patients/**").hasAnyRole("ADMIN", "PATIENT","DOCTOR")
-                    .pathMatchers(HttpMethod.GET, "/insurance-admins").hasAnyRole("INSURANCE_ADMIN", "PATIENT")
-                    .pathMatchers("/insurance-admins/**").hasAnyRole("INSURANCE_ADMIN","DOCTOR")
+                    .pathMatchers(HttpMethod.GET, "/insurance-admins").hasAnyRole("INSURANCE_ADMIN", "PATIENT","ADMIN")
+                    .pathMatchers("/insurance-admins/**").hasAnyRole("INSURANCE_ADMIN","DOCTOR","ADMIN")
 
-                    .pathMatchers(("/medical-records/**")).hasAnyRole("DOCTOR", "PATIENT")
+                    .pathMatchers(("/medical-records/**")).hasAnyRole("DOCTOR", "PATIENT","ADMIN")
                     .pathMatchers("/api/notifications/notifications/receiver/**").permitAll()
                     .pathMatchers("/api/notifications/notifications/**").permitAll()
 
-                    .pathMatchers("/api/invoices/**").hasAnyRole("PATIENT" ,"DOCTOR" , "INSURANCE_ADMIN")
-                    .pathMatchers("/api/reimbursements/**").hasAnyRole("PATIENT","DOCTOR","INSURANCE_ADMIN")
+                    .pathMatchers("/api/invoices/**").hasAnyRole("PATIENT" ,"DOCTOR" , "INSURANCE_ADMIN","ADMIN")
+                    .pathMatchers("/api/reimbursements/**").hasAnyRole("PATIENT","DOCTOR","INSURANCE_ADMIN","ADMIN")
 
                     .pathMatchers("api/sharing-messages/**").permitAll()
 

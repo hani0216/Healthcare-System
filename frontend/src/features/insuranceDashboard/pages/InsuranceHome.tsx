@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import SideBar from '../components/sideBar';
 import DashboardActionsBar from '../components/DashboardActionsBar';
 import MessageItem from '../components/MessageItem';
-import { fetchReceivedMessages, fetchDoctorName } from '../services/insuranceService';
+import { fetchReceivedMessages, fetchDoctorName, fetchInvoiceById } from '../services/insuranceService';
 import { ToastContainer, toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
@@ -26,7 +26,25 @@ export default function InsuranceHome() {
         }
 
         const receivedMessages = await fetchReceivedMessages(parseInt(specificId));
-        setMessages(receivedMessages);
+        // Pour chaque message de type INVOICE, récupérer l'invoiceDate
+        const messagesWithInvoiceDate = await Promise.all(receivedMessages.map(async (msg: any) => {
+          if (msg.resourceType === 'INVOICE' && msg.resourceId) {
+            try {
+              const invoice = await fetchInvoiceById(msg.resourceId);
+              return { ...msg, displayDate: invoice.invoiceDate };
+            } catch (e) {
+              return { ...msg, displayDate: msg.date };
+            }
+          }
+          return { ...msg, displayDate: msg.date };
+        }));
+        // Trier les messages par date (du plus récent au plus ancien)
+        const sortedMessages = messagesWithInvoiceDate.sort((a: any, b: any) => {
+          const dateA = new Date(a.displayDate || 0);
+          const dateB = new Date(b.displayDate || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        setMessages(sortedMessages);
 
         // Récupérer les noms des médecins expéditeurs
         const uniqueDoctorIds = Array.from(new Set(receivedMessages.map((msg: any) => msg.senderId))) as number[];
@@ -140,6 +158,7 @@ export default function InsuranceHome() {
                     resourceType={message.resourceType}
                     resourceId={message.resourceId}
                     date={message.date}
+                    displayDate={message.displayDate}
                     senderName={doctorNames[message.senderId]}
                     onUpdate={handleRefresh}
                   />

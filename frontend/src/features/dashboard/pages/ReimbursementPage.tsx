@@ -37,7 +37,13 @@ export default function BillingPage() {
       setError(null);
       try {
         const invs = await fetchInvoicesByMedicalRecordId(medicalRecordId);
-        setInvoices(invs);
+        // Trier les factures par date de facture (du plus récent au plus ancien)
+        const sortedInvs = invs.sort((a: any, b: any) => {
+          const dateA = new Date(a.invoiceDate || 0);
+          const dateB = new Date(b.invoiceDate || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        setInvoices(sortedInvs);
         // Récupérer les noms des médecins pour chaque facture
         const uniqueDoctorIds: number[] = Array.from(new Set(invs.map((inv: any) => inv.generatedBy)));
         const names: Record<number, string> = {};

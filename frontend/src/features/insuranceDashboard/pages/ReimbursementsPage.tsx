@@ -36,7 +36,13 @@ const ReimbursementsPage: React.FC = () => {
       }
 
       const data = await fetchReimbursementsByInsuredId(parseInt(insuredId));
-      setReimbursements(data);
+      // Trier les remboursements par date de création (du plus récent au plus ancien)
+      const sortedData = data.sort((a: any, b: any) => {
+        const dateA = new Date(a.creationDate || a.createdAt || 0);
+        const dateB = new Date(b.creationDate || b.createdAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+      setReimbursements(sortedData);
     } catch (error) {
       console.error('Error loading reimbursements:', error);
       setError('Failed to load reimbursements');

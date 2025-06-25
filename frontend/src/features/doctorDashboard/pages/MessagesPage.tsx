@@ -23,9 +23,16 @@ export default function MessagesPage() {
     setLoading(true);
     fetchReceivedMessages(receiverId)
       .then(async (msgs) => {
+        // Trier les messages par date d'envoi (du plus récent au plus ancien)
+        const sortedMsgs = msgs.sort((a: any, b: any) => {
+          const dateA = new Date(a.sendingDate || a.date || 0);
+          const dateB = new Date(b.sendingDate || b.date || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
         // Pour chaque message, récupérer le nom du sender
         const msgsWithNames = await Promise.all(
-          msgs.map(async (msg: any) => {
+          sortedMsgs.map(async (msg: any) => {
             const senderName = await fetchDoctorName(msg.senderId);
             return { ...msg, senderName };
           })

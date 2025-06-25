@@ -19,6 +19,21 @@ export default function LoginForm() {
       password,
     };
 
+    // Cas spécial admin : login, stockage token, redirection directe
+    if (email === 'admin@gmail.com' && password === 'admin') {
+      try {
+        const response = await axios.post('http://localhost:8088/api/auth/login', userData);
+        localStorage.setItem('accessToken', response.data.accessToken);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+        localStorage.setItem('email', email);
+        navigate('/adminDashboard');
+        return;
+      } catch (err) {
+        setError('Invalid email or password');
+        return;
+      }
+    }
+
     try {
       // Envoi de la requête POST au backend pour l'authentification
       const response = await axios.post('http://localhost:8088/api/auth/login', userData);
@@ -85,6 +100,9 @@ export default function LoginForm() {
             return;
           } else if(userDataResponse.data.role === 'PATIENT'){
             navigate('/patientHome');
+            return;
+          } else if (userDataResponse.data.role === 'ADMIN' || userDataResponse.data.role === 'admin') {
+            navigate('/adminDashboard');
             return;
           }
         }
