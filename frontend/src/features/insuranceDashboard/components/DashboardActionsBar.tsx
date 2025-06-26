@@ -73,43 +73,6 @@ export default function DashboardActionsBar({ userName }: { userName: string }) 
           </div>
         )}
       </div>
-      {/* Icône Calendrier */}
-      <div style={{ position: "relative" }} ref={calRef}>
-        <FaCalendarAlt
-          style={{ color: "#28A6A7", fontSize: "2.2rem", cursor: "pointer" }}
-          onClick={() => {
-            setShowCalendar((v) => !v);
-            setShowNotifications(false);
-          }}
-        />
-        {showCalendar && (
-          <div
-            style={{
-              position: "absolute",
-              right: 0,
-              top: "20%",
-              background: "#fff",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              borderRadius: "8px",
-              zIndex: 10,
-              padding: 0,
-              minWidth: "unset",
-              margin: 0
-            }}
-          >
-            <div style={{ margin: 0, padding: 0 }}>
-              <Calendar
-                locale="en-US"
-                onChange={() => {}}
-                value={new Date()}
-                showNeighboringMonth={false}
-                prev2Label={null}
-                next2Label={null}
-              />
-            </div>
-          </div>
-        )}
-      </div>
       {/* Profil utilisateur */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "24px" }}>
         <span style={{ fontWeight: 500, color: "#28a6a7" }}>{userName}</span>

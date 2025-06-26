@@ -4,9 +4,9 @@ import DashboardActionsBar from "../components/DashboardActionsBar";
 import MessageItem from "../components/MessageItem";
 import MessageListItem from "../components/MessageListItem";
 import MessageContent from "../components/MessageContent";
-import { fetchReceivedMessages } from "../services/messagesService";
+import { fetchReceivedMessages, updateMessageSeen, deleteMessage } from "../services/messagesService";
 import { fetchDocumentById, fetchDoctorName } from "../services/medicalRecordService";
-import { FaEnvelopeOpenText } from "react-icons/fa";
+import { FaEnvelopeOpenText, FaTrash } from "react-icons/fa";
 import PdfCard from "../components/PdfCard";
 import PdfCardReadOnly from "../components/PdfCardReadOnly";
 
@@ -86,20 +86,54 @@ export default function MessagesPage() {
             />
             <div style={{ flex: 1, overflowY: "auto" }}>
               {loading ? (
-                <div style={{ color: "#888", textAlign: "center", marginTop: 40 }}>Chargement…</div>
+                <div style={{ color: "#888", textAlign: "center", marginTop: 40 }}>Loading...</div>
               ) : messages.length === 0 ? (
-                <div style={{ color: "#888", textAlign: "center", marginTop: 40 }}>Aucun message partagé pour le moment.</div>
+                <div style={{ color: "#888", textAlign: "center", marginTop: 40 }}>No messages recieved yet.</div>
               ) : (
                 messages.map(msg => (
-                  <MessageListItem
-                  key={msg.id}
-                  sender={msg.senderName}
-                  date={new Date(msg.sendingDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  message={msg.description}
-                  seen={msg.seen}
-                  selected={selectedMessage?.id === msg.id}
-                  onClick={() => setSelectedMessage(msg)}
-                />
+                  <div key={msg.id} style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                    <MessageListItem
+                      sender={msg.senderName}
+                      date={new Date(msg.sendingDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      message={msg.description}
+                      seen={msg.seen}
+                      selected={selectedMessage?.id === msg.id}
+                      onClick={async () => {
+                        setSelectedMessage(msg);
+                        if (!msg.seen) {
+                          try {
+                            await updateMessageSeen(msg);
+                            setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, seen: true } : m));
+                          } catch {}
+                        }
+                      }}
+                    />
+                    <button
+                      style={{
+                        position: 'absolute',
+                        right: 8,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: '#e11d48',
+                        cursor: 'pointer',
+                        fontSize: 18,
+                        zIndex: 2
+                      }}
+                      title="Supprimer le message"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          await deleteMessage(msg.id);
+                          setMessages(prev => prev.filter(m => m.id !== msg.id));
+                          if (selectedMessage?.id === msg.id) setSelectedMessage(null);
+                        } catch {}
+                      }}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 ))
               )}
             </div>

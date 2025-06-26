@@ -77,39 +77,11 @@ export default function SideBar() {
                         Dashboard
                     </MenuItem>
                     <MenuItem
-                        icon={<FaBell />}
-                        component={<Link to="/doctorNotification" />}
-                        active={location.pathname === "/doctorNotification"}
-                    >
-                        Notifications
-                    </MenuItem>
-                    <MenuItem
-                        icon={<FaHistory />}
-                        component={<Link to="/doctorHistory" />}
-                        active={location.pathname === "/doctorHistory"}
-                    >
-                        History
-                    </MenuItem>
-                    <MenuItem
                         icon={<FaUser />}
                         component={<Link to="/doctorProfile" />}
                         active={location.pathname === "/doctorProfile"}
                     >
                         Profile
-                    </MenuItem>
-                    <MenuItem
-                        icon={<FaCalendarAlt />}
-                        component={<Link to="/doctorCalendar" />}
-                        active={location.pathname === "/doctorCalendar"}
-                    >
-                        Calendar
-                    </MenuItem>
-                    <MenuItem
-                        icon={<FaSearch />}
-                        component={<Link to="/doctorSearch" />}
-                        active={location.pathname === "/doctorSearch"}
-                    >
-                        Search
                     </MenuItem>
                     <MenuItem
                         icon={<FontAwesomeIcon icon={faEnvelope} />}

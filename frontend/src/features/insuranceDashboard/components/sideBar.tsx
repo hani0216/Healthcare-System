@@ -89,32 +89,11 @@ export default function SideBar() {
                         Notifications
                     </MenuItem>
                     <MenuItem
-                        icon={<FaHistory />}
-                        component={<Link to="/insuranceHistory" />}
-                        active={location.pathname === "/insuranceHistory"}
-                    >
-                        History
-                    </MenuItem>
-                    <MenuItem
                         icon={<FaUser />}
                         component={<Link to="/insuranceProfile" />}
                         active={location.pathname === "/insuranceProfile"}
                     >
                         Profile
-                    </MenuItem>
-                    <MenuItem
-                        icon={<FaCalendarAlt />}
-                        component={<Link to="/insuranceCalendar" />}
-                        active={location.pathname === "/insuranceCalendar"}
-                    >
-                        Calendar
-                    </MenuItem>
-                    <MenuItem
-                        icon={<FaSearch />}
-                        component={<Link to="/insuranceSearch" />}
-                        active={location.pathname === "/insuranceSearch"}
-                    >
-                        Search
                     </MenuItem>
                     {/* Ajoute ici d'autres liens spécifiques à l'assurance si besoin */}
                 </Menu>
