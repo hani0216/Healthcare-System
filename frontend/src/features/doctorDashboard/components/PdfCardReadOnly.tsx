@@ -113,12 +113,6 @@ const PdfCardReadOnly: React.FC<PdfCardReadOnlyProps> = ({
     }
   };
 
-  const handleCardClick = () => {
-    if (patientId) {
-      navigate(`/doctor/patient/${patientId}/medical-record`);
-    }
-  };
-
   return (
     <div
       style={{
@@ -131,7 +125,6 @@ const PdfCardReadOnly: React.FC<PdfCardReadOnlyProps> = ({
         marginBottom: showDescription ? 16 : 0,
         position: "relative",
       }}
-      onClick={handleCardClick}
     >
       <div style={{ display: "flex" }}>
         <div

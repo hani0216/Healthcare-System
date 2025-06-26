@@ -26,5 +26,9 @@ public interface DocumentService {
 
     void removeDocument(Long id);
 
+    Long getPatientIdByDocumentId(Long documentId);
+
 
 }
+
+

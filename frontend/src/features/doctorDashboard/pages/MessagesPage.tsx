@@ -4,11 +4,12 @@ import DashboardActionsBar from "../components/DashboardActionsBar";
 import MessageItem from "../components/MessageItem";
 import MessageListItem from "../components/MessageListItem";
 import MessageContent from "../components/MessageContent";
-import { fetchReceivedMessages, updateMessageSeen, deleteMessage } from "../services/messagesService";
+import { fetchReceivedMessages, updateMessageSeen, deleteMessage, getMedicalRecordIdFromDocument, getPatientIdFromMedicalRecord, getPatientIdByDocumentId } from "../services/messagesService";
 import { fetchDocumentById, fetchDoctorName } from "../services/medicalRecordService";
 import { FaEnvelopeOpenText, FaTrash } from "react-icons/fa";
 import PdfCard from "../components/PdfCard";
 import PdfCardReadOnly from "../components/PdfCardReadOnly";
+import { useNavigate } from "react-router-dom";
 
 export default function MessagesPage() {
   const userName = localStorage.getItem("userName") || "Doctor";
@@ -17,6 +18,7 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!receiverId) return;
@@ -152,16 +154,36 @@ export default function MessagesPage() {
                     message={selectedMessage.description}
                   >
                     <div style={{ marginTop: 32, width: "100%", padding: "0 20px" }}>
-                      <PdfCardReadOnly
-                        documentTitle={selectedDocument.name}
-                        noteTitle={selectedDocument.note?.title || ""}
-                        noteDescription={selectedDocument.note?.description || ""}
-                        creator={selectedDocument.doctorName}
-                        creationDate={selectedDocument.creationDate}
-                        contentUrl={selectedDocument.content?.[0] || ""}
-                        doctorId={selectedDocument.uploadedById}
-                        patientId={selectedDocument.patientId}
-                      />
+                      <div onClick={async () => {
+                        let patientId = selectedDocument.patientId;
+                        if (!patientId && selectedDocument.id) {
+                          try {
+                            patientId = await getPatientIdByDocumentId(selectedDocument.id);
+                            console.log('patientId from new API:', patientId);
+                          } catch (e) {
+                            console.error('Erreur lors de la récupération du patientId via nouvelle API:', e);
+                            return;
+                          }
+                        } else {
+                          console.log('patientId direct from document:', patientId);
+                        }
+                        if (patientId && selectedDocument.id) {
+                          navigate(`/doctor/patient/${patientId}/medical-record?openDocumentId=${selectedDocument.id}`);
+                        } else if (patientId) {
+                          navigate(`/doctor/patient/${patientId}/medical-record`);
+                        }
+                      }} style={{ cursor: 'pointer' }}>
+                        <PdfCardReadOnly
+                          documentTitle={selectedDocument.name}
+                          noteTitle={selectedDocument.note?.title || ""}
+                          noteDescription={selectedDocument.note?.description || ""}
+                          creator={selectedDocument.doctorName}
+                          creationDate={selectedDocument.creationDate}
+                          contentUrl={selectedDocument.content?.[0] || ""}
+                          doctorId={selectedDocument.uploadedById}
+                          patientId={selectedDocument.patientId}
+                        />
+                      </div>
                     </div>
                   </MessageContent>
                 </div>

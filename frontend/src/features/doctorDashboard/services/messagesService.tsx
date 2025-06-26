@@ -36,3 +36,33 @@ export async function deleteMessage(messageId) {
   if (!res.ok) throw new Error("Erreur lors de la suppression du message");
   return true;
 }
+
+export async function getMedicalRecordIdFromDocument(documentId) {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`http://localhost:8088/medical-records/document/${documentId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erreur lors de la récupération du document");
+  const doc = await res.json();
+  return doc.medicalRecord; // ou doc.medicalRecordId selon la structure réelle
+}
+
+export async function getPatientIdFromMedicalRecord(medicalRecordId) {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`http://localhost:8088/medical-records/${medicalRecordId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erreur lors de la récupération du dossier médical");
+  const mr = await res.json();
+  return mr.patientId;
+}
+
+export async function getPatientIdByDocumentId(documentId) {
+  const token = localStorage.getItem("accessToken");
+  const res = await fetch(`http://localhost:8088/medical-records/${documentId}/patient-id`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erreur lors de la récupération du patientId via documentId");
+  const data = await res.json();
+  return data.patientId || data.id || data; // selon la structure de la réponse
+}

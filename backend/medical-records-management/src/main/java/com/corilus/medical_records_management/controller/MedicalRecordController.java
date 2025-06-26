@@ -270,6 +270,17 @@ public class MedicalRecordController {
     }
 
 
+    @GetMapping("/{documentId}/patient-id")
+    public ResponseEntity<Long> getPatientIdByDocumentId(@PathVariable Long documentId) {
+        try {
+            Long patientId = documentService.getPatientIdByDocumentId(documentId);
+            return ResponseEntity.ok(patientId);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
 
 
 

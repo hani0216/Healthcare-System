@@ -91,7 +91,7 @@ export async function fetchReimbursementByInvoiceId(invoiceId: string) {
 
 export async function fetchMedicalRecordById(mrId: string) {
   const token = localStorage.getItem("accessToken");
-  const response = await fetch(`http://localhost:8082/medical-records/${mrId}`, {
+  const response = await fetch(`http://localhost:8088/medical-records/${mrId}`, {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,

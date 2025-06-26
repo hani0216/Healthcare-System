@@ -134,5 +134,15 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new RuntimeException("Document not found"));
     }
 
+    // medical-records-management/src/main/java/com/corilus/medical_records_management/service/DocumentService.java
+    public Long getPatientIdByDocumentId(Long documentId) {
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document non trouvé"));
+        Long medicalRecordId = document.getMedicalRecord();
+        MedicalRecord medicalRecord = medicalRecordRepository.findById(medicalRecordId)
+                .orElseThrow(() -> new RuntimeException("Dossier médical non trouvé"));
+        return medicalRecord.getPatientId();
+    }
+
 
 }

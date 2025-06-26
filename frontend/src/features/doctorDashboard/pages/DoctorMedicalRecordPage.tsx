@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import SideBar from "../components/sideBar";
 import DashboardActionsBar from "../components/DashboardActionsBar";
 import PdfCard from "../components/PdfCard";
@@ -13,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export default function DoctorMedicalRecordPage() {
   const { patientId } = useParams();
+  const location = useLocation();
   const userName = localStorage.getItem("userName") || "Doctor";
   const [medicalRecord, setMedicalRecord] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
@@ -81,11 +82,29 @@ export default function DoctorMedicalRecordPage() {
               .catch(() => setDoctorNames(prev => ({ ...prev, [id]: "Unknown" })));
           }
         });
+        // Ouvre le PDF si openDocumentId est dans l'URL
+        const params = new URLSearchParams(location.search);
+        const openDocId = params.get('openDocumentId');
+        if (openDocId) {
+          const doc = docs.find((d: any) => String(d.id) === String(openDocId));
+          if (doc) {
+            handlePdfClick(doc);
+          }
+        } else {
+          // Ancienne logique par nom (si besoin)
+          const docTitle = params.get('documentId');
+          if (docTitle) {
+            const doc = docs.find((d: any) => d.name === docTitle);
+            if (doc) {
+              handlePdfClick(doc);
+            }
+          }
+        }
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
     // eslint-disable-next-line
-  }, [patientId]);
+  }, [patientId, location.search]);
 
   // Synchronise les champs d'édition avec la note actuelle
   useEffect(() => {
