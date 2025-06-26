@@ -18,7 +18,8 @@ export default function PatientSecondForm() {
 
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [insuranceProviders, setInsuranceProviders] = useState<string[]>([]);
+  const [insuranceProviders, setInsuranceProviders] = useState<any[]>([]);
+  const [selectedInsuranceId, setSelectedInsuranceId] = useState<string>('');
 
   const navigate = useNavigate();
 
@@ -28,8 +29,7 @@ export default function PatientSecondForm() {
       const response = await axios.get('http://localhost:8088/insurance-admins', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const providers = response.data.map((item: any) => item.userInfo.name);
-      setInsuranceProviders(providers);
+      setInsuranceProviders(response.data);
     } catch (error) {
       setErrorMessage('Error fetching insurance providers');
       console.error(error);
@@ -39,6 +39,9 @@ export default function PatientSecondForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const selectedInsurance = insuranceProviders.find((item) => String(item.id) === selectedInsuranceId);
+    const insuranceCompany = selectedInsurance ? selectedInsurance.insuranceCompany : '';
+
     try {
       const payload = {
         phone: formData.phone,
@@ -46,7 +49,7 @@ export default function PatientSecondForm() {
         birthDate: formData.birthDate,
         cin: Number(formData.cin),
         insuranceNumber: Number(formData.insuranceNumber),
-        insuranceName: formData.insuranceName,
+        insuranceName: insuranceCompany,
       };
 
       const token = localStorage.getItem('accessToken');
@@ -85,10 +88,14 @@ export default function PatientSecondForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: ['cin', 'insuranceNumber'].includes(name) ? value.replace(/\D/g, '') : value,
-    }));
+    if (name === 'insuranceName') {
+      setSelectedInsuranceId(value);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: ['cin', 'insuranceNumber'].includes(name) ? value.replace(/\D/g, '') : value,
+      }));
+    }
   };
 
   useEffect(() => {
@@ -148,7 +155,7 @@ export default function PatientSecondForm() {
               <select
                 name="insuranceName"
                 className="form-input"
-                value={formData.insuranceName}
+                value={selectedInsuranceId}
                 onChange={handleChange}
                 required
               >
@@ -156,8 +163,8 @@ export default function PatientSecondForm() {
                   Choose your Insurance Provider
                 </option>
                 {insuranceProviders.map((provider, index) => (
-                  <option key={index} value={provider}>
-                    {provider}
+                  <option key={provider.id} value={provider.id}>
+                    {provider.userInfo.name}
                   </option>
                 ))}
               </select>

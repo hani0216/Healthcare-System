@@ -40,7 +40,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const [checkingReimbursement, setCheckingReimbursement] = useState(true);
   const [reimbursementAction, setReimbursementAction] = useState<'initialize' | 'refuse' | null>(null);
 
-  // Vérifier si un remboursement existe déjà pour cette facture
   useEffect(() => {
     const checkExistingReimbursement = async () => {
       try {

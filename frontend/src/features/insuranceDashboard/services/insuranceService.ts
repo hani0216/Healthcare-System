@@ -161,4 +161,18 @@ export async function checkReimbursementExistsForInvoice(invoiceId: number): Pro
     console.error("Error checking reimbursement existence:", error);
     return false;
   }
+}
+
+export async function fetchInsuranceAdminProfile(specificId) {
+  const token = localStorage.getItem("accessToken");
+  if (!token) throw new Error("No access token found");
+  const response = await fetch(`http://localhost:8088/insurance-admins/${specificId}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  return await response.json();
 } 
