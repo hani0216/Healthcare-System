@@ -39,6 +39,37 @@ export default function HistoryPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const itemsPerPage = 4;
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(["NOTE", "DOCUMENT", "INVOICE"]);
+
+  // Liste des types filtrables
+  const FILTER_TYPES = [
+    { label: "Note", value: "NOTE" },
+    { label: "Document", value: "DOCUMENT" },
+    { label: "Invoice", value: "INVOICE" },
+  ];
+
+  // Mapping des types d'historique vers les valeurs de filtre
+  const typeMapping: Record<string, string> = {
+    NOTE_CREATED: "NOTE",
+    NOTE_DELETED: "NOTE",
+    NOTE_UPDATED: "NOTE",
+    NOTE_UPDATEDD: "NOTE",
+    MAIN_NOTE_UPDATED: "NOTE",
+    DOCUMENT_UPLOADED: "DOCUMENT",
+    DOCUMENT_DELETED: "DOCUMENT",
+    DOCUMENT_SHARED: "DOCUMENT",
+    DOCUMENT_UPDATED: "DOCUMENT",
+    DOCUMENT_NOTE_UPDATED: "DOCUMENT",
+    INVOICE_GENERATED: "INVOICE",
+    INVOICE_CREATED: "INVOICE",
+    INVOICE_UPDATED: "INVOICE",
+    INVOICE_DELETED: "INVOICE",
+    INVOICE_PAID: "INVOICE",
+    INVOICE_CANCELLED: "INVOICE",
+    REIMBURSEMENT_UPDATED: "INVOICE",
+    REIMBURSEMENT_GENERATED: "INVOICE",
+    REIMBURSEMENT_DELETED: "INVOICE",
+  };
 
   useEffect(() => {
     const specificId = localStorage.getItem("specificId");
@@ -58,8 +89,10 @@ export default function HistoryPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const totalPages = Math.ceil(logs.length / itemsPerPage);
-  const paginatedLogs = logs.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  // Filtrage des logs selon le type sélectionné
+  const filteredLogs = logs.filter(log => selectedTypes.includes(typeMapping[log.historyType]));
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const paginatedLogs = filteredLogs.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return (
     <div style={{ height: "auto", display: "flex" }}>
@@ -75,6 +108,25 @@ export default function HistoryPage() {
                 </div>
               </div>
             </section>
+            {/* Filtre par type d'historique */}
+            <div className="flex gap-4 justify-center items-center my-4">
+              {FILTER_TYPES.map(type => (
+                <label key={type.value} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedTypes.includes(type.value)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedTypes([...selectedTypes, type.value]);
+                      } else {
+                        setSelectedTypes(selectedTypes.filter(t => t !== type.value));
+                      }
+                    }}
+                  />
+                  {type.label}
+                </label>
+              ))}
+            </div>
             <section className="notification-list-section divide-y divide-gray-100" style={{background:'#F5F6FA'}}>
               {paginatedLogs.map((log, idx) => (
                 <div key={log.id || idx} className="notification-item p-3 hover:bg-gray-50 relative rounded-xl shadow-sm mb-2 transition-all duration-300" style={{ backgroundColor: '#f8fafc', borderLeft: '4px solid #38bdf8' }}>

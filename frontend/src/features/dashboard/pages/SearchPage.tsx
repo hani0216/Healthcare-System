@@ -198,7 +198,7 @@ export default function SearchPage() {
     setCurrentPage(1); // Reset to first page when selecting new speciality
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8081/doctors/speciality/${key}`, {
+      const res = await fetch(`http://localhost:8088/doctors/speciality/${key}`, {
       });
       const data = await res.json();
       setDoctors(data);
@@ -238,10 +238,9 @@ export default function SearchPage() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full max-w-xl border border-blue-200 rounded-full px-6 py-3 text-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
                     style={{ boxShadow: "0 2px 8px rgba(40,166,167,0.06)"  , width:'60%' , marginBottom:'4vh' , marginTop:'2vh' ,borderRadius: '9999px'}}
-                    
                   />
-                  
                 </div>
+                {/* Pagination sur la liste des spécialités (optionnel, si beaucoup de spécialités) */}
                 <DoctorSpecialityGrid specialities={filteredSpecialities} onSpecialityClick={handleSpecialityClick} />
               </>
             ) : (

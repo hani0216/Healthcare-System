@@ -16,6 +16,49 @@ export default function BillingPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [invoicesPerPage] = useState(4); // 4 factures par page
+  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+
+  // Liste des statuts filtrables
+  const STATUS_OPTIONS = [
+    { label: 'All', value: 'ALL' },
+    { label: 'Processing', value: 'PROCESSING' },
+    { label: 'Approved', value: 'APPROVED' },
+    { label: 'Rejected', value: 'REJECTED' },
+  ];
+
+  // Fonction pour obtenir le statut du premier remboursement lié à une facture
+  async function getReimbursementStatus(invoiceId: number) {
+    try {
+      const reimbursements = await fetchReimbursementByInvoiceId(invoiceId.toString());
+      if (Array.isArray(reimbursements) && reimbursements.length > 0 && reimbursements[0]?.status) {
+        return reimbursements[0].status.toUpperCase();
+      }
+    } catch {}
+    return null;
+  }
+
+  // Filtrage des factures selon le statut sélectionné
+  const [filteredInvoices, setFilteredInvoices] = useState<any[]>([]);
+  useEffect(() => {
+    async function filterInvoices() {
+      if (selectedStatus === 'ALL') {
+        setFilteredInvoices(invoices);
+      } else {
+        const filtered = [];
+        for (const inv of invoices) {
+          const status = await getReimbursementStatus(inv.id);
+          if (status === selectedStatus) {
+            filtered.push(inv);
+          }
+        }
+        setFilteredInvoices(filtered);
+      }
+    }
+    filterInvoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoices, selectedStatus]);
+  const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+  const paginatedInvoices = filteredInvoices.slice((currentPage - 1) * invoicesPerPage, currentPage * invoicesPerPage);
 
   // Récupérer l'id du medical record
   useEffect(() => {
@@ -66,10 +109,6 @@ export default function BillingPage() {
     fetchInvoices();
   }, [medicalRecordId]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(invoices.length / invoicesPerPage);
-  const paginatedInvoices = invoices.slice((currentPage - 1) * invoicesPerPage, currentPage * invoicesPerPage);
-
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
@@ -78,6 +117,21 @@ export default function BillingPage() {
         <div className="container mx-auto p-6 max-w-3xl" style={{ marginTop: "40px" , background: "#f5f6fa" , width:'60%'   }}>
           <div className=" rounded-xl shadow-md overflow-hidden p-8"  style={{background: "#f5f6fa"}}>
             <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: '#28A6A7' , background: "#f5f6fa"  }}>Invoices And Reimbursement</h2>
+            {/* Filtre par statut de remboursement */}
+            <div className="flex gap-4 justify-center items-center my-4">
+              {STATUS_OPTIONS.map(option => (
+                <label key={option.value} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="status"
+                    value={option.value}
+                    checked={selectedStatus === option.value}
+                    onChange={() => setSelectedStatus(option.value)}
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
             {loading && <div>Loading invoices...</div>}
             {error && <div className="text-red-500">{error}</div>}
             <div style={{background: "#f5f6fa", borderRadius:'10%'}}>

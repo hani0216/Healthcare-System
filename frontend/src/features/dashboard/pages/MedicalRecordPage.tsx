@@ -27,6 +27,8 @@ export default function MedicalRecordPage() {
   const [error, setError] = useState<string | null>(null);
   const [medicalRecordId, setMedicalRecordId] = useState<string | null>(null);
   const specificId = localStorage.getItem('specificId');
+  const [currentPage, setCurrentPage] = useState(1);
+  const documentsPerPage = 3;
 
   // Récupérer l'id du medical record au chargement
   useEffect(() => {
@@ -74,6 +76,10 @@ export default function MedicalRecordPage() {
     fetchDocs();
   }, [medicalRecordId]);
 
+  // Pagination des documents
+  const totalPages = Math.ceil(documents.length / documentsPerPage);
+  const paginatedDocuments = documents.slice((currentPage - 1) * documentsPerPage, currentPage * documentsPerPage);
+
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
@@ -102,7 +108,7 @@ export default function MedicalRecordPage() {
               {loading && <div>Loading documents...</div>}
               {error && <div className="text-red-500">{error}</div>}
               <div className="flex flex-col gap-4">
-                {documents.map(doc => (
+                {paginatedDocuments.map(doc => (
                   <PdfCard
                     key={doc.id}
                     documentTitle={doc.name}
@@ -124,6 +130,52 @@ export default function MedicalRecordPage() {
                   />
                 ))}
               </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center space-x-4 mt-4">
+                  <button
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    style={{
+                      minWidth: 80,
+                      color: "#28A6A7",
+                      border: "1px solid #28A6A7",
+                      background: "transparent",
+                      fontSize: "1rem",
+                      fontWeight: 500,
+                      padding: "4px 14px",
+                      borderRadius: 6,
+                      cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                      opacity: currentPage === 1 ? 0.5 : 1,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    Précédent
+                  </button>
+                  <span style={{ color: "#28A6A7", fontWeight: 500 }}>
+                    Page {currentPage} sur {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    style={{
+                      minWidth: 80,
+                      color: "#28A6A7",
+                      border: "1px solid #28A6A7",
+                      background: "transparent",
+                      fontSize: "1rem",
+                      fontWeight: 500,
+                      padding: "4px 14px",
+                      borderRadius: 6,
+                      cursor: (currentPage === totalPages || totalPages === 0) ? "not-allowed" : "pointer",
+                      opacity: (currentPage === totalPages || totalPages === 0) ? 0.5 : 1,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    Suivant
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           {/* PDF Viewer à droite */}

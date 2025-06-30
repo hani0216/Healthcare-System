@@ -7,7 +7,10 @@
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.4.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
+	</parent><dependency>
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-mail</artifactId>
+	</dependency>
 	<groupId>com.corilus</groupId>
 	<artifactId>notification_management</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
