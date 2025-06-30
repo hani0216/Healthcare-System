@@ -18,6 +18,8 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [messagesPerPage] = useState(10); // 10 messages par page
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,6 +67,16 @@ export default function MessagesPage() {
     }
   }, [selectedMessage]);
 
+  // Calcul de la pagination pour les messages
+  const indexOfLastMessage = currentPage * messagesPerPage;
+  const indexOfFirstMessage = indexOfLastMessage - messagesPerPage;
+  const currentMessages = messages.slice(indexOfFirstMessage, indexOfLastMessage);
+  const totalPages = Math.ceil(messages.length / messagesPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
@@ -92,51 +104,122 @@ export default function MessagesPage() {
               ) : messages.length === 0 ? (
                 <div style={{ color: "#888", textAlign: "center", marginTop: 40 }}>No messages recieved yet.</div>
               ) : (
-                messages.map(msg => (
-                  <div key={msg.id} style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-                    <MessageListItem
-                      sender={msg.senderName}
-                      date={new Date(msg.sendingDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      message={msg.description}
-                      seen={msg.seen}
-                      selected={selectedMessage?.id === msg.id}
-                      onClick={async () => {
-                        setSelectedMessage(msg);
-                        if (!msg.seen) {
+                <>
+                  {currentMessages.map(msg => (
+                    <div key={msg.id} style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+                      <MessageListItem
+                        sender={msg.senderName}
+                        date={new Date(msg.sendingDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        message={msg.description}
+                        seen={msg.seen}
+                        selected={selectedMessage?.id === msg.id}
+                        onClick={async () => {
+                          setSelectedMessage(msg);
+                          if (!msg.seen) {
+                            try {
+                              await updateMessageSeen(msg);
+                              setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, seen: true } : m));
+                            } catch {}
+                          }
+                        }}
+                      />
+                      <button
+                        style={{
+                          position: 'absolute',
+                          right: 8,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          color: '#e11d48',
+                          cursor: 'pointer',
+                          fontSize: 18,
+                          zIndex: 2
+                        }}
+                        title="Supprimer le message"
+                        onClick={async (e) => {
+                          e.stopPropagation();
                           try {
-                            await updateMessageSeen(msg);
-                            setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, seen: true } : m));
+                            await deleteMessage(msg.id);
+                            setMessages(prev => prev.filter(m => m.id !== msg.id));
+                            if (selectedMessage?.id === msg.id) setSelectedMessage(null);
                           } catch {}
-                        }
-                      }}
-                    />
-                    <button
-                      style={{
-                        position: 'absolute',
-                        right: 8,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        color: '#e11d48',
-                        cursor: 'pointer',
-                        fontSize: 18,
-                        zIndex: 2
-                      }}
-                      title="Supprimer le message"
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        try {
-                          await deleteMessage(msg.id);
-                          setMessages(prev => prev.filter(m => m.id !== msg.id));
-                          if (selectedMessage?.id === msg.id) setSelectedMessage(null);
-                        } catch {}
-                      }}
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                ))
+                        }}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {/* Pagination pour les messages */}
+                  {totalPages > 1 && (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '20px',
+                      borderTop: '1px solid #e5e7eb',
+                      marginTop: '20px'
+                    }}>
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #e5e7eb',
+                          background: currentPage === 1 ? '#f3f4f6' : '#fff',
+                          color: currentPage === 1 ? '#9ca3af' : '#374151',
+                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                          fontWeight: 500,
+                          fontSize: '14px'
+                        }}
+                      >
+                        Précédent
+                      </button>
+                      
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            style={{
+                              padding: '6px 10px',
+                              borderRadius: '4px',
+                              border: '1px solid #e5e7eb',
+                              background: currentPage === page ? '#28a6a7' : '#fff',
+                              color: currentPage === page ? '#fff' : '#374151',
+                              cursor: 'pointer',
+                              fontWeight: 500,
+                              fontSize: '14px',
+                              minWidth: '32px'
+                            }}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                      </div>
+                      
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #e5e7eb',
+                          background: currentPage === totalPages ? '#f3f4f6' : '#fff',
+                          color: currentPage === totalPages ? '#9ca3af' : '#374151',
+                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                          fontWeight: 500,
+                          fontSize: '14px'
+                        }}
+                      >
+                        Suivant
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -152,6 +235,9 @@ export default function MessagesPage() {
                     subject={selectedMessage.subject || selectedMessage.description?.split(" ").slice(0, 4).join(" ")}
                     date={new Date(selectedMessage.sendingDate).toLocaleDateString()}
                     message={selectedMessage.description}
+                    senderId={selectedMessage.senderId}
+                    documentId={selectedMessage.resourceId}
+                    resourceType={selectedMessage.resourceType}
                   >
                     <div style={{ marginTop: 32, width: "100%", padding: "0 20px" }}>
                       <div onClick={async () => {
@@ -194,6 +280,9 @@ export default function MessagesPage() {
                   subject={selectedMessage.subject || selectedMessage.description?.split(" ").slice(0, 4).join(" ")}
                   date={new Date(selectedMessage.sendingDate).toLocaleDateString()}
                   message={selectedMessage.description}
+                  senderId={selectedMessage.senderId}
+                  documentId={selectedMessage.resourceId}
+                  resourceType={selectedMessage.resourceType}
                 />
               )
             ) : (

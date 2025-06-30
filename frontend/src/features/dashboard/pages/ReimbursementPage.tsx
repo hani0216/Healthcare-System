@@ -14,6 +14,8 @@ export default function BillingPage() {
   const [doctorNames, setDoctorNames] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [invoicesPerPage] = useState(4); // 4 factures par page
 
   // Récupérer l'id du medical record
   useEffect(() => {
@@ -64,6 +66,10 @@ export default function BillingPage() {
     fetchInvoices();
   }, [medicalRecordId]);
 
+  // Pagination logic
+  const totalPages = Math.ceil(invoices.length / invoicesPerPage);
+  const paginatedInvoices = invoices.slice((currentPage - 1) * invoicesPerPage, currentPage * invoicesPerPage);
+
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
@@ -75,7 +81,7 @@ export default function BillingPage() {
             {loading && <div>Loading invoices...</div>}
             {error && <div className="text-red-500">{error}</div>}
             <div style={{background: "#f5f6fa", borderRadius:'10%'}}>
-              {invoices.map(inv => (
+              {paginatedInvoices.map(inv => (
                 <BillingItem
                   key={inv.id}
                   date={inv.invoiceDate}
@@ -87,6 +93,56 @@ export default function BillingPage() {
                 />
               ))}
             </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-4 mt-8">
+                <button
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    minWidth: 100,
+                    color: "#28A6A7",
+                    border: "1px solid #28A6A7",
+                    background: "transparent",
+                    fontSize: "1rem",
+                    fontWeight: 500,
+                    padding: "6px 18px",
+                    borderRadius: 6,
+                    cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                    opacity: currentPage === 1 ? 0.5 : 1,
+                    transition: "all 0.2s",
+                  }}
+                  onMouseOver={e => { if (currentPage !== 1) (e.currentTarget.style.background = "#28A6A7", e.currentTarget.style.color = "#fff"); }}
+                  onMouseOut={e => { if (currentPage !== 1) (e.currentTarget.style.background = "transparent", e.currentTarget.style.color = "#28A6A7"); }}
+                >
+                  Précédent
+                </button>
+                <span style={{ color: "#28A6A7", fontWeight: 500 }}>
+                  Page {currentPage} sur {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  style={{
+                    minWidth: 100,
+                    color: "#28A6A7",
+                    border: "1px solid #28A6A7",
+                    background: "transparent",
+                    fontSize: "1rem",
+                    fontWeight: 500,
+                    padding: "6px 18px",
+                    borderRadius: 6,
+                    cursor: (currentPage === totalPages || totalPages === 0) ? "not-allowed" : "pointer",
+                    opacity: (currentPage === totalPages || totalPages === 0) ? 0.5 : 1,
+                    transition: "all 0.2s",
+                  }}
+                  onMouseOver={e => { if (!(currentPage === totalPages || totalPages === 0)) (e.currentTarget.style.background = "#28A6A7", e.currentTarget.style.color = "#fff"); }}
+                  onMouseOut={e => { if (!(currentPage === totalPages || totalPages === 0)) (e.currentTarget.style.background = "transparent", e.currentTarget.style.color = "#28A6A7"); }}
+                >
+                  Suivant
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

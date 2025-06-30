@@ -7,6 +7,7 @@ import InsuranceSignUp from '../features/auth/pages/InsuranceSecondSignupPage'
 import InsuranceHome from '../features/insuranceDashboard/pages/InsuranceHome'
 import ReimbursementsPage from '../features/insuranceDashboard/pages/ReimbursementsPage'
 import DoctorHome from '../features/doctorDashboard/pages/DoctorHome'
+import DoctorStatistics from '../features/doctorDashboard/pages/DoctorStatistics'
 import PatientHome from '../features/dashboard/pages/PatientHome';
 import PatientNotification from '../features/dashboard/pages/PatienNotification';
 import HistoryPage from '../features/dashboard/pages/HistoryPage';
@@ -33,6 +34,7 @@ export default function AppRouter() {
       <Route path='/insuranceHome' element={<InsuranceHome />}></Route>
       <Route path='/insuranceReimbursements' element={<ReimbursementsPage />}></Route>
       <Route path='/doctorHome' element={<DoctorHome />}></Route>
+      <Route path='/doctorStatistics' element={<DoctorStatistics />}></Route>
       <Route path='/patientHome' element={<PatientHome />}></Route>
       <Route path='/patientNotification' element={<PatientNotification />}></Route>
       <Route path='/history' element={<HistoryPage />}></Route>
