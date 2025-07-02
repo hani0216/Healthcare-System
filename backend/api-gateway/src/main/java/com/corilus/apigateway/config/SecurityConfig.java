@@ -84,6 +84,7 @@ public class SecurityConfig {
 
                     .pathMatchers("api/sharing-messages/**").permitAll()
                     .pathMatchers("/api/authorizations/**").hasAnyRole("DOCTOR",  "INSURANCE_ADMIN")
+                    .pathMatchers(("/api/notifications/authorization/save-response")).permitAll()
 
 
 
