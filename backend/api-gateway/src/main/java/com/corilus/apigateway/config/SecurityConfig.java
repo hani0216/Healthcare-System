@@ -83,6 +83,7 @@ public class SecurityConfig {
                     .pathMatchers("/api/reimbursements/**").hasAnyRole("PATIENT","DOCTOR","INSURANCE_ADMIN","ADMIN")
 
                     .pathMatchers("api/sharing-messages/**").permitAll()
+                    .pathMatchers("/api/authorizations/**").hasAnyRole("DOCTOR",  "INSURANCE_ADMIN")
 
 
 

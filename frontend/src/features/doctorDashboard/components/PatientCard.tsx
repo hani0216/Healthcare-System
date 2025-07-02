@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getAuthorizationStatus } from '../services/patientService';
+import { useState } from 'react';
 
 interface PatientCardProps {
   name: string;
@@ -15,6 +17,32 @@ const BORDER_RADIUS = '10px';
 
 const PatientCard: React.FC<PatientCardProps & { id: number }> = ({ id, name, email, address, phone, insurance }) => {
   const navigate = useNavigate();
+  const [authStatus, setAuthStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAccessMedicalRecord = async () => {
+    setLoading(true);
+    setError(null);
+    setAuthStatus(null);
+    try {
+      const doctorId = Number(localStorage.getItem('specificId'));
+      const status = await getAuthorizationStatus(doctorId, id);
+      setAuthStatus(status);
+      if (status === 'AUTHORIZED') {
+        navigate(`/doctor/patient/${id}/medical-record`);
+      }
+    } catch (e: any) {
+      setError(e?.message || String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRequestAuthorization = async () => {
+    // TODO: implémenter la requête d'autorisation si besoin
+    alert('Request authorization feature not implemented yet.');
+  };
 
   return (
     <div
@@ -108,10 +136,33 @@ const PatientCard: React.FC<PatientCardProps & { id: number }> = ({ id, name, em
               backgroundColor: 'transparent',
               border: 'none',
             }}
-            onClick={() => navigate(`/doctor/patient/${id}/medical-record`)}
+            onClick={handleAccessMedicalRecord}
           >
             Voir plus
           </button>
+          {loading && <div style={{ color: '#2563eb', fontSize: 13 }}>Checking authorization...</div>}
+          {error && <div style={{ color: 'red', fontSize: 13 }}>{error}</div>}
+          {authStatus === 'PENDING' && <div style={{ color: '#fbbf24', fontSize: 13 }}>Waiting for patient to confirm access to this medical record.</div>}
+          {authStatus === 'DENIED' && <div style={{ color: '#ef4444', fontSize: 13 }}>The user did not grant permission to access this medical record.</div>}
+          {authStatus === 'UNKNOWN' && (
+            <div style={{ marginTop: 8 }}>
+              <button
+                style={{
+                  color: '#fff',
+                  backgroundColor: '#28a6a7',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '6px 16px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  fontSize: 13
+                }}
+                onClick={handleRequestAuthorization}
+              >
+                Request authorization
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -94,4 +94,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         return appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
     }
+
+
+
+
 }
