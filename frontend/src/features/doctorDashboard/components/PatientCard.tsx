@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuthorizationStatus } from '../services/patientService';
+import { sendAuthorizationRequest, fetchDoctorName } from '../services/medicalRecordService';
 import { useState } from 'react';
 
 interface PatientCardProps {
@@ -40,8 +41,34 @@ const PatientCard: React.FC<PatientCardProps & { id: number }> = ({ id, name, em
   };
 
   const handleRequestAuthorization = async () => {
-    // TODO: implémenter la requête d'autorisation si besoin
-    alert('Request authorization feature not implemented yet.');
+    setLoading(true);
+    setError(null);
+    try {
+      const doctorId = Number(localStorage.getItem('specificId'));
+      const senderName = await fetchDoctorName(doctorId);
+      const medicalRecordId = id; // On suppose que id est bien le medicalRecordId
+      const sendTo = email;
+      // 1. Appeler l'API pour ajouter le status PENDING
+      const token = localStorage.getItem('accessToken');
+      const statusBody = { doctorId, medicalRecordId, status: 'PENDING' };
+      await fetch('http://localhost:8088/api/authorizations/add-status', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(statusBody)
+      });
+      // 2. Envoyer la demande d'autorisation
+      const body = { doctorId, medicalRecordId, sendTo, senderName };
+      console.log('Params for sendAuthorizationRequest:', body);
+      await sendAuthorizationRequest(body);
+      alert('Authorization request sent!');
+    } catch (e: any) {
+      // Gestion d'erreur simplifiée
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -138,11 +165,11 @@ const PatientCard: React.FC<PatientCardProps & { id: number }> = ({ id, name, em
             }}
             onClick={handleAccessMedicalRecord}
           >
-            Voir plus
+            View medical record
           </button>
           {loading && <div style={{ color: '#2563eb', fontSize: 13 }}>Checking authorization...</div>}
           {error && <div style={{ color: 'red', fontSize: 13 }}>{error}</div>}
-          {authStatus === 'PENDING' && <div style={{ color: '#fbbf24', fontSize: 13 }}>Waiting for patient to confirm access to this medical record.</div>}
+          {authStatus === 'PENDING' && <div style={{ color: '#fbbf24', fontSize: 13, fontWeight: 600 }}>PENDING REQUEST</div>}
           {authStatus === 'DENIED' && <div style={{ color: '#ef4444', fontSize: 13 }}>The user did not grant permission to access this medical record.</div>}
           {authStatus === 'UNKNOWN' && (
             <div style={{ marginTop: 8 }}>

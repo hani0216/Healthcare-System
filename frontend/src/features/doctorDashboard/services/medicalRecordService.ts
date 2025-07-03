@@ -496,4 +496,41 @@ export async function fetchPatientById(patientId: number) {
   return await response.json();
 }
 
+/**
+ * Envoie une demande d'autorisation d'accès au dossier médical d'un patient
+ * @param doctorId id du médecin (specificId)
+ * @param medicalRecordId id du dossier médical du patient
+ * @param sendTo email du patient
+ * @param senderName nom du médecin
+ */
+export async function sendAuthorizationRequest({ doctorId, medicalRecordId, sendTo, senderName }: {
+  doctorId: number;
+  medicalRecordId: number;
+  sendTo: string;
+  senderName: string;
+}) {
+  const token = localStorage.getItem('accessToken');
+  const body = {
+    doctorId,
+    medicalRecordId,
+    sendTo,
+    senderName
+  };
+  console.log('Authorization request body:', body);
+  const response = await fetch('http://localhost:8088/api/notifications/send-authorization-json', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => null);
+  console.log('Authorization request response:', data);
+  if (!response.ok) {
+    throw new Error(data?.message || 'Erreur lors de la demande d\'autorisation');
+  }
+  return data;
+}
+
 

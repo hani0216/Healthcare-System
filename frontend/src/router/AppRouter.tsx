@@ -22,6 +22,8 @@ import DoctorProfile from '../features/doctorDashboard/pages/DoctorProfile';
 import AdminDashboard from '../features/adminDashboard/AdminDashboard';
 import InsuranceProfile from '../features/insuranceDashboard/pages/InsuranceProfile';
 import AuthorizationResponsePage from '../features/doctorDashboard/pages/AuthorizationResponsePage';
+import InsuranceNotification from '../features/insuranceDashboard/pages/InsuranceNotification';
+import InsuranceStatistics from '../features/insuranceDashboard/pages/InsuranceStatistics';
 
 
 export default function AppRouter() {
@@ -51,6 +53,8 @@ export default function AppRouter() {
       <Route path="/adminDashboard" element={<AdminDashboard />} />
       <Route path="/insuranceProfile" element={<InsuranceProfile />} />
       <Route path="/authorization-response" element={<AuthorizationResponsePage />} />
+      <Route path='/insuranceNotification' element={<InsuranceNotification />}></Route>
+      <Route path='/insuranceStatistics' element={<InsuranceStatistics />}></Route>
 
 
       {/* <Route path="/dashboard" element={<Dashboard />} /> */}

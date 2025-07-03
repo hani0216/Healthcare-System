@@ -10,6 +10,24 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPen, faUpload, faCheck, faCalendar, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Calendar as BigCalendar, dateFnsLocalizer, Views } from 'react-big-calendar';
+import { format } from 'date-fns/format';
+import { parse } from 'date-fns/parse';
+import { startOfWeek } from 'date-fns/startOfWeek';
+import { getDay } from 'date-fns/getDay';
+import { enUS } from 'date-fns/locale/en-US';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { getAppointments } from '../../dashboard/services/appointmentService';
+
+// Déplacer la déclaration des variables de calendrier en dehors du composant
+const locales = { 'en-US': enUS };
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 1 }),
+  getDay,
+  locales,
+});
 
 export default function DoctorMedicalRecordPage() {
   const { patientId } = useParams();
@@ -54,12 +72,14 @@ export default function DoctorMedicalRecordPage() {
   const [invoicesLoading, setInvoicesLoading] = useState(false);
   const [invoicesError, setInvoicesError] = useState<string | null>(null);
 
+  const [appointments, setAppointments] = useState<any[]>([]);
+
   useEffect(() => {
     if (!patientId) return;
     setLoading(true);
     fetchMedicalRecord(patientId)
       .then((mr) => {
-        console.log("Medical Record Data:", mr); // Log pour voir la structure
+        console.log("Medical Record Data:", mr);  
         setMedicalRecord(mr);
         if (mr?.note?.authorId) {
           fetchDoctorName(mr.note.authorId)
@@ -226,6 +246,14 @@ export default function DoctorMedicalRecordPage() {
   };
 
   const handleAddAppointment = async () => {
+    if (isConflict(appointmentDate)) {
+      toast.error('This time slot is already booked for the patient!', {
+        position: 'top-center',
+        autoClose: 2000,
+        hideProgressBar: true,
+      });
+      return;
+    }
     try {
       const appointmentData = {
         date: appointmentDate,
@@ -244,7 +272,7 @@ export default function DoctorMedicalRecordPage() {
       toast.success("Appointment added successfully!", {
         position: "top-center",
         autoClose: 1500,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
@@ -257,7 +285,7 @@ export default function DoctorMedicalRecordPage() {
       toast.error("Failed to add appointment", {
         position: "top-center",
         autoClose: 1500,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
@@ -299,7 +327,7 @@ export default function DoctorMedicalRecordPage() {
       toast.success("Invoice generated successfully!", {
         position: "top-center",
         autoClose: 1500,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
@@ -312,7 +340,7 @@ export default function DoctorMedicalRecordPage() {
       toast.error("Failed to generate invoice", {
         position: "top-center",
         autoClose: 1500,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
@@ -336,6 +364,33 @@ export default function DoctorMedicalRecordPage() {
         .finally(() => setInvoicesLoading(false));
     }
   }, [activeTab, medicalRecord?.id]);
+
+  useEffect(() => {
+    if (medicalRecord?.patientId) {
+      getAppointments(medicalRecord.patientId.toString()).then((apps) => {
+        setAppointments(
+          apps.map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            start: new Date(a.date),
+            end: new Date(new Date(a.date).getTime() + 60 * 60 * 1000),
+            type: a.type,
+            status: a.status,
+          }))
+        );
+      });
+    }
+  }, [medicalRecord?.patientId]);
+
+  const isConflict = (date: string) => {
+    const newStart = new Date(date);
+    const newEnd = new Date(newStart.getTime() + 60 * 60 * 1000);
+    return appointments.some(app => {
+      const appStart = new Date(app.start);
+      const appEnd = new Date(app.end);
+      return (newStart < appEnd && newEnd > appStart);
+    });
+  };
 
   return (
     <div style={{ height: "auto", display: "flex" }}>
@@ -672,6 +727,39 @@ export default function DoctorMedicalRecordPage() {
 
               {showAppointmentSection && (
                 <div style={{ marginTop: 12 }}>
+                  {/* Calendrier des rendez-vous du patient (lecture seule) */}
+                  <div style={{ marginBottom: 24 }}>
+                    <BigCalendar
+                      localizer={localizer}
+                      events={appointments}
+                      startAccessor="start"
+                      endAccessor="end"
+                      style={{ height: 300, background: 'white', borderRadius: '1rem', padding: 10 }}
+                      views={[Views.WEEK, Views.DAY, Views.MONTH]}
+                      popup
+                      selectable={false}
+                      eventPropGetter={(event) => ({
+                        style: {
+                          backgroundColor: '#38bdf8',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          border: 'none',
+                          fontWeight: 600,
+                          fontSize: 15,
+                          padding: 4,
+                        },
+                      })}
+                      components={{
+                        event: ({ event }: any) => (
+                          <div>
+                            <div style={{ fontWeight: 700 }}>{event.title}</div>
+                            <div style={{ fontSize: 12 }}>{event.status}</div>
+                          </div>
+                        ),
+                      }}
+                    />
+                  </div>
+                  {/* Formulaire d'ajout de rendez-vous */}
                   <div style={{ marginBottom: 12 }}>
                     <input
                       type="text"

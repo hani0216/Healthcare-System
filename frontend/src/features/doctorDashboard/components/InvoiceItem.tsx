@@ -65,7 +65,7 @@ const InvoiceItem: React.FC<InvoiceItemProps> = ({
       toast.success("Invoice updated successfully!", {
         position: "top-center",
         autoClose: 1500,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
@@ -78,7 +78,7 @@ const InvoiceItem: React.FC<InvoiceItemProps> = ({
       toast.error("Failed to update invoice", {
         position: "top-center",
         autoClose: 1500,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
@@ -152,7 +152,7 @@ const InvoiceItem: React.FC<InvoiceItemProps> = ({
       toast.success("Invoice shared successfully with insurance provider!", {
         position: "top-center",
         autoClose: 1500,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
@@ -167,7 +167,7 @@ const InvoiceItem: React.FC<InvoiceItemProps> = ({
       toast.error(error instanceof Error ? error.message : "Failed to share invoice with insurance provider", {
         position: "top-center",
         autoClose: 1500,
-        hideProgressBar: false,
+        hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,

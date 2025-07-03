@@ -6,11 +6,15 @@ import dermatoImg from '../../../assets/vectors/emergency.svg';
 import pediatryImg from '../../../assets/vectors/kidney.svg';
 import orthoImg from '../../../assets/vectors/liver.svg';
 import HealthTip from "./HealthTip";  
-import { getAppointments, getNextAppointment } from "../services/appointmentService";
+import { getAppointments, getNextAppointment, fetchMedicalRecord } from "../services/appointmentService";
 import appointmentImg from '../../../assets/appointment.png';
 import DashboardActionBar from "./DashboardActionsBar";
 import { fetchNotificationsByReceiverId, getDisplayableNotifications } from '../services/patientNotificationService';
 import notifImg from '../../../assets/notif.png'
+import { useNavigate } from 'react-router-dom';
+import { fetchInvoicesByMedicalRecordId, fetchReimbursementByInvoiceId } from '../services/medicalRecordService';
+import invoiceImg from '../../../assets/invoice.png';
+import messageImg from '../../../assets/message.png';
 
 interface Appointment {
   id: number;
@@ -33,6 +37,8 @@ export default function Dashboard({ sidebarCollapsed = true }) {
   const specificId = localStorage.getItem("specificId"); 
   const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const [approvedReimbursements, setApprovedReimbursements] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (specificId) {
@@ -62,6 +68,29 @@ export default function Dashboard({ sidebarCollapsed = true }) {
     fetchNotifs();
     interval = setInterval(fetchNotifs, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    async function fetchApprovedReimbursements() {
+      try {
+        const specificId = localStorage.getItem('specificId');
+        if (!specificId) return;
+        const mr = await fetchMedicalRecord(specificId);
+        if (!mr?.id) return;
+        const invoices = await fetchInvoicesByMedicalRecordId(mr.id.toString());
+        let count = 0;
+        for (const inv of invoices) {
+          const reimbursements = await fetchReimbursementByInvoiceId(inv.id.toString());
+          if (Array.isArray(reimbursements) && reimbursements.some(r => r.status === 'APPROVED')) {
+            count++;
+          }
+        }
+        setApprovedReimbursements(count);
+      } catch {
+        setApprovedReimbursements(0);
+      }
+    }
+    fetchApprovedReimbursements();
   }, []);
 
   function formatDate(dateStr: string) {
@@ -97,7 +126,7 @@ export default function Dashboard({ sidebarCollapsed = true }) {
             <p className="welcomeText">
               Stay updated. Access your health records anytime, anywhere, and take charge of your care effortlessly.
             </p>
-            <button className="bookBtn">
+            <button className="bookBtn" onClick={() => navigate('/search')}>
               <i className="fas fa-calendar-plus" style={{ marginRight: 8 }}></i>
               Book an appointment
             </button>
@@ -163,17 +192,19 @@ export default function Dashboard({ sidebarCollapsed = true }) {
             />
         </div>
 
-        {/* Heart Rate */}
+        {/* Approved Reimbursements */}
         <div className="statsCard">
           <div>
-            <p className="statsCardTitle">Heart Rate</p>
-            <h3 className="statsCardValue">
-              72 <span style={{ fontSize: "1rem", fontWeight: "normal" }}>bpm</span>
-            </h3>
-            <p className="statsCardSub">Normal</p>
+            <p className="statsCardTitle">Approved Reimbursements</p>
+            <h3 className="statsCardValue">{approvedReimbursements}</h3>
+            <p className="statsCardSub">Total approved</p>
           </div>
           <div className="statsCardIconRed">
-            <i className="fas fa-heart" style={{ color: "#ef4444", fontSize: "1.4rem" }}></i>
+            <img
+              src={invoiceImg}
+              alt="Approved Reimbursements"
+              style={{ width: "2rem", height: "2rem", display: "block" }}
+            />
           </div>
         </div>
 
@@ -185,7 +216,11 @@ export default function Dashboard({ sidebarCollapsed = true }) {
             <p className="statsCardSub">2 urgent</p>
           </div>
           <div className="statsCardIconPurple">
-            <i className="fas fa-comment-medical" style={{ color: "#7c3aed", fontSize: "1.4rem" }}></i>
+            <img
+              src={messageImg}
+              alt="Unread Messages"
+              style={{ width: "2rem", height: "2rem", display: "block" }}
+            />
           </div>
         </div>
       </div>

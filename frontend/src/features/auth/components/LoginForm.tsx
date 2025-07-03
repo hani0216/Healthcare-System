@@ -91,7 +91,7 @@ export default function LoginForm() {
         }
         if (userDataResponse.data && userDataResponse.data.role) {
           localStorage.setItem('role', userDataResponse.data.role);
-          console.log(userDataResponse.data.doctorInfo)
+          console.log('Role reçu du backend:', userDataResponse.data.role);
           if (userDataResponse.data.role === 'DOCTOR') {
             navigate('/doctorHome');
             return;
@@ -103,6 +103,10 @@ export default function LoginForm() {
             return;
           } else if (userDataResponse.data.role === 'ADMIN' || userDataResponse.data.role === 'admin') {
             navigate('/adminDashboard');
+            return;
+          } else {
+            // Si le rôle n'est pas reconnu, on redirige par défaut vers patientHome
+            navigate('/patientHome');
             return;
           }
         }

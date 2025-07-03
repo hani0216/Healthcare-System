@@ -58,6 +58,39 @@ export default function PatientSecondForm() {
 
       await updatePatient(userId, payload, token);
 
+      // Récupérer et stocker les infos comme lors du login
+      try {
+        // userId est déjà dans le localStorage
+        // Récupérer specificId
+        const specificIdResponse = await axios.get(
+          `http://localhost:8088/api/users/specific-id/${localStorage.getItem('email')}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        localStorage.setItem('specificId', specificIdResponse.data);
+
+        // Récupérer userName et role
+        const userDataResponse = await axios.get(
+          `http://localhost:8088/api/users/email/${localStorage.getItem('email')}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (userDataResponse.data && userDataResponse.data.name) {
+          localStorage.setItem('userName', userDataResponse.data.name);
+        }
+        if (userDataResponse.data && userDataResponse.data.role) {
+          localStorage.setItem('role', userDataResponse.data.role);
+        }
+      } catch (e) {
+        // Optionnel : log erreur
+      }
+
       setSuccessMessage('');
       setErrorMessage('');
 
@@ -72,7 +105,7 @@ export default function PatientSecondForm() {
       });
 
       setTimeout(() => {
-        navigate('/login');
+        window.location.href = 'http://localhost:3000/patientHome';
       }, 3200);
 
     } catch (error) {

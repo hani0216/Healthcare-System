@@ -1,6 +1,6 @@
 import { Sidebar, Menu, MenuItem } from 'react-pro-sidebar';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaUser, FaCalendarAlt, FaSearch, FaMoneyCheckAlt, FaBookMedical, FaBars, FaSignOutAlt, FaTachometerAlt, FaHistory, FaBell, FaMoneyBillWave } from 'react-icons/fa';
+import { FaUser, FaCalendarAlt, FaSearch, FaMoneyCheckAlt, FaBookMedical, FaBars, FaSignOutAlt, FaTachometerAlt, FaHistory, FaBell, FaMoneyBillWave, FaChartBar } from 'react-icons/fa';
 import { useState } from 'react';
 import '../../../index.css';
 
@@ -67,6 +67,13 @@ export default function SideBar() {
                         label: { marginLeft: '8px' }
                     }}
                 >
+                    <MenuItem
+                        icon={<FaChartBar />}
+                        component={<Link to="/insuranceStatistics" />}
+                        active={location.pathname === "/insuranceStatistics"}
+                    >
+                        Statistics
+                    </MenuItem>
                     <MenuItem
                         icon={<FaTachometerAlt />}
                         component={<Link to="/insuranceHome" />}

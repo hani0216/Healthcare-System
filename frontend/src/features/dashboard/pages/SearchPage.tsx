@@ -189,16 +189,13 @@ export default function SearchPage() {
   const [doctors, setDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [doctorsPerPage] = useState(8); // 8 médecins par page
 
   async function handleSpecialityClick(key: string) {
     setSelectedSpeciality(key);
     setLoading(true);
-    setCurrentPage(1); // Reset to first page when selecting new speciality
     try {
       const token = localStorage.getItem("accessToken");
-      const res = await fetch(`http://localhost:8088/doctors/speciality/${key}`, {
+      const res = await fetch(`http://localhost:8081/doctors/speciality/${key}`, {
       });
       const data = await res.json();
       setDoctors(data);
@@ -213,10 +210,6 @@ export default function SearchPage() {
     spec.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Pagination logic for doctors
-  const totalPages = Math.ceil(doctors.length / doctorsPerPage);
-  const paginatedDoctors = doctors.slice((currentPage - 1) * doctorsPerPage, currentPage * doctorsPerPage);
-
   return (
     <div style={{ height: "auto", display: "flex" }}>
       <SideBar />
@@ -229,7 +222,7 @@ export default function SearchPage() {
               Find a Doctor
             </h2>
             {!selectedSpeciality ? (
-              <>
+              < >
                 <div className="flex justify-center mb-10"  >
                   <input
                     type="text"
@@ -238,9 +231,10 @@ export default function SearchPage() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full max-w-xl border border-blue-200 rounded-full px-6 py-3 text-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
                     style={{ boxShadow: "0 2px 8px rgba(40,166,167,0.06)"  , width:'60%' , marginBottom:'4vh' , marginTop:'2vh' ,borderRadius: '9999px'}}
+                    
                   />
+                  
                 </div>
-                {/* Pagination sur la liste des spécialités (optionnel, si beaucoup de spécialités) */}
                 <DoctorSpecialityGrid specialities={filteredSpecialities} onSpecialityClick={handleSpecialityClick} />
               </>
             ) : (
@@ -254,70 +248,18 @@ export default function SearchPage() {
                 {loading ? (
                   <div>Loading...</div>
                 ) : (
-                  <>
-                    <div className="flex flex-wrap gap-6 justify-center"  >
-                      {paginatedDoctors.map((doc) => (
-                        <DoctorCard 
-                          key={doc.id}
-                          name={doc.doctorInfo.name}
-                          email={doc.doctorInfo.email}
-                          speciality={doc.speciality}
-                          phone={doc.doctorInfo.phone}
-                          address={doc.doctorInfo.address}
-                        />
-                      ))}
-                    </div>
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="flex justify-center items-center space-x-4 mt-8">
-                        <button
-                          onClick={() => setCurrentPage(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          style={{
-                            minWidth: 100,
-                            color: "#28A6A7",
-                            border: "1px solid #28A6A7",
-                            background: "transparent",
-                            fontSize: "1rem",
-                            fontWeight: 500,
-                            padding: "6px 18px",
-                            borderRadius: 6,
-                            cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                            opacity: currentPage === 1 ? 0.5 : 1,
-                            transition: "all 0.2s",
-                          }}
-                          onMouseOver={e => { if (currentPage !== 1) (e.currentTarget.style.background = "#28A6A7", e.currentTarget.style.color = "#fff"); }}
-                          onMouseOut={e => { if (currentPage !== 1) (e.currentTarget.style.background = "transparent", e.currentTarget.style.color = "#28A6A7"); }}
-                        >
-                          Précédent
-                        </button>
-                        <span style={{ color: "#28A6A7", fontWeight: 500 }}>
-                          Page {currentPage} sur {totalPages}
-                        </span>
-                        <button
-                          onClick={() => setCurrentPage(currentPage + 1)}
-                          disabled={currentPage === totalPages || totalPages === 0}
-                          style={{
-                            minWidth: 100,
-                            color: "#28A6A7",
-                            border: "1px solid #28A6A7",
-                            background: "transparent",
-                            fontSize: "1rem",
-                            fontWeight: 500,
-                            padding: "6px 18px",
-                            borderRadius: 6,
-                            cursor: (currentPage === totalPages || totalPages === 0) ? "not-allowed" : "pointer",
-                            opacity: (currentPage === totalPages || totalPages === 0) ? 0.5 : 1,
-                            transition: "all 0.2s",
-                          }}
-                          onMouseOver={e => { if (!(currentPage === totalPages || totalPages === 0)) (e.currentTarget.style.background = "#28A6A7", e.currentTarget.style.color = "#fff"); }}
-                          onMouseOut={e => { if (!(currentPage === totalPages || totalPages === 0)) (e.currentTarget.style.background = "transparent", e.currentTarget.style.color = "#28A6A7"); }}
-                        >
-                          Suivant
-                        </button>
-                      </div>
-                    )}
-                  </>
+                  <div className="flex flex-wrap gap-6 justify-center"  >
+                    {doctors.map((doc) => (
+                      <DoctorCard 
+                        key={doc.id}
+                        name={doc.doctorInfo.name}
+                        email={doc.doctorInfo.email}
+                        speciality={doc.speciality}
+                        phone={doc.doctorInfo.phone}
+                        address={doc.doctorInfo.address}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             )}
