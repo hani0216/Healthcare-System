@@ -5,6 +5,7 @@ import { updateDoctor } from '../doctorService';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+
 export default function PatientSecondForm() {
   const [formData, setFormData] = useState({
     phone: '',
@@ -81,7 +82,8 @@ export default function PatientSecondForm() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,

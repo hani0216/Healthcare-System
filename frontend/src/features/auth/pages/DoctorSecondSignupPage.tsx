@@ -1,6 +1,6 @@
 import RightSideBar from '../components/RightSideBar';
 import DoctorImg from '../../../assets/doctor.png';
-import DoctorSecondForm from '../components/doctorSecondForm'
+import DoctorSecondForm from '../components/DoctorSecondForm'
 
 export default function DoctorSecondSignupPage() {
   return (

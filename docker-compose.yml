@@ -93,6 +93,7 @@ services:
       - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./mariadb-init:/docker-entrypoint-initdb.d
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 
   zookeeper:
@@ -122,7 +123,10 @@ services:
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_IMPORT=/opt/keycloak/data/import/mrecords-realm.json
     command: start-dev
+    volumes:
+      - ./keycloak-import:/opt/keycloak/data/import
     depends_on:
       - mariadb
 

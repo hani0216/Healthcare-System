@@ -1,0 +1,4 @@
+CREATE DATABASE IF NOT EXISTS user_profile_db;
+CREATE DATABASE IF NOT EXISTS medical_records_db;
+CREATE DATABASE IF NOT EXISTS billing_management_db;
+CREATE DATABASE IF NOT EXISTS notification_db;

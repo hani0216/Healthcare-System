@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import SideBar from "../components/sideBar";
-import DashboardActionsBar from "../components/DashboardActionsBar";
-import MessageItem from "../components/MessageItem";
-import { fetchReceivedMessages, fetchDoctorName } from "../services/insuranceService";
+
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import SideBar from "@features/insuranceDashboard/components/sideBar";
+import DashboardActionsBar from "@features/insuranceDashboard/components/DashboardActionsBar";
+import MessageItem from "@features/insuranceDashboard/components/MessageItem";
+import { fetchReceivedMessages, fetchDoctorName } from "@features/insuranceDashboard/services/insuranceService";
+
 
 export default function InsuranceDashboard() {
   const [messages, setMessages] = useState<any[]>([]);
@@ -25,7 +27,7 @@ export default function InsuranceDashboard() {
         setMessages(receivedMessages);
 
         // Récupérer les noms des médecins expéditeurs
-        const uniqueDoctorIds = Array.from(new Set(receivedMessages.map((msg: any) => msg.senderId)));
+        const uniqueDoctorIds: number[] = Array.from(new Set(receivedMessages.map((msg: any) => msg.senderId)));
         const doctorNamesMap: Record<number, string> = {};
         
         for (const doctorId of uniqueDoctorIds) {
