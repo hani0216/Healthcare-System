@@ -281,11 +281,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String getAdminToken() {
-        String tokenUrl = keycloakUrl + "/realms/master/protocol/openid-connect/token";
+        String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "password");
-        formData.add("client_id", "admin-cli");
+        formData.add("client_id", clientId);
+        formData.add("client_secret", clientSecret);
         formData.add("username", adminUsername);
         formData.add("password", adminPassword);
 

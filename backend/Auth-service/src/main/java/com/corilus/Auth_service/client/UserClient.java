@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
-@FeignClient(name = "user-profile-management" , url = "http://localhost:8081" )
+@FeignClient(name = "user-profile-management" , url = "http://user-profile-management:8081" )
 public interface UserClient {
 
     @GetMapping("/api/users/info")

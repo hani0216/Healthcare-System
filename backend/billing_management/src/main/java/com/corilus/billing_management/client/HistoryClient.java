@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "medical-records-service", url = "http://localhost:8082")
+@FeignClient(name = "medical-records-service", url = "http://medical-records-management:8082")
 public interface HistoryClient {
     @PostMapping("/api/history/{medicalRecordId}")
     void createHistory(@PathVariable("medicalRecordId") Long medicalRecordId, 

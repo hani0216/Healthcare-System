@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
         name = "medical-record-service",
-        url = "http://localhost:8082",
+        url = "http://medical-records-management:8082",
         configuration = MedicalRecordClientConfig.class
 )
 public interface MedicalRecordClient {

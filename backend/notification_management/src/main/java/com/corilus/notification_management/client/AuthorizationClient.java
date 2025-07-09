@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 
 
 
-@FeignClient(name = "MEDICAL-RECORDS-MANAGEMENT", url = "http://localhost:8082")
+@FeignClient(name = "MEDICAL-RECORDS-MANAGEMENT", url = "http://medical-records-management:8082")
 public interface AuthorizationClient {
 
     @PostMapping("/api/authorizations/add-status")

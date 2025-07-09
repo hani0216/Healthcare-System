@@ -11,7 +11,7 @@ services:
   api-gateway:
     build: ./backend/api-gateway
     ports:
-      - "8080:8080"
+      - "8088:8088"
     environment:
       - JAVA_OPTS=-Xmx512m -Xms256m
     depends_on:
@@ -111,7 +111,7 @@ services:
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
       - zookeeper
@@ -119,14 +119,15 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.2
     ports:
-      - "8085:8080"
+      - "8080:8080"
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_IMPORT=/opt/keycloak/data/import/mrecords-realm.json
+      - KC_DB=mariadb
+      - KC_DB_URL=jdbc:mariadb://mariadb:3306/keycloak
+      - KC_DB_USERNAME=root
+      - KC_DB_PASSWORD=root
     command: start-dev
-    volumes:
-      - ./keycloak-import:/opt/keycloak/data/import
     depends_on:
       - mariadb
 

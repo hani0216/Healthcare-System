@@ -54,12 +54,6 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- Spring Boot Starter Security (protection des routes) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-
 		<!-- OAuth2 Resource Server (pour valider les tokens JWT de Keycloak) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
