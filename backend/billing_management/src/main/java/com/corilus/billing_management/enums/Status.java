@@ -4,9 +4,5 @@ public enum Status {
     DRAFT,
     PENDING,
     PAID,
-    CANCELED,
-    Draft,
-    Pending,
-    Paid,
-    Canceled
+    CANCELED
 }

@@ -82,4 +82,70 @@ export async function fetchAllReimbursements() {
     },
   });
   return response.data;
-} 
+}
+
+export const deletePatient = async (id: string) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`http://localhost:8088/patients/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete patient: ${response.statusText}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting patient:', error);
+    throw error;
+  }
+};
+
+export const deleteDoctor = async (id: string) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`http://localhost:8088/doctors/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete doctor: ${response.statusText}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting doctor:', error);
+    throw error;
+  }
+};
+
+export const deleteInsuranceAdmin = async (id: string) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`http://localhost:8088/insurance-admins/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete insurance admin: ${response.statusText}`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting insurance admin:', error);
+    throw error;
+  }
+};

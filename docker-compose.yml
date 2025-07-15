@@ -46,7 +46,7 @@ services:
       - eureka-server
       - kafka
 
-  billing_management:
+  billing-management:
     build: ./backend/billing_management
     ports:
       - "8083:8083"
@@ -60,7 +60,7 @@ services:
       - eureka-server
       - kafka
 
-  notification_management:
+  notification-management:
     build: ./backend/notification_management
     ports:
       - "8084:8084"

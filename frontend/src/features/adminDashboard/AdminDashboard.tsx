@@ -3,7 +3,7 @@ import { Line, Pie, Bar, Doughnut } from 'react-chartjs-2';
 import { Chart, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, BarElement } from 'chart.js';
 // @ts-ignore
 import Mermaid from 'react-mermaid2';
-import { fetchAllUsers, fetchAllDoctors, fetchAllPatients, fetchAllInsuranceAdmins, fetchAllInvoices, fetchAllReimbursements } from './userService';
+import { fetchAllUsers, fetchAllDoctors, fetchAllPatients, fetchAllInsuranceAdmins, fetchAllInvoices, fetchAllReimbursements, deletePatient, deleteDoctor, deleteInsuranceAdmin } from './userService';
 import { useNavigate } from 'react-router-dom';
 
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, BarElement);
@@ -338,6 +338,39 @@ const AdminDashboard: React.FC = () => {
   const totalPages = Math.ceil(getActiveList().length / PAGE_SIZE);
   const paginatedList = getActiveList().slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
+  // Fonction pour gérer la suppression d'un utilisateur
+  const handleDeleteUser = async (id: string, type: 'doctors' | 'patients' | 'insurances') => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      return;
+    }
+
+    try {
+      if (type === 'patients') {
+        await deletePatient(id);
+        setPatients(patients.filter(p => p.id !== id));
+      } else if (type === 'doctors') {
+        await deleteDoctor(id);
+        setDoctors(doctors.filter(d => d.id !== id));
+      } else if (type === 'insurances') {
+        await deleteInsuranceAdmin(id);
+        setInsurances(insurances.filter(i => i.id !== id));
+      }
+      
+      // Mettre à jour les statistiques
+      const updatedStats = { ...userStats };
+      if (type === 'patients') updatedStats.patients--;
+      else if (type === 'doctors') updatedStats.doctors--;
+      else if (type === 'insurances') updatedStats.insuranceAdmins--;
+      updatedStats.total--;
+      setUserStats(updatedStats);
+      
+      alert('Utilisateur supprimé avec succès');
+    } catch (error) {
+      alert('Erreur lors de la suppression de l\'utilisateur');
+      console.error('Delete error:', error);
+    }
+  };
+
   // Table columns by type
   const renderTableHeader = () => {
     if (activeList === 'doctors') {
@@ -347,6 +380,7 @@ const AdminDashboard: React.FC = () => {
           <th style={thStyle}>Speciality</th>
           <th style={thStyle}>Email</th>
           <th style={thStyle}>Phone</th>
+          <th style={thStyle}>Actions</th>
         </tr>
       );
     } else if (activeList === 'patients') {
@@ -357,6 +391,7 @@ const AdminDashboard: React.FC = () => {
           <th style={thStyle}>Phone</th>
           <th style={thStyle}>Birth Date</th>
           <th style={thStyle}>Insurance</th>
+          <th style={thStyle}>Actions</th>
         </tr>
       );
     } else {
@@ -365,12 +400,24 @@ const AdminDashboard: React.FC = () => {
           <th style={thStyle}>Name</th>
           <th style={thStyle}>Email</th>
           <th style={thStyle}>Company</th>
+          <th style={thStyle}>Actions</th>
         </tr>
       );
     }
   };
 
   const renderTableRow = (item: any) => {
+    const buttonStyle = {
+      background: '#ef4444',
+      color: 'white',
+      border: 'none',
+      borderRadius: 4,
+      padding: '4px 8px',
+      fontSize: '0.75rem',
+      cursor: 'pointer',
+      fontWeight: 600,
+    };
+
     if (activeList === 'doctors') {
       return (
         <tr key={item.id}>
@@ -378,6 +425,14 @@ const AdminDashboard: React.FC = () => {
           <td style={tdStyle}>{item.speciality}</td>
           <td style={tdStyle}>{item.doctorInfo?.email}</td>
           <td style={tdStyle}>{item.doctorInfo?.phone}</td>
+          <td style={tdStyle}>
+            <button 
+              style={buttonStyle}
+              onClick={() => handleDeleteUser(item.id, 'doctors')}
+            >
+              Block User
+            </button>
+          </td>
         </tr>
       );
     } else if (activeList === 'patients') {
@@ -388,6 +443,14 @@ const AdminDashboard: React.FC = () => {
           <td style={tdStyle}>{item.patientInfo?.phone}</td>
           <td style={tdStyle}>{item.birthDate}</td>
           <td style={tdStyle}>{item.insurance}</td>
+          <td style={tdStyle}>
+            <button 
+              style={buttonStyle}
+              onClick={() => handleDeleteUser(item.id, 'patients')}
+            >
+              Block User
+            </button>
+          </td>
         </tr>
       );
     } else {
@@ -396,6 +459,14 @@ const AdminDashboard: React.FC = () => {
           <td style={tdStyle}>{item.userInfo?.name}</td>
           <td style={tdStyle}>{item.userInfo?.email}</td>
           <td style={tdStyle}>{item.insuranceCompany || '-'}</td>
+          <td style={tdStyle}>
+            <button 
+              style={buttonStyle}
+              onClick={() => handleDeleteUser(item.id, 'insurances')}
+            >
+              Block User
+            </button>
+          </td>
         </tr>
       );
     }
@@ -482,14 +553,6 @@ const AdminDashboard: React.FC = () => {
             <h2 style={{ color: '#22c55e', fontSize: '1.1rem', marginBottom: 16 }}>Reimbursements by Status</h2>
             <Bar data={reimbursementStatusBarData} options={{ plugins: { legend: { display: false } } }} />
             <div style={{ marginTop: 12, color: '#22c55e', fontWeight: 600 }}>Total Reimbursement Amount: {totalReimbursementAmount.toFixed(2)} €</div>
-          </div>
-        </div>
-
-        {/* Diagramme de flux */}
-        <div style={{ ...sectionCardStyle }}>
-          <h2 style={{ color: '#2563eb', fontSize: '1.3rem', marginBottom: 16 }}>Patient Journey (Flow Diagram)</h2>
-          <div style={{ background: '#f1f5f9', borderRadius: 8, padding: 16 }}>
-            <Mermaid chart={`graph TD;\n  A[Patients] -->|Consultations| B(Doctors)\n  B -->|Prescriptions| C[Pharmacy]\n  B -->|Invoices| D[Insurance]\n  D -->|Reimbursements| A\n  A -->|Notifications| E[Notification System]\n  B -->|Medical Records| F[Medical Records System]\n  F -->|History| A\n`} />
           </div>
         </div>
 
@@ -609,4 +672,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;
