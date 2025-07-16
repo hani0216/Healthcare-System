@@ -47,14 +47,22 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Notification updateNotification(Long id, Notification notificationDetails) {
-        Notification notification = notificationRepository.findById(id).orElseThrow();
+        Notification notification = notificationRepository.findById(id)
+            .orElseThrow();
+
         notification.setTitle(notificationDetails.getTitle());
         notification.setMessage(notificationDetails.getMessage());
         notification.setNotificationType(notificationDetails.getNotificationType());
         notification.setSeen(notificationDetails.getSeen());
-        notification.setTimeToSend(notificationDetails.getTimeToSend());
         notification.setReceiverId(notificationDetails.getReceiverId());
         notification.setFrequency(notificationDetails.getFrequency());
+
+        // Correction ici : ne change timeToSend que si la nouvelle valeur n'est pas null
+        if (notificationDetails.getTimeToSend() != null) {
+            notification.setTimeToSend(notificationDetails.getTimeToSend());
+        }
+        // Sinon, on garde l'ancienne valeur (rien à faire)
+
         return notificationRepository.save(notification);
     }
 

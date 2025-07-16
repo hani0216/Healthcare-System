@@ -8,7 +8,7 @@ const AuthorizationResponsePage = () => {
 
   const handleResponse = async (newStatus: string) => {
     try {
-      const response = await fetch('http://localhost:8084/api/notifications/authorization/save-response', {
+      const response = await fetch('http://localhost:8088/api/notifications/authorization/save-response', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, status: newStatus }),

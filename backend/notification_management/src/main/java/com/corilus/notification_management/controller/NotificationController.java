@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:3000")
+
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
@@ -72,7 +72,7 @@ public class NotificationController {
         );
         return ResponseEntity.ok("Email envoyé à " + dto.getSendTo());
     }
-
+    
     @GetMapping("/authorization/response")
     public ResponseEntity<String> handleResponse(
             @RequestParam String token,
@@ -90,7 +90,7 @@ public class NotificationController {
               function sendResponse(userStatus) {
                 console.log('Envoi de la réponse:', userStatus, 'Token:', '%s');
 
-                fetch('http://localhost:8084/api/notifications/authorization/save-response', {
+                fetch('http://localhost:8088/api/notifications/authorization/save-response', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',

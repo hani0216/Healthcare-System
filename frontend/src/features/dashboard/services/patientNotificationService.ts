@@ -17,7 +17,7 @@ export async function fetchPatientNotifications(specificId: string) {
 
 export async function fetchNotificationsByReceiverId(receiverId: string) {
   const token = localStorage.getItem("accessToken");
-  const url = `http://localhost:8088/api/notifications/notifications/receiver/${receiverId}`;
+  const url = `http://localhost:8088/api/notifications/receiver/${receiverId}`;
   const response = await fetch(url, {
     method: "GET",
     headers: {

@@ -11,14 +11,14 @@ import { ToastContainer } from 'react-toastify';
 
 export default function PatientNotification() {
   const userName = localStorage.getItem("userName") || "Patient";
-  const userId = localStorage.getItem("userId");
+  const specificId = localStorage.getItem("specificId");
   const [notifications, setNotifications] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
 
   useEffect(() => {
-    if (userId) {
-      fetchNotificationsByReceiverId(userId)
+    if (specificId) {
+      fetchNotificationsByReceiverId(specificId)
         .then((data) => {
           setNotifications(getDisplayableNotifications(data));
         })
@@ -26,7 +26,7 @@ export default function PatientNotification() {
           setNotifications([]);
         });
     }
-  }, [userId]);
+  }, [specificId]);
 
   const unreadCount = notifications.filter(n => !n.seen).length;
 
@@ -39,9 +39,9 @@ export default function PatientNotification() {
 
   // Rafraîchir les notifications
   const refreshNotifications = async () => {
-    if (userId) {
+    if (specificId) {
       try {
-        const data = await fetchNotificationsByReceiverId(userId);
+        const data = await fetchNotificationsByReceiverId(specificId);
         setNotifications(getDisplayableNotifications(data));
       } catch {
         setNotifications([]);
