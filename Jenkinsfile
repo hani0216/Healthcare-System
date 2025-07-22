@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Remplace par ton nom d'utilisateur Docker Hub
+        // Remplace par ton nom d'utilisateur Docker hub
         REGISTRY = 'docker.io/hani016' 
         // Nom de l'image (repository) sur Docker Hub
         IMAGE_NAME = 'medical-records-management-system'
