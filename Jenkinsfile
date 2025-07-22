@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Remplace par ton nom d'utilisateur Docker Hub
         REGISTRY = 'docker.io/hani016' 
-        // L'image de base est le nom du repo sur Docker Hub
+        // Nom de l'image (repository) sur Docker Hub
         IMAGE_NAME = 'medical-records-management-system'
     }
 
@@ -18,7 +18,7 @@ pipeline {
         stage('Build & Push Images') {
             steps {
                 script {
-                    // Structure pour gérer les chemins différents
+                    // Dictionnaire des services et leurs chemins respectifs
                     def services = [
                         'Auth-service': 'backend/Auth-service',
                         'api-gateway': 'backend/api-gateway',
@@ -26,19 +26,20 @@ pipeline {
                         'user-profile-management': 'backend/user-profile-management',
                         'medical-records-management': 'backend/medical-records-management',
                         'notification-management': 'backend/notification_management', // Attention au _
-                        'billing-management': 'backend/billing_management',      // Attention au _
+                        'billing-management': 'backend/billing_management',          // Attention au _
                         'frontend': 'frontend'
                     ]
 
-                    // Utilisation des credentials Jenkins pour Docker Hub
-                    withCredentials([string(credentialsId: 'DOCKER_HUB_PASSWORD', variable: 'DOCKER_PASSWORD'),
-                                     string(credentialsId: 'DOCKER_HUB_USERNAME', variable: 'DOCKER_USERNAME')]) {
+                    // Utilisation des credentials Jenkins de type Username with password
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         
+                        // Login Docker
                         sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
 
+                        // Build & push pour chaque service
                         services.each { serviceName, servicePath ->
                             def imageTag = "${REGISTRY}/${IMAGE_NAME}:${serviceName}"
-                            echo "Building and pushing ${imageTag} from ${servicePath}"
+                            echo "Building and pushing image: ${imageTag} from path: ${servicePath}"
                             
                             sh "docker build -t ${imageTag} ./${servicePath}"
                             sh "docker push ${imageTag}"
@@ -50,7 +51,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                // Assure-toi que kubectl est configuré sur l'agent Jenkins
+                // Assure-toi que kubectl est configuré et accessible sur l'agent Jenkins
                 sh 'kubectl apply -f k8s/'
             }
         }
