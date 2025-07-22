@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: billing-management
+spec:
+  type: ClusterIP
+  selector:
+    app: billing-management
+  ports:
+    - port: 8083
+      targetPort: 8083

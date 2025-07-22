@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: billing-management
+  template:
+    metadata:
+      labels:
+        app: billing-management
+    spec:
+      containers:
+      - name: billing-management
+        image: hani016/medical-records-management-system:billing-management
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mariadb://mariadb:3306/billing_management_db"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "root"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "root"
+        - name: JAVA_OPTS
+          value: "-Xmx512m -Xms256m"
+        ports:
+        - containerPort: 8083

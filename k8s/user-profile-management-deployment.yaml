@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-profile-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-profile-management
+  template:
+    metadata:
+      labels:
+        app: user-profile-management
+    spec:
+      containers:
+      - name: user-profile-management
+        image: hani016/medical-records-management-system:user-profile-management
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mariadb://mariadb:3306/user_profile_db"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "root"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "root"
+        - name: JAVA_OPTS
+          value: "-Xmx512m -Xms256m"
+        ports:
+        - containerPort: 8081

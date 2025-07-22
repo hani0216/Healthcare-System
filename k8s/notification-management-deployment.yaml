@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-management
+  template:
+    metadata:
+      labels:
+        app: notification-management
+    spec:
+      containers:
+      - name: notification-management
+        image: hani016/medical-records-management-system:notification-management
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mariadb://mariadb:3306/notification_db"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "root"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "root"
+        - name: JAVA_OPTS
+          value: "-Xmx512m -Xms256m"
+        ports:
+        - containerPort: 8084

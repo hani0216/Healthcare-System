@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+  ports:
+    - port: 3000         # Port du service à l'intérieur du cluster (pour les autres pods et l'Ingress)
+      targetPort: 80     # Port exposé par le conteneur (nginx)
