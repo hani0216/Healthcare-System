@@ -63,31 +63,23 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+                stage('Deploy to Kubernetes') {
             steps {
                 echo '🚀 Déploiement des microservices sur Kubernetes...'
-                script {
-                    // Vérifier et récupérer dynamiquement le token du Secret  
-                    def kubeToken = sh(
-                        script: "kubectl get secret ${KUBERNETES_TOKEN_SECRET} -o jsonpath='{.data.token}' ",
-                        returnStdout: true
-                    ).trim()
-
-                    if (!kubeToken) {
-                        error "❌ Échec : Le token Kubernetes est vide ou introuvable."
-                    }
-
+                withCredentials([string(credentialsId: 'kubernetes-token', variable: 'KUBE_TOKEN')]) {
                     sh """
                         for file in k8s/*.yaml; do
                             echo "📁 Déploiement de \$file"
                             kubectl --server=${KUBERNETES_SERVER} \\
-                                    --token="${kubeToken}" \\
+                                    --token="\$KUBE_TOKEN" \\
                                     --namespace=${KUBERNETES_NAMESPACE} \\
                                     apply --validate=false --insecure-skip-tls-verify -f \$file
                         done
                     """
                 }
             }
+        }
+
         }
 
         stage('Health Check') {
