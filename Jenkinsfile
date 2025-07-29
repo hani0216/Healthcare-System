@@ -11,7 +11,7 @@ pipeline {
         DOCKER_REGISTRY = 'docker.io' // Registre Docker Hub
         DOCKER_NAMESPACE = 'hani016/medical-records-management-system' // Namespace Docker Hub
         KUBERNETES_NAMESPACE = 'medical-records'
-        KUBERNETES_SERVER = 'https://<kubernetes-api-server-url>' // URL de l'API Kubernetes
+        KUBERNETES_SERVER = 'https://kubernetes.docker.internal:6443' // URL de l'API Kubernetes
     }
 
     stages {
