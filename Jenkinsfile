@@ -7,8 +7,8 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'docker-credentials' // ID du credential Jenkins pour Docker
         KUBERNETES_TOKEN_ID = 'kubernetes-token' // ID du credential Jenkins pour Kubernetes token
         GIT_REPO_URL = 'https://dev.azure.com/hanimedyouni12/MedicalRecordsManagementService/_git/MedicalRecordsManagementService'
-        GIT_BRANCH = 'main' // à adapter selon ta branche
-        DOCKER_IMAGE = 'medical-records-service'
+        GIT_BRANCH = 'develop' // Branche à utiliser
+        DOCKER_IMAGE_PREFIX = 'medical-records-service'
         KUBERNETES_NAMESPACE = 'medical-records'
         KUBERNETES_SERVER = 'https://<kubernetes-api-server-url>' // URL de l'API Kubernetes
     }
@@ -30,19 +30,31 @@ pipeline {
 
         stage('Build & Push Images') {
             steps {
-                echo '🔨 Compilation du projet et création de l’image Docker...'
-                sh 'mvn clean install -DskipTests'
-                sh "docker build -t ${DOCKER_IMAGE}:latest ."
-                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
-                    sh "docker push ${DOCKER_IMAGE}:latest"
+                echo '🔨 Compilation des microservices et création des images Docker...'
+                script {
+                    // Scanner les sous-dossiers dans backend
+                    def services = sh(script: "ls backend", returnStdout: true).trim().split("\n")
+                    for (service in services) {
+                        echo "📦 Compilation du service : ${service}"
+                        dir("backend/${service}") {
+                            sh 'mvn clean install -DskipTests'
+                            def imageName = "${DOCKER_IMAGE_PREFIX}-${service.replace('_', '-')}"
+
+                            // Construction et publication de l'image Docker
+                            sh "docker build -t ${imageName}:latest ."
+                            withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
+                                sh "docker push ${imageName}:latest"
+                            }
+                        }
+                    }
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                echo '🚀 Déploiement sur Kubernetes...'
+                echo '🚀 Déploiement des microservices sur Kubernetes...'
                 withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
                     sh """
                         kubectl --server=${KUBERNETES_SERVER} \
@@ -60,7 +72,7 @@ pipeline {
                     sh """
                         kubectl --server=${KUBERNETES_SERVER} \
                         --token=${KUBE_TOKEN} \
-                        --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${DOCKER_IMAGE}
+                        --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${DOCKER_IMAGE_PREFIX}
                     """
                 }
             }
@@ -84,7 +96,7 @@ pipeline {
                 echo '📦 Archivage des artefacts...'
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
                 echo '📜 Nettoyage des images locales...'
-                sh "docker rmi ${DOCKER_IMAGE}:latest"
+                sh "docker rmi ${DOCKER_IMAGE_PREFIX}-*"
             }
         }
     }
