@@ -8,7 +8,6 @@ pipeline {
         KUBERNETES_TOKEN_ID = 'kubernetes-token' // ID du credential Jenkins pour Kubernetes token
         GIT_REPO_URL = 'https://dev.azure.com/hanimedyouni12/MedicalRecordsManagementService/_git/MedicalRecordsManagementService'
         GIT_BRANCH = 'develop' // Branche à utiliser
-        DOCKER_IMAGE_PREFIX = 'medical-records-service'
         KUBERNETES_NAMESPACE = 'medical-records'
         KUBERNETES_SERVER = 'https://<kubernetes-api-server-url>' // URL de l'API Kubernetes
     }
@@ -38,7 +37,9 @@ pipeline {
                         echo "📦 Compilation du service : ${service}"
                         dir("backend/${service}") {
                             sh 'mvn clean install -DskipTests'
-                            def imageName = "${DOCKER_IMAGE_PREFIX}-${service.replace('_', '-')}"
+
+                            // Utiliser des noms d'images en minuscules
+                            def imageName = "${service.toLowerCase()}"
 
                             // Construction et publication de l'image Docker
                             sh "docker build -t ${imageName}:latest ."
@@ -72,7 +73,7 @@ pipeline {
                     sh """
                         kubectl --server=${KUBERNETES_SERVER} \
                         --token=${KUBE_TOKEN} \
-                        --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${DOCKER_IMAGE_PREFIX}
+                        --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${service.toLowerCase()}
                     """
                 }
             }
@@ -96,7 +97,7 @@ pipeline {
                 echo '📦 Archivage des artefacts...'
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
                 echo '📜 Nettoyage des images locales...'
-                sh "docker rmi ${DOCKER_IMAGE_PREFIX}-*"
+                sh "docker rmi ${service.toLowerCase()}:latest"
             }
         }
     }
