@@ -67,7 +67,7 @@ pipeline {
             steps {
                 echo '🚀 Déploiement des microservices sur Kubernetes...'
                 script {
-                    // Vérifier et récupérer dynamiquement le token du Secret Kubernetes
+                    // Vérifier et récupérer dynamiquement le token du Secret  
                     def kubeToken = sh(
                         script: "kubectl get secret ${KUBERNETES_TOKEN_SECRET} -o jsonpath='{.data.token}' ",
                         returnStdout: true
