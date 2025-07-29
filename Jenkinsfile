@@ -75,7 +75,7 @@ pipeline {
                     sh """
                         for file in $(ls k8s/*.yaml); do
                             kubectl --server=${KUBERNETES_SERVER} \
-                            --token=$(cat <<< "${KUBE_TOKEN}") \
+                            --token="${KUBE_TOKEN}" \
                             --namespace=${KUBERNETES_NAMESPACE} apply -f $file;
                         done
                     """
@@ -102,7 +102,7 @@ pipeline {
                         withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
                             sh """
                                 kubectl --server=${KUBERNETES_SERVER} \
-                                --token=$(cat <<< "${KUBE_TOKEN}") \
+                                --token="${KUBE_TOKEN}" \
                                 --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${service}
                             """
                         }
