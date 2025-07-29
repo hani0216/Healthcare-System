@@ -40,10 +40,10 @@ pipeline {
                             sh 'mvn clean install -DskipTests'
 
                             // Utiliser des noms d'images en minuscules
-                            def imageName = "${DOCKER_REGISTRY}/${DOCKER_USER}/${service.toLowerCase()}"
-
-                            // Construction et publication de l'image Docker
+                            def imageName = "${DOCKER_REGISTRY}/${service.toLowerCase()}"
                             sh "docker build -t ${imageName}:latest ."
+
+                            // Utiliser les credentials Docker
                             withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                                 sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
                                 sh "docker push ${imageName}:latest"
@@ -98,7 +98,7 @@ pipeline {
                 echo '📦 Archivage des artefacts...'
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
                 echo '📜 Nettoyage des images locales...'
-                sh "docker rmi ${DOCKER_USER}/${service.toLowerCase()}:latest"
+                sh "docker rmi ${DOCKER_REGISTRY}/${service.toLowerCase()}:latest"
             }
         }
     }
