@@ -46,16 +46,21 @@ pipeline {
                     for (service in services) {
                         echo "📦 Compilation du service : ${service}"
                         dir("backend/${service}") {
-                            sh 'mvn clean install -DskipTests'
+                            // Vérifier si le fichier pom.xml existe
+                            if (fileExists('pom.xml')) {
+                                sh 'mvn clean install -DskipTests'
 
-                            // Utiliser les noms d'images correctement formatés
-                            def imageName = "${DOCKER_NAMESPACE}-${service}"
-                            sh "docker build -t ${imageName}:latest ."
+                                // Utiliser les noms d'images correctement formatés
+                                def imageName = "${DOCKER_NAMESPACE}-${service}"
+                                sh "docker build -t ${imageName}:latest ."
 
-                            // Utiliser les credentials Docker
-                            withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
-                                sh "docker push ${imageName}:latest"
+                                // Utiliser les credentials Docker
+                                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
+                                    sh "docker push ${imageName}:latest"
+                                }
+                            } else {
+                                echo "⚠️ Le fichier pom.xml est introuvable dans backend/${service}. Ignorer ce service."
                             }
                         }
                     }
@@ -79,25 +84,27 @@ pipeline {
         stage('Health Check') {
             steps {
                 echo '🔍 Vérification de la santé du déploiement...'
-                withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
-                    sh """
-                        kubectl --server=${KUBERNETES_SERVER} \
-                        --token=${KUBE_TOKEN} \
-                        --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${service.toLowerCase()}
-                    """
-                }
-            }
-        }
-
-        stage('Deploy Monitoring Stack') {
-            steps {
-                echo '📊 Déploiement de la stack de monitoring...'
-                withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
-                    sh """
-                        kubectl --server=${KUBERNETES_SERVER} \
-                        --token=${KUBE_TOKEN} \
-                        --namespace=${KUBERNETES_NAMESPACE} apply -f k8s/monitoring-stack.yaml
-                    """
+                script {
+                    def services = [
+                        "api-gateway",
+                        "auth-service",
+                        "billing-management",
+                        "eureka-server",
+                        "frontend",
+                        "medical-records-management",
+                        "notification-management",
+                        "user-profile-management"
+                    ]
+                    for (service in services) {
+                        echo "🔍 Vérification de la santé du service : ${service}"
+                        withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
+                            sh """
+                                kubectl --server=${KUBERNETES_SERVER} \
+                                --token=${KUBE_TOKEN} \
+                                --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${service}
+                            """
+                        }
+                    }
                 }
             }
         }
