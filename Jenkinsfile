@@ -2,16 +2,15 @@ pipeline {
     agent any
 
     environment {
-        // Variables d'environnement Jenkins
-        GIT_CREDENTIALS_ID = 'git-credentials' // ID du credential Jenkins pour Git
-        DOCKER_CREDENTIALS_ID = 'docker-credentials' // ID du credential Jenkins pour Docker
-        KUBERNETES_TOKEN_ID = 'kubernetes-token' // ID du credential Jenkins pour Kubernetes token
+        GIT_CREDENTIALS_ID = 'git-credentials'
+        DOCKER_CREDENTIALS_ID = 'docker-credentials'
+        KUBERNETES_TOKEN_ID = 'kubernetes-token'
         GIT_REPO_URL = 'https://dev.azure.com/hanimedyouni12/MedicalRecordsManagementService/_git/MedicalRecordsManagementService'
-        GIT_BRANCH = 'develop' // Branche à utiliser
-        DOCKER_REGISTRY = 'docker.io' // Registre Docker Hub
-        DOCKER_NAMESPACE = 'hani016/medical-records-management-system' // Namespace Docker Hub
+        GIT_BRANCH = 'develop'
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_NAMESPACE = 'hani016/medical-records-management-system'
         KUBERNETES_NAMESPACE = 'medical-records'
-        KUBERNETES_SERVER = 'https://kubernetes.docker.internal:6443' // URL de l'API Kubernetes
+        KUBERNETES_SERVER = 'https://kubernetes.docker.internal:6443'
     }
 
     stages {
@@ -46,15 +45,11 @@ pipeline {
                     for (service in services) {
                         echo "📦 Compilation du service : ${service}"
                         dir("backend/${service}") {
-                            // Vérifier si le fichier pom.xml existe
                             if (fileExists('pom.xml')) {
                                 sh 'mvn clean install -DskipTests'
-
-                                // Utiliser les noms d'images correctement formatés
                                 def imageName = "${DOCKER_NAMESPACE}-${service}"
                                 sh "docker build -t ${imageName}:latest ."
 
-                                // Utiliser les credentials Docker
                                 withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                                     sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
                                     sh "docker push ${imageName}:latest"
@@ -72,13 +67,17 @@ pipeline {
             steps {
                 echo '🚀 Déploiement des microservices sur Kubernetes...'
                 withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
-                    sh '''
-                        for file in $(ls k8s/*.yaml); do
-                            kubectl --server=${KUBERNETES_SERVER} \
-                            --token="${KUBE_TOKEN}" \
-                            --namespace=${KUBERNETES_NAMESPACE} apply --validate=false --insecure-skip-tls-verify -f $file;
-                        done
-                    '''
+                    script {
+                        sh """
+                            for file in k8s/*.yaml; do
+                                echo "📁 Déploiement de \$file"
+                                kubectl --server=${KUBERNETES_SERVER} \\
+                                        --token="${KUBE_TOKEN}" \\
+                                        --namespace=${KUBERNETES_NAMESPACE} \\
+                                        apply --validate=false --insecure-skip-tls-verify -f \$file
+                            done
+                        """
+                    }
                 }
             }
         }
@@ -100,11 +99,12 @@ pipeline {
                     for (service in services) {
                         echo "🔍 Vérification de la santé du service : ${service}"
                         withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
-                            sh '''
-                                kubectl --server=${KUBERNETES_SERVER} \
-                                --token="${KUBE_TOKEN}" \
-                                --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${service}
-                            '''
+                            sh """
+                                kubectl --server=${KUBERNETES_SERVER} \\
+                                        --token="${KUBE_TOKEN}" \\
+                                        --namespace=${KUBERNETES_NAMESPACE} \\
+                                        rollout status deployment/${service}
+                            """
                         }
                     }
                 }
@@ -129,7 +129,7 @@ pipeline {
                     ]
                     for (service in services) {
                         def imageName = "${DOCKER_NAMESPACE}-${service}"
-                        sh "docker rmi ${imageName}:latest"
+                        sh "docker rmi ${imageName}:latest || true"
                     }
                 }
             }
