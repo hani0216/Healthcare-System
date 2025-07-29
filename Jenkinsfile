@@ -4,7 +4,7 @@ pipeline {
     environment {
         GIT_CREDENTIALS_ID = 'git-credentials'
         DOCKER_CREDENTIALS_ID = 'docker-credentials'
-        KUBERNETES_TOKEN_ID = 'kubernetes-token'
+        KUBERNETES_TOKEN_SECRET = 'jenkins-sa-token' // Nom du Secret Kubernetes
         GIT_REPO_URL = 'https://dev.azure.com/hanimedyouni12/MedicalRecordsManagementService/_git/MedicalRecordsManagementService'
         GIT_BRANCH = 'develop'
         DOCKER_REGISTRY = 'docker.io'
@@ -67,17 +67,21 @@ pipeline {
             steps {
                 echo '🚀 Déploiement des microservices sur Kubernetes...'
                 script {
-                    withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
-                        sh """
-                            for file in k8s/*.yaml; do
-                                echo "📁 Déploiement de \$file"
-                                kubectl --server=${KUBERNETES_SERVER} \\
-                                        --token=\$KUBE_TOKEN \\
-                                        --namespace=${KUBERNETES_NAMESPACE} \\
-                                        apply --validate=false --insecure-skip-tls-verify -f \$file
-                            done
-                        """
-                    }
+                    // Récupérer dynamiquement le token du Secret Kubernetes
+                    def kubeToken = sh(
+                        script: "kubectl get secret ${KUBERNETES_TOKEN_SECRET} -o jsonpath='{.data.token}' | base64 --decode",
+                        returnStdout: true
+                    ).trim()
+
+                    sh """
+                        for file in k8s/*.yaml; do
+                            echo "📁 Déploiement de \$file"
+                            kubectl --server=${KUBERNETES_SERVER} \\
+                                    --token="${kubeToken}" \\
+                                    --namespace=${KUBERNETES_NAMESPACE} \\
+                                    apply --validate=false --insecure-skip-tls-verify -f \$file
+                        done
+                    """
                 }
             }
         }
