@@ -76,7 +76,7 @@ pipeline {
                         for file in $(ls k8s/*.yaml); do
                             kubectl --server=${KUBERNETES_SERVER} \
                             --token="${KUBE_TOKEN}" \
-                            --namespace=${KUBERNETES_NAMESPACE} apply -f $file;
+                            --namespace=${KUBERNETES_NAMESPACE} apply --validate=false --insecure-skip-tls-verify -f $file;
                         done
                     '''
                 }
