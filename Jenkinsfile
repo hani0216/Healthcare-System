@@ -1,55 +1,100 @@
 pipeline {
-    agent {
-        docker {
-            image 'docker:20.10.16-dind' // version Docker avec daemon Docker
-            args '-v /var/run/docker.sock:/var/run/docker.sock' // partage socket Docker avec hôte
-        }
-    }
+    agent any
 
     environment {
-        REGISTRY = 'docker.io/hani016' 
-        IMAGE_NAME = 'medical-records-management-system'
+        // Variables d'environnement Jenkins
+        GIT_CREDENTIALS_ID = 'git-credentials' // ID du credential Jenkins pour Git
+        DOCKER_CREDENTIALS_ID = 'docker-credentials' // ID du credential Jenkins pour Docker
+        KUBERNETES_TOKEN_ID = 'kubernetes-token' // ID du credential Jenkins pour Kubernetes token
+        GIT_REPO_URL = 'https://dev.azure.com/hanimedyouni12/MedicalRecordsManagementService/_git/MedicalRecordsManagementService'
+        GIT_BRANCH = 'main' // à adapter selon ta branche
+        DOCKER_IMAGE = 'medical-records-service'
+        KUBERNETES_NAMESPACE = 'medical-records'
+        KUBERNETES_SERVER = 'https://<kubernetes-api-server-url>' // URL de l'API Kubernetes
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                echo '🔄 Checkout du code source...'
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${env.GIT_BRANCH}"]],
+                    userRemoteConfigs: [[
+                        url: env.GIT_REPO_URL,
+                        credentialsId: env.GIT_CREDENTIALS_ID
+                    ]]
+                ])
             }
         }
 
         stage('Build & Push Images') {
             steps {
-                script {
-                    def services = [
-                        'Auth-service': 'backend/Auth-service',
-                        'api-gateway': 'backend/api-gateway',
-                        'eureka-server': 'backend/eureka-server',
-                        'user-profile-management': 'backend/user-profile-management',
-                        'medical-records-management': 'backend/medical-records-management',
-                        'notification-management': 'backend/notification_management',
-                        'billing-management': 'backend/billing_management',
-                        'frontend': 'frontend'
-                    ]
-
-                    withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
-
-                        services.each { serviceName, servicePath ->
-                            def imageTag = "${REGISTRY}/${IMAGE_NAME}:${serviceName}"
-                            echo "Build & push image: ${imageTag} from ${servicePath}"
-                            sh "docker build -t ${imageTag} ./${servicePath}"
-                            sh "docker push ${imageTag}"
-                        }
-                    }
+                echo '🔨 Compilation du projet et création de l’image Docker...'
+                sh 'mvn clean install -DskipTests'
+                sh "docker build -t ${DOCKER_IMAGE}:latest ."
+                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
+                    sh "docker push ${DOCKER_IMAGE}:latest"
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/'
+                echo '🚀 Déploiement sur Kubernetes...'
+                withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
+                    sh """
+                        kubectl --server=${KUBERNETES_SERVER} \
+                        --token=${KUBE_TOKEN} \
+                        --namespace=${KUBERNETES_NAMESPACE} apply -f k8s/deployment.yaml
+                    """
+                }
             }
+        }
+
+        stage('Health Check') {
+            steps {
+                echo '🔍 Vérification de la santé du déploiement...'
+                withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
+                    sh """
+                        kubectl --server=${KUBERNETES_SERVER} \
+                        --token=${KUBE_TOKEN} \
+                        --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${DOCKER_IMAGE}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy Monitoring Stack') {
+            steps {
+                echo '📊 Déploiement de la stack de monitoring...'
+                withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
+                    sh """
+                        kubectl --server=${KUBERNETES_SERVER} \
+                        --token=${KUBE_TOKEN} \
+                        --namespace=${KUBERNETES_NAMESPACE} apply -f k8s/monitoring-stack.yaml
+                    """
+                }
+            }
+        }
+
+        stage('Post Actions') {
+            steps {
+                echo '📦 Archivage des artefacts...'
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+                echo '📜 Nettoyage des images locales...'
+                sh "docker rmi ${DOCKER_IMAGE}:latest"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Pipeline terminé avec succès !'
+        }
+        failure {
+            echo '❌ Échec du pipeline.'
         }
     }
 }
