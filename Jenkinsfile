@@ -72,13 +72,13 @@ pipeline {
             steps {
                 echo '🚀 Déploiement des microservices sur Kubernetes...'
                 withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
-                    sh """
+                    sh '''
                         for file in $(ls k8s/*.yaml); do
                             kubectl --server=${KUBERNETES_SERVER} \
                             --token="${KUBE_TOKEN}" \
                             --namespace=${KUBERNETES_NAMESPACE} apply -f $file;
                         done
-                    """
+                    '''
                 }
             }
         }
@@ -100,11 +100,11 @@ pipeline {
                     for (service in services) {
                         echo "🔍 Vérification de la santé du service : ${service}"
                         withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
-                            sh """
+                            sh '''
                                 kubectl --server=${KUBERNETES_SERVER} \
                                 --token="${KUBE_TOKEN}" \
                                 --namespace=${KUBERNETES_NAMESPACE} rollout status deployment/${service}
-                            """
+                            '''
                         }
                     }
                 }
