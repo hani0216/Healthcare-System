@@ -63,7 +63,7 @@ pipeline {
             }
         }
 
-                stage('Deploy to Kubernetes') {
+        stage('Deploy to Kubernetes') {
             steps {
                 echo '🚀 Déploiement des microservices sur Kubernetes...'
                 withCredentials([string(credentialsId: 'kubernetes-token', variable: 'KUBE_TOKEN')]) {
@@ -78,8 +78,6 @@ pipeline {
                     """
                 }
             }
-        }
-
         }
 
         stage('Health Check') {
@@ -98,7 +96,7 @@ pipeline {
                     ]
                     for (service in services) {
                         echo "🔍 Vérification de la santé du service : ${service}"
-                        withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
+                        withCredentials([string(credentialsId: 'kubernetes-token', variable: 'KUBE_TOKEN')]) {
                             sh """
                                 kubectl --server=${KUBERNETES_SERVER} \\
                                         --token="\$KUBE_TOKEN" \\
