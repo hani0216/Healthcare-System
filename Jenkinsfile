@@ -66,13 +66,13 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 echo '🚀 Déploiement des microservices sur Kubernetes...'
-                withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
-                    script {
+                script {
+                    withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
                         sh """
                             for file in k8s/*.yaml; do
                                 echo "📁 Déploiement de \$file"
                                 kubectl --server=${KUBERNETES_SERVER} \\
-                                        --token="${KUBE_TOKEN}" \\
+                                        --token=\$KUBE_TOKEN \\
                                         --namespace=${KUBERNETES_NAMESPACE} \\
                                         apply --validate=false --insecure-skip-tls-verify -f \$file
                             done
@@ -101,7 +101,7 @@ pipeline {
                         withCredentials([string(credentialsId: KUBERNETES_TOKEN_ID, variable: 'KUBE_TOKEN')]) {
                             sh """
                                 kubectl --server=${KUBERNETES_SERVER} \\
-                                        --token="${KUBE_TOKEN}" \\
+                                        --token="\$KUBE_TOKEN" \\
                                         --namespace=${KUBERNETES_NAMESPACE} \\
                                         rollout status deployment/${service}
                             """
