@@ -67,11 +67,15 @@ pipeline {
             steps {
                 echo '🚀 Déploiement des microservices sur Kubernetes...'
                 script {
-                    // Récupérer dynamiquement le token du Secret Kubernetes
+                    // Vérifier et récupérer dynamiquement le token du Secret Kubernetes
                     def kubeToken = sh(
                         script: "kubectl get secret ${KUBERNETES_TOKEN_SECRET} -o jsonpath='{.data.token}' ",
                         returnStdout: true
                     ).trim()
+
+                    if (!kubeToken) {
+                        error "❌ Échec : Le token Kubernetes est vide ou introuvable."
+                    }
 
                     sh """
                         for file in k8s/*.yaml; do
