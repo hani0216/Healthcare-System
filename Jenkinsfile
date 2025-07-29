@@ -69,7 +69,7 @@ pipeline {
                 script {
                     // Récupérer dynamiquement le token du Secret Kubernetes
                     def kubeToken = sh(
-                        script: "kubectl get secret ${KUBERNETES_TOKEN_SECRET} -o jsonpath='{.data.token}' | base64 --decode",
+                        script: "kubectl get secret ${KUBERNETES_TOKEN_SECRET} -o jsonpath='{.data.token}' ",
                         returnStdout: true
                     ).trim()
 
