@@ -48,8 +48,8 @@ pipeline {
                         dir("backend/${service}") {
                             sh 'mvn clean install -DskipTests'
 
-                            // Utiliser les noms d'images spécifiés
-                            def imageName = "${DOCKER_NAMESPACE}:${service}"
+                            // Utiliser les noms d'images correctement formatés
+                            def imageName = "${DOCKER_NAMESPACE}-${service}"
                             sh "docker build -t ${imageName}:latest ."
 
                             // Utiliser les credentials Docker
@@ -119,7 +119,7 @@ pipeline {
                         "user-profile-management"
                     ]
                     for (service in services) {
-                        def imageName = "${DOCKER_NAMESPACE}:${service}"
+                        def imageName = "${DOCKER_NAMESPACE}-${service}"
                         sh "docker rmi ${imageName}:latest"
                     }
                 }
