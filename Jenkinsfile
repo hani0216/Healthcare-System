@@ -8,6 +8,7 @@ pipeline {
         KUBERNETES_TOKEN_ID = 'kubernetes-token' // ID du credential Jenkins pour Kubernetes token
         GIT_REPO_URL = 'https://dev.azure.com/hanimedyouni12/MedicalRecordsManagementService/_git/MedicalRecordsManagementService'
         GIT_BRANCH = 'develop' // Branche à utiliser
+        DOCKER_REGISTRY = 'docker.io' // Registre Docker Hub
         KUBERNETES_NAMESPACE = 'medical-records'
         KUBERNETES_SERVER = 'https://<kubernetes-api-server-url>' // URL de l'API Kubernetes
     }
@@ -39,12 +40,12 @@ pipeline {
                             sh 'mvn clean install -DskipTests'
 
                             // Utiliser des noms d'images en minuscules
-                            def imageName = "${service.toLowerCase()}"
+                            def imageName = "${DOCKER_REGISTRY}/${DOCKER_USER}/${service.toLowerCase()}"
 
                             // Construction et publication de l'image Docker
                             sh "docker build -t ${imageName}:latest ."
                             withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}"
+                                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
                                 sh "docker push ${imageName}:latest"
                             }
                         }
@@ -97,7 +98,7 @@ pipeline {
                 echo '📦 Archivage des artefacts...'
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
                 echo '📜 Nettoyage des images locales...'
-                sh "docker rmi ${service.toLowerCase()}:latest"
+                sh "docker rmi ${DOCKER_USER}/${service.toLowerCase()}:latest"
             }
         }
     }
