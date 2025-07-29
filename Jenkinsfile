@@ -9,6 +9,7 @@ pipeline {
         GIT_REPO_URL = 'https://dev.azure.com/hanimedyouni12/MedicalRecordsManagementService/_git/MedicalRecordsManagementService'
         GIT_BRANCH = 'develop' // Branche à utiliser
         DOCKER_REGISTRY = 'docker.io' // Registre Docker Hub
+        DOCKER_NAMESPACE = 'hani016/medical-records-management-system' // Namespace Docker Hub
         KUBERNETES_NAMESPACE = 'medical-records'
         KUBERNETES_SERVER = 'https://<kubernetes-api-server-url>' // URL de l'API Kubernetes
     }
@@ -32,15 +33,23 @@ pipeline {
             steps {
                 echo '🔨 Compilation des microservices et création des images Docker...'
                 script {
-                    // Scanner les sous-dossiers dans backend
-                    def services = sh(script: "ls backend", returnStdout: true).trim().split("\n")
+                    def services = [
+                        "api-gateway",
+                        "auth-service",
+                        "billing-management",
+                        "eureka-server",
+                        "frontend",
+                        "medical-records-management",
+                        "notification-management",
+                        "user-profile-management"
+                    ]
                     for (service in services) {
                         echo "📦 Compilation du service : ${service}"
                         dir("backend/${service}") {
                             sh 'mvn clean install -DskipTests'
 
-                            // Utiliser des noms d'images en minuscules
-                            def imageName = "${DOCKER_REGISTRY}/${service.toLowerCase()}"
+                            // Utiliser les noms d'images spécifiés
+                            def imageName = "${DOCKER_NAMESPACE}:${service}"
                             sh "docker build -t ${imageName}:latest ."
 
                             // Utiliser les credentials Docker
@@ -98,7 +107,22 @@ pipeline {
                 echo '📦 Archivage des artefacts...'
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
                 echo '📜 Nettoyage des images locales...'
-                sh "docker rmi ${DOCKER_REGISTRY}/${service.toLowerCase()}:latest"
+                script {
+                    def services = [
+                        "api-gateway",
+                        "auth-service",
+                        "billing-management",
+                        "eureka-server",
+                        "frontend",
+                        "medical-records-management",
+                        "notification-management",
+                        "user-profile-management"
+                    ]
+                    for (service in services) {
+                        def imageName = "${DOCKER_NAMESPACE}:${service}"
+                        sh "docker rmi ${imageName}:latest"
+                    }
+                }
             }
         }
     }
