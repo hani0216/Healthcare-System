@@ -9,7 +9,7 @@ pipeline {
         GIT_BRANCH = 'develop'
         DOCKER_REGISTRY = 'docker.io'
         DOCKER_NAMESPACE = 'hani016/medical-records-management-system'
-        KUBERNETES_NAMESPACE = 'medical-records'
+        KUBERNETES_NAMESPACE = 'default'
         KUBERNETES_SERVER = 'https://kubernetes.docker.internal:6443'
     }
 
