@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: medical-records-management
-        image: hani016/medical-records-management-system:medical-records-management
+        image: hani016/medical-records-management-system-medical-records-management
         env:
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:mariadb://mariadb:3306/medical_records_db"

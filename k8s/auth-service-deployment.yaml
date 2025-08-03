@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: hani016/medical-records-management-system:auth-service
+        image: hani016/medical-records-management-system-auth-service
         env:
         - name: JAVA_OPTS
           value: "-Xmx512m -Xms256m"

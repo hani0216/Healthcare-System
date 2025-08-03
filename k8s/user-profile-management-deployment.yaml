@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: user-profile-management
-        image: hani016/medical-records-management-system:user-profile-management
+        image: hani016/medical-records-management-system-user-profile-management
         env:
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:mariadb://mariadb:3306/user_profile_db"
