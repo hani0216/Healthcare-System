@@ -8,4 +8,4 @@ spec:
     app: frontend
   ports:
     - port: 3000         # Port du service à l'intérieur du cluster (pour les autres pods et l'Ingress)
-      targetPort: 80     # Port exposé par le conteneur (nginx)
+      targetPort: 3000  

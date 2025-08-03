@@ -16,4 +16,4 @@ spec:
       - name: frontend
         image: hani016/medical-records-management-system:frontend
         ports:
-        - containerPort: 80
+        - containerPort: 3000
