@@ -98,7 +98,8 @@ pipeline {
                         echo "🔍 Vérification de la santé du service : ${service}"
                         withCredentials([string(credentialsId: 'kubernetes-token', variable: 'KUBE_TOKEN')]) {
                             sh """
-                                kubectl --server=${KUBERNETES_SERVER} \\
+                                kubectl --insecure-skip-tls-verify \\
+                                        --server=${KUBERNETES_SERVER} \\
                                         --token="\$KUBE_TOKEN" \\
                                         --namespace=${KUBERNETES_NAMESPACE} \\
                                         rollout status deployment/${service}

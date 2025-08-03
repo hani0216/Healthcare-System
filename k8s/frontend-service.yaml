@@ -3,9 +3,10 @@ kind: Service
 metadata:
   name: frontend
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: frontend
   ports:
-    - port: 3000         # Port du service à l'intérieur du cluster (pour les autres pods et l'Ingress)
+    - port: 3000        
       targetPort: 3000  
+      nodePort: 30000
