@@ -47,7 +47,7 @@ pipeline {
                 echo "📦 Compilation du service : ${service}"
 
                 if (service == "frontend") {
-                    dir(frontend) {
+                    dir("frontend") {
                         if (fileExists('package.json')) {
                             sh 'npm install'
                             def imageName = "${DOCKER_NAMESPACE}:frontend"
