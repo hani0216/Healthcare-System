@@ -34,7 +34,7 @@ pipeline {
         script {
             def services = [
                 "api-gateway",
-                "Auth-service",
+                "auth-service",
                 "billing_management",
                 "eureka-server",
                 "frontend",
