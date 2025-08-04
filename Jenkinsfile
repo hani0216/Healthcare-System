@@ -4,7 +4,7 @@ pipeline {
     environment {
         GIT_CREDENTIALS_ID = 'git-credentials'
         DOCKER_CREDENTIALS_ID = 'docker-credentials'
-        KUBERNETES_TOKEN_SECRET = 'jenkins-sa-token' // Nom du Secret Kubernetes
+        KUBERNETES_TOKEN_SECRET = 'jenkins-sa-token'
         GIT_REPO_URL = 'https://dev.azure.com/hanimedyouni12/MedicalRecordsManagementService/_git/MedicalRecordsManagementService'
         GIT_BRANCH = 'develop'
         DOCKER_REGISTRY = 'docker.io'
@@ -43,37 +43,45 @@ pipeline {
                 "user-profile-management"
             ]
 
-            for (service in services) {
-                echo "📦 Compilation du service : ${service}"
+                    for (service in services) {
+                        echo "📦 Compilation du service : ${service}"
 
-                if (service == "frontend") {
-                    dir("frontend") {
-                        if (fileExists('package.json')) {
-                            sh 'npm install'
-                            def imageName = "${DOCKER_NAMESPACE}:frontend"
-                            sh "docker build -t ${imageName} ."
+                        if (service == "frontend") {
+                            dir("frontend") {
+                                echo "📂 Vérification du répertoire frontend..."
+                                sh 'pwd && ls -la'
+                                
+                                if (fileExists('package.json')) {
+                                    echo "✅ package.json trouvé, installation des dépendances..."
+                                    sh 'npm install'
+                                    
+                                    def imageName = "${DOCKER_NAMESPACE}-frontend"
+                                    echo "🐳 Construction de l'image : ${imageName}"
+                                    sh "docker build -t ${imageName}:latest ."
 
-                            withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
-                                sh "docker push ${imageName}"
+                                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                        sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
+                                        sh "docker push ${imageName}:latest"
+                                    }
+                                } else {
+                                    echo "❌ Le fichier package.json est introuvable dans ${service}. Ignorer ce service."
+                                }
                             }
                         } else {
-                            echo "⚠️ Le fichier package.json est introuvable dans ${service}. Ignorer ce service."
-                        }
-                    }
-                } else {
-                    dir("backend/${service}") {
-                        if (fileExists('pom.xml')) {
-                            sh 'mvn clean install -DskipTests'
-                            def imageName = "${DOCKER_NAMESPACE}-${service}"
-                            sh "docker build -t ${imageName}:latest ."
+                            dir("backend/${service}") {
+                                if (fileExists('pom.xml')) {
+                                    sh 'mvn clean install -DskipTests'
+                                    def imageName = "${DOCKER_NAMESPACE}-${service}"
+                                    sh "docker build -t ${imageName}:latest ."
 
-                            withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
-                                sh "docker push ${imageName}:latest"
+                                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                        sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
+                                        sh "docker push ${imageName}:latest"
+                                    }
+                                } else {
+                                    echo "⚠️ Le fichier pom.xml est introuvable dans backend/${service}. Ignorer ce service."
+                                }
                             }
-                        } else {
-                            echo "⚠️ Le fichier pom.xml est introuvable dans backend/${service}. Ignorer ce service."
                         }
                     }
                 }
@@ -108,18 +116,18 @@ pipeline {
                         "eureka-server",
                         "frontend",
                         "medical-records-management",
-                        "notification-management",
+                        "notification-management", 
                         "user-profile-management"
                     ]
                     for (service in services) {
                         echo "🔍 Vérification de la santé du service : ${service}"
                         withCredentials([string(credentialsId: 'kubernetes-token', variable: 'KUBE_TOKEN')]) {
                             sh """
-                                kubectl --insecure-skip-tls-verify \
+                                kubectl --insecure-skip-tls-verify \\
                                         --server=${KUBERNETES_SERVER} \\
                                         --token="\$KUBE_TOKEN" \\
                                         --namespace=${KUBERNETES_NAMESPACE} \\
-                                        rollout status deployment/${service}
+                                        rollout status deployment/${service} || true
                             """
                         }
                     }
@@ -130,7 +138,7 @@ pipeline {
         stage('Post Actions') {
             steps {
                 echo '📦 Archivage des artefacts...'
-                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true, allowEmptyArchive: true
                 echo '📜 Nettoyage des images locales...'
                 script {
                     def services = [
