@@ -29,39 +29,59 @@ pipeline {
         }
 
         stage('Build & Push Images') {
-            steps {
-                echo '🔨 Compilation des microservices et création des images Docker...'
-                script {
-                    def services = [
-                        "api-gateway",
-                        "auth-service",
-                        "billing-management",
-                        "eureka-server",
-                        "frontend",
-                        "medical-records-management",
-                        "notification-management",
-                        "user-profile-management"
-                    ]
-                    for (service in services) {
-                        echo "📦 Compilation du service : ${service}"
-                        dir("backend/${service}") {
-                            if (fileExists('pom.xml')) {
-                                sh 'mvn clean install -DskipTests'
-                                def imageName = "${DOCKER_NAMESPACE}-${service}"
-                                sh "docker build -t ${imageName}:latest ."
+    steps {
+        echo '🔨 Compilation des microservices et création des images Docker...'
+        script {
+            def services = [
+                "api-gateway",
+                "Auth-service",
+                "billing_management",
+                "eureka-server",
+                "frontend",
+                "medical-records-management",
+                "notification_management",
+                "user-profile-management"
+            ]
 
-                                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                                    sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
-                                    sh "docker push ${imageName}:latest"
-                                }
-                            } else {
-                                echo "⚠️ Le fichier pom.xml est introuvable dans backend/${service}. Ignorer ce service."
+            for (service in services) {
+                echo "📦 Compilation du service : ${service}"
+
+                if (service == "frontend") {
+                    dir("${service}") {
+                        if (fileExists('package.json')) {
+                            sh 'npm install'
+                            def imageName = "${DOCKER_NAMESPACE}:frontend"
+                            sh "docker build -t ${imageName} ."
+
+                            withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
+                                sh "docker push ${imageName}"
                             }
+                        } else {
+                            echo "⚠️ Le fichier package.json est introuvable dans ${service}. Ignorer ce service."
+                        }
+                    }
+                } else {
+                    dir("backend/${service}") {
+                        if (fileExists('pom.xml')) {
+                            sh 'mvn clean install -DskipTests'
+                            def imageName = "${DOCKER_NAMESPACE}-${service}"
+                            sh "docker build -t ${imageName}:latest ."
+
+                            withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}"
+                                sh "docker push ${imageName}:latest"
+                            }
+                        } else {
+                            echo "⚠️ Le fichier pom.xml est introuvable dans backend/${service}. Ignorer ce service."
                         }
                     }
                 }
             }
         }
+    }
+}
+
 
         stage('Deploy to Kubernetes') {
             steps {
@@ -98,7 +118,7 @@ pipeline {
                         echo "🔍 Vérification de la santé du service : ${service}"
                         withCredentials([string(credentialsId: 'kubernetes-token', variable: 'KUBE_TOKEN')]) {
                             sh """
-                                kubectl --insecure-skip-tls-verify \\
+                                kubectl --insecure-skip-tls-verify \
                                         --server=${KUBERNETES_SERVER} \\
                                         --token="\$KUBE_TOKEN" \\
                                         --namespace=${KUBERNETES_NAMESPACE} \\
