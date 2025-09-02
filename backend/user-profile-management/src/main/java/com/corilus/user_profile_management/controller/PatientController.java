@@ -35,7 +35,7 @@ public class PatientController {
         return ResponseEntity.ok(patientService.getPatientIdByName(name));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}")               
     public ResponseEntity<Patient> updatePatient(@PathVariable Long id, @RequestBody PatientDto dto) {
         return ResponseEntity.ok(patientService.updatePatient(id, dto));
     }
@@ -47,7 +47,7 @@ public class PatientController {
     }
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<Patient> getPatientById(@PathVariable Long id) {
+    public ResponseEntity<Patient> getPatientById   (@PathVariable Long id) {
         return ResponseEntity.ok(patientService.getPatientById(id));
     }
 
