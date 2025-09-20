@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: notification-management
-        image: hani016/medical-records-management-system-notification-management
+        image: hani016/medical-records-management-system-notification_management
         env:
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:mariadb://mariadb:3306/notification_db"
